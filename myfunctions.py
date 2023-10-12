@@ -1,9 +1,10 @@
-import numpy as np                                  # type: ignore
-from skimage.measure import label, regionprops      # type: ignore
-from skimage.io import imread                       # type: ignore
-from skimage.filters import threshold_yen           # type: ignore
-import glob
+import numpy as np                                  
+from skimage.measure import label, regionprops      
+from skimage.io import imread                       
+from skimage.filters import threshold_yen          
 from dataclasses import dataclass
+import glob
+import os
 
 
 
@@ -22,8 +23,6 @@ class experiment:
     slice_area: feature                     # area of the agglomerates contained in a fixed slice at different time instants
     slice_stability_time: feature           # time needed to see stabilization in the number of agglomerates contained in a fixed slice
 
-
-
 def exp_list():
     return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3',  
             'P28A_FT_H_Exp4_2', 'P28A_FT_H_Exp5_2',  
@@ -32,36 +31,38 @@ def exp_list():
             'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp1',
             'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp3', 'VCT5A_FT_H_Exp4', 'VCT5A_FT_H_Exp5']
 
-
 def exp_start_time():
     return [112, 99, 90, 90108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
 
 
 
-def read_sequence(exp, time=0, slice=0, volume=True, win=False, first_time=0, last_time=220, first_slice=20, last_slice=260):
+
+
+def image_path(exp, time, slice, win=False):
     if win:
-        if volume:
-            path = 'Z:/Reconstructions/' + exp + '/entry' + str(time).zfill(4) + '_no_extpag_db0100_vol/'
-        else:
-            path = 'Z:/Reconstructions/' + exp + '/slice ' + str(slice) + '/'
+        path = 'Z:/Reconstructions/' + exp
     else:
-        if volume:
-            path = '../MasterThesisData/' + exp + '/entry' + str(time).zfill(4) + '_no_extpag_db0100_vol/'
-        else:
-            path = '../MasterThesisData/' + exp + '/slice ' + str(slice) + '/'
-        
-    image = imread(path+'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol_' + str(slice).zfill(6) + '.tiff')
+        path = '../MasterThesisData/' + exp
+    folder_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol'
+    image_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol_' + str(slice).zfill(6) + '.tiff'
+    return os.path.join(path, folder_name, image_name)
+
+
+
+def read_sequence(exp, time=0, slice=0, first_time=0, last_time=220, first_slice=20, last_slice=260, volume=True, win=False):
 
     if volume:
-        sequence = np.zeros((last_slice-first_slice, image.shape[0], image.shape[1]))
-        for i in range(first_slice, last_slice):
-            image = imread(path+'entry'+str(time).zfill(4)+'_no_extpag_db0100_vol_'+str(i).zfill(6)+'.tiff')
-            sequence[i-first_slice,:,:] = image
+        test_image = imread(image_path(exp, time, first_slice, win))
+        sequence = np.zeros((last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
+        for slice in range(first_slice, last_slice):
+            image = imread(image_path(exp, time, slice, win))
+            sequence[slice-first_slice,:,:] = image
     else:
-        sequence = np.zeros((last_time-first_time, image.shape[0], image.shape[1]))
-        for i in range(first_time, last_time):
-            image = imread(path+'entry'+str(i).zfill(4)+'_no_extpag_db0100_vol_'+str(slice).zfill(6)+'.tiff')
-            sequence[i-first_time,:,:] = image
+        test_image = imread(image_path(exp, first_time, slice, win))
+        sequence = np.zeros((last_time-first_time, test_image.shape[0], test_image.shape[1]))
+        for time in range(first_time, last_time):
+            image = imread(image_path(exp, time, slice, win))
+            sequence[time-first_time,:,:] = image
 
     return sequence
 
@@ -132,14 +133,14 @@ def propagate_labels(mask, start=12, stop=0):
 
 
 
-def explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, step):
+def explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, step, win):
     
     time_steps = np.arange(start_time, min(start_time+step*time_steps_number, 220), time_steps_number, dtype=int)
     temp_area = np.zeros((len(time_steps), last_slice-first_slice))
-    temp_number = np.zeroslike(temp_area)
+    temp_number = np.zeros_like(temp_area)
 
-    for time in time_steps:
-        sequence = read_sequence(exp, time=time, volume=True, first_slice=first_slice, last_slice=last_slice)
+    for t, time in enumerate(time_steps):
+        sequence = read_sequence(exp, time=time, first_slice=first_slice, last_slice=last_slice,  volume=True, win=win)
         segmented_image = (np.zeros_like(sequence)).astype(int)
 
         for z in range(sequence.shape[0]):
@@ -149,8 +150,8 @@ def explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, 
         for z in range(sequence.shape[0]):
             rps = regionprops(new_segmented_image[z,:,:])
             areas = [r.area for r in rps]
-            temp_area[time-time_steps[0], z] = np.mean(areas)
-            temp_number[time-time_steps[0], z] = len(areas)
+            temp_area[t, z] = np.mean(areas)
+            temp_number[t, z] = len(areas)
 
     volume_area = feature(np.mean(temp_area, axis=1), np.mean(temp_area), np.std(temp_area))
     volume_number = feature(np.mean(temp_number, axis=1), np.mean(temp_number), np.std(temp_number))
@@ -160,17 +161,19 @@ def explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, 
 
 
 
-def explore_slice(exp, start_time, volumes_number, first_slice, last_slice):
-
+def explore_slice(exp, start_time, volumes_number, first_slice, last_slice, win):
+    slice_number = feature(np.zeros((1)), 0, 0)
+    slice_area = slice_number
+    slice_stability_time = slice_number
     return slice_number, slice_area, slice_stability_time
 
 
 
-def explore_experiment(exp, time_steps_number=5, volumes_number=5, first_slice=20, last_slice=260, step=5):
+def explore_experiment(exp, time_steps_number=5, volumes_number=5, first_slice=20, last_slice=260, step=5, win=True):
 
     start_time = exp_start_time()[exp_list().index(exp)]
 
-    volume_number, volume_area = explore_volume(exp, start_time, time_steps_number, first_slice, last_slice)
-    slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, volumes_number, first_slice, last_slice)
+    volume_number, volume_area = explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, step, win)
+    slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, volumes_number, first_slice, last_slice, win)
     
     return experiment(exp, volume_number, volume_area, slice_number, slice_area, slice_stability_time)
