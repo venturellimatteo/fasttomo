@@ -9,31 +9,36 @@ from dataclasses import dataclass
 
 @dataclass
 class feature:
-    mean: float
-    std: float
-    max: float
-    min: float
+    values: np.ndarray                      # values mediated by the different samples considered
+    mean: float                             # mean of all the values
+    std: float                              # standard deviation of all the values
 
 @dataclass
 class experiment:
-    number: feature
-    area: feature
-    shape: feature
-    duration: feature
+    name: str                               # name of the experiment
+    volume_number: feature                  # number of agglomerates contained in each slice of a volume
+    volume_area: feature                    # area of the agglomerates contained in each slice of a volume
+    slice_number: feature                   # number of agglomerates contained in a fixed slice at different time instants
+    slice_area: feature                     # area of the agglomerates contained in a fixed slice at different time instants
+    slice_stability_time: feature           # time needed to see stabilization in the number of agglomerates contained in a fixed slice
 
 
 
 def exp_list():
-    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3', 'P28A_FT_H_Exp3_2', 
-            'P28A_FT_H_Exp4_2', 'P28A_FT_H_Exp5', 'P28A_FT_H_Exp5_2', 'P28A_FT_H_Exp5_3', 
+    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3',  
+            'P28A_FT_H_Exp4_2', 'P28A_FT_H_Exp5_2',  
             'P28A_FT_N_Exp1', 'P28A_FT_N_Exp4', 'P28B_ICS_FT_H_Exp5', 'P28B_ICS_FT_H_Exp2', 
             'P28B_ICS_FT_H_Exp3', 'P28B_ICS_FT_H_Exp4', 'P28B_ICS_FT_H_Exp4_2', 'VCT5_FT_N_Exp1', 
             'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp1',
             'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp3', 'VCT5A_FT_H_Exp4', 'VCT5A_FT_H_Exp5']
 
 
+def exp_start_time():
+    return [112, 99, 90, 90108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
 
-def read_sequence(exp, time=0, slice=0, volume=True, win=False):
+
+
+def read_sequence(exp, time=0, slice=0, volume=True, win=False, first_time=0, last_time=220, first_slice=20, last_slice=260):
     if win:
         if volume:
             path = 'Z:/Reconstructions/' + exp + '/entry' + str(time).zfill(4) + '_no_extpag_db0100_vol/'
@@ -46,15 +51,21 @@ def read_sequence(exp, time=0, slice=0, volume=True, win=False):
             path = '../MasterThesisData/' + exp + '/slice ' + str(slice) + '/'
         
     image = imread(path+'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol_' + str(slice).zfill(6) + '.tiff')
-    files_number = len(glob.glob1(path,"*.tiff"))
-    sequence = np.zeros((files_number,image.shape[0],image.shape[1]))
+    # files_number = len(glob.glob1(path,"*.tiff"))
 
-    for i in range(files_number):
-        if volume:
+    if volume:
+        sequence = np.zeros((last_slice-first_slice, image.shape[0], image.shape[1]))
+        for i in range(first_slice, last_slice):
             image = imread(path+'entry'+str(time).zfill(4)+'_no_extpag_db0100_vol_'+str(i).zfill(6)+'.tiff')
-        else:
+            sequence[i-first_slice,:,:] = image
+    else:
+        sequence = np.zeros((last_time-first_time, image.shape[0], image.shape[1]))
+        for i in range(first_time, last_time):
             image = imread(path+'entry'+str(i).zfill(4)+'_no_extpag_db0100_vol_'+str(slice).zfill(6)+'.tiff')
-        sequence[i,:,:] = image
+            sequence[i-first_time,:,:] = image
+
+    print(sequence.shape)
+
     return sequence
 
 
@@ -121,3 +132,29 @@ def propagate_labels(mask, start=12, stop=0):
         mask[slice,:,:] = current_slice
             
     return mask
+
+
+
+# def explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, step):
+#     time_steps = np.arange(start_time, min(start_time+step*time_steps_number, 220), time_steps_number, dtype=int)
+#     for time in time_steps:
+
+#     return volume_number, volume_area
+
+
+
+
+# def explore_slice(exp, start_time, volumes_number, first_slice, last_slice):
+
+#     return slice_number, slice_area, slice_stability_time
+
+
+
+# def explore_experiment(exp, time_steps_number=5, volumes_number=5, first_slice=20, last_slice=260, step=5):
+
+#     start_time = exp_start_time()[exp_list().index(exp)]
+
+#     volume_number, volume_area = explore_volume(exp, start_time, time_steps_number, first_slice, last_slice)
+#     slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, volumes_number, first_slice, last_slice)
+    
+#     return experiment(exp, volume_number, volume_area, slice_number, slice_area, slice_stability_time)
