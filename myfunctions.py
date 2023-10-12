@@ -3,6 +3,7 @@ from skimage.measure import label, regionprops
 from skimage.io import imread
 from skimage.filters import threshold_yen
 import glob
+from dataclasses import dataclass
 
 
 
@@ -94,3 +95,12 @@ def propagate_labels(mask, start=12, stop=0):
         mask[slice,:,:] = current_slice
             
     return mask
+
+
+def exp_list():
+    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3', 'P28A_FT_H_Exp3_2', 
+            'P28A_FT_H_Exp4_2', 'P28A_FT_H_Exp5', 'P28A_FT_H_Exp5_2', 'P28A_FT_H_Exp5_3', 
+            'P28A_FT_N_Exp1', 'P28A_FT_N_Exp4', 'P28B_ICS_FT_H_Exp5', 'P28B_ICS_FT_H_Exp2', 
+            'P28B_ICS_FT_H_Exp3', 'P28B_ICS_FT_H_Exp4', 'P28B_ICS_FT_H_Exp4_2', 'VCT5_FT_N_Exp1', 
+            'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp1',
+            'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp3', 'VCT5A_FT_H_Exp4', 'VCT5A_FT_H_Exp5']
