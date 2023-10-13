@@ -1,7 +1,7 @@
-import numpy as np                                  
-from skimage.measure import label, regionprops      
-from skimage.io import imread                       
-from skimage.filters import threshold_yen          
+import numpy as np                                  # type: ignore
+from skimage.measure import label, regionprops      # type: ignore
+from skimage.io import imread                       # type: ignore
+from skimage.filters import threshold_yen           # type: ignore
 from dataclasses import dataclass
 import glob
 import os
@@ -32,7 +32,7 @@ def exp_list():
             'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp3', 'VCT5A_FT_H_Exp4', 'VCT5A_FT_H_Exp5']
 
 def exp_start_time():
-    return [112, 99, 90, 90108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
+    return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
 
 
 
@@ -132,8 +132,8 @@ def propagate_labels(mask, start=12, stop=0):
     return mask
 
 
-
-def explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, step, win):
+# the biggest agglomerate has to be removed since it is the external shell
+def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, win):
     
     time_steps = np.arange(start_time, min(start_time+step*time_steps_number, 220), time_steps_number, dtype=int)
     temp_area = np.zeros((len(time_steps), last_slice-first_slice))
@@ -150,6 +150,7 @@ def explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, 
         for z in range(sequence.shape[0]):
             rps = regionprops(new_segmented_image[z,:,:])
             areas = [r.area for r in rps]
+            areas.pop(np.max(areas))
             temp_area[t, z] = np.mean(areas)
             temp_number[t, z] = len(areas)
 
@@ -160,20 +161,52 @@ def explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, 
 
 
 
+def rotate180(image):
+    rotated_image = np.zeros_like(image)
+    M = image.shape[0]
+    N = image.shape[1]
+    for i in range(M):
+        for j in range(N):
+            rotated_image[i, N-1-j] = image[M-1-i, j]
+            
 
-def explore_slice(exp, start_time, volumes_number, first_slice, last_slice, win):
-    slice_number = feature(np.zeros((1)), 0, 0)
-    slice_area = slice_number
+
+def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, win):
+
+    slices = np.linspace(first_slice, last_slice, volumes_number, dtype=int)
+    temp_area = np.zeros((len(slices), end_time-start_time)) 
+    temp_number = np.zeros_like(temp_area)
+
+    for z, slice in enumerate(slices):
+        sequence = read_sequence(exp, slice=slice, first_slice=first_slice, last_slice=last_slice,  volume=True, win=win)
+        for i in range(0, sequence.shape[0], 2):
+            sequence[i,:,:] = rotate180(sequence[i,:,:])
+        segmented_image = (np.zeros_like(sequence)).astype(int)
+
+        for t in range(start_time, end_time):
+            segmented_image[t,:,:] = segment(sequence[t,:,:])
+        new_segmented_image = propagate_labels(segmented_image)
+
+        for t in range(start_time, end_time):
+            rps = regionprops(new_segmented_image[t,:,:])
+            areas = [r.area for r in rps]
+            areas.pop(np.max(areas))
+            temp_area[z, t] = np.mean(areas)
+            temp_number[z, t] = len(areas)
+
+    slice_area = feature(np.mean(temp_area, axis=1), np.mean(temp_area), np.std(temp_area))
+    slice_number = feature(np.mean(temp_number, axis=1), np.mean(temp_number), np.std(temp_number))
     slice_stability_time = slice_number
+
     return slice_number, slice_area, slice_stability_time
 
 
 
-def explore_experiment(exp, time_steps_number=5, volumes_number=5, first_slice=20, last_slice=260, step=5, win=True):
+def explore_experiment(exp, time_steps_number=5, volumes_number=5, end_time=220, first_slice=20, last_slice=260, step=5, win=True):
 
     start_time = exp_start_time()[exp_list().index(exp)]
 
-    volume_number, volume_area = explore_volume(exp, start_time, time_steps_number, first_slice, last_slice, step, win)
-    slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, volumes_number, first_slice, last_slice, win)
+    volume_number, volume_area = explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, win)
+    slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, win)
     
     return experiment(exp, volume_number, volume_area, slice_number, slice_area, slice_stability_time)
