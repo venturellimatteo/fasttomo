@@ -68,71 +68,92 @@ def read_sequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=
 
 
 
-def isAgglomerate(rps, i, smallest_area, eccentricity, volume=False):
-    if rps[i].area < smallest_area:
-        return False
-    if not volume:
-        if rps[i].eccentricity > eccentricity:
-            return False
-    return True
+def mask(image, threshold):
+    return np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
 
 
 
-def segment(image, n_agglomerates=50, smallest_area=5, eccentricity=0.99, all=True):
+def find_biggest_area(sequence, threshold):
+
+    area = np.zeros(sequence.shape[0])
+    for i in range(sequence.shape[0]):
+        image = sequence[i,:,:]
+        mask_labeled = mask(image, threshold)
+        rps = regionprops(mask_labeled)
+        areas = [r.area for r in rps]
+        area[i] = np.max(areas)
+
+    return np.mean(area)
+
+
+
+def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
+
+    flag = False
+    add = False
+    while not flag:
+        current_area = find_biggest_area(sequence, threshold)
+        if current_area < target - delta:
+            threshold -= step
+            if add:
+                step = step/2
+                add = True
+        elif current_area > target + delta:
+            threshold += step
+            if not add:
+                step = step/2
+                add = False
+        else:
+            flag = True
+
+    return threshold
+
+
+# the problem is that the label propagation is overriden because of the order in which the labels appear
+# one solution would be to do the label update from the smallest area to the largest one
+# this problem is solved but still there's not consistent labeling everywhere
+def propagate_labels(previous_mask, current_mask, forward=True):
+    if forward:
+        current_mask[current_mask > 0] = current_mask[current_mask > 0] + np.max(previous_mask)
+    # here I order np.unique(previous_mask) from the smallest to the largest area
+    ordered_labels = np.argsort([r.area for r in regionprops(previous_mask)])
+    for previous_slice_label in ordered_labels:
+        if previous_slice_label == 0:
+            continue
+        bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
+        if len(bincount) <= 1:
+            continue
+        bincount[0] = 0
+        current_slice_label = np.argmax(bincount)
+        current_mask[current_mask == current_slice_label] = previous_slice_label
+    return current_mask
+
+
+
+def remove_small_agglomerates(sequence_mask, smallest_volume):
+
+    return sequence_mask
+
+
+
+def segment(sequence, threshold, smallest_volume=10):
+
+    sequence_mask = np.zeros_like(sequence).astype(int)
+    sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
+
+    # masking of current slice and forward propagation from the first slice
+    for i in range(1, sequence.shape[0]):
+        sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
+        sequence_mask[i,:,:] = propagate_labels(sequence_mask[i-1,:,:], sequence_mask[i,:,:], forward=True)
+
+    # backward propagation from the last slice
+    '''for i in range(sequence_mask.shape[0]-1, 0, -1):
+        sequence_mask[i-1,:,:] = propagate_labels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)'''
     
-    image = (image - np.min(image))/(np.max(image) - np.min(image))
+    # removal of the agglomerates with volume smaller than smallest_volume
+    sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
+    return sequence_mask
 
-    threshold = threshold_yen(image)
-    mask = image > threshold
-    mask_labeled = np.vectorize(label, signature='(n,m)->(n,m)')(mask)
-
-    rps = regionprops(mask_labeled)
-    areas = [r.area for r in rps]
-    idxs = np.argsort(areas)[::-1]
-    new_mask = np.zeros_like(mask_labeled)
-    
-    if all:
-        n_agglomerates = len(idxs)
-        
-    for j, i in enumerate(idxs[:n_agglomerates]):
-        if isAgglomerate(rps, i, smallest_area, eccentricity):
-            new_mask[tuple(rps[i].coords.T)] = j + 1
-    return new_mask
-
-
-
-def propagate_labels(mask, start=12, stop=0):
-    for slice in range(start, mask.shape[0]-stop):
-        previous_slice = mask[slice-1,:,:]
-        current_slice = mask[slice,:,:]
-        current_slice[current_slice > 0] = current_slice[current_slice > 0] + np.max(previous_slice)
-        flag = False
-
-        for previous_slice_label in np.unique(previous_slice):
-            if previous_slice_label == 0:
-                continue
-            previous_slice_region = previous_slice == previous_slice_label
-            overlap = current_slice * previous_slice_region
-            unique_labels = np.unique(overlap)
-            
-            for _, current_slice_label in enumerate(unique_labels):
-                if current_slice_label == 0:
-                    continue
-                temp = np.array([[previous_slice_label, current_slice_label, len(overlap[overlap == current_slice_label])]]).T
-                if not flag:
-                    mapping = temp
-                    flag = True
-                else:
-                    mapping = np.append(mapping, temp, axis=1)
-        
-        for current_slice_label in np.unique(mapping[1,:]):
-            temp = mapping[:,mapping[1,:] == current_slice_label]
-            previous_slice_label = temp[0, np.argmax(temp[2,:])]
-            current_slice[current_slice == current_slice_label] = previous_slice_label
-        
-        mask[slice,:,:] = current_slice
-            
-    return mask
 
 
 # the biggest agglomerate has to be removed since it is the external shell
