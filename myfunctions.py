@@ -1,9 +1,8 @@
 import numpy as np                                  # type: ignore
 from skimage.measure import label, regionprops      # type: ignore
 from skimage.io import imread                       # type: ignore
-from skimage.filters import threshold_yen           # type: ignore
 from dataclasses import dataclass
-import glob
+from tqdm import tqdm                               # type: ignore
 import os
 
 
@@ -116,10 +115,9 @@ def propagate_labels(previous_mask, current_mask, forward=True):
     if forward:
         current_mask[current_mask > 0] = current_mask[current_mask > 0] + np.max(previous_mask)
     # here I order np.unique(previous_mask) from the smallest to the largest area
-    ordered_labels = np.argsort([r.area for r in regionprops(previous_mask)])
+    labels = [r.label for r in regionprops(previous_mask)]
+    ordered_labels = [labels[i] for i in np.argsort([r.area for r in regionprops(previous_mask)])]
     for previous_slice_label in ordered_labels:
-        if previous_slice_label == 0:
-            continue
         bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
         if len(bincount) <= 1:
             continue
@@ -131,24 +129,25 @@ def propagate_labels(previous_mask, current_mask, forward=True):
 
 
 def remove_small_agglomerates(sequence_mask, smallest_volume):
-
+    bincount = np.bincount(sequence_mask.flatten())
+    sequence_mask[np.isin(sequence_mask, np.where(bincount < smallest_volume))] = 0
     return sequence_mask
 
 
 
-def segment(sequence, threshold, smallest_volume=10):
+def segment(sequence, threshold, smallest_volume=50):
 
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
 
     # masking of current slice and forward propagation from the first slice
-    for i in range(1, sequence.shape[0]):
+    for i in tqdm(range(1, sequence.shape[0]), desc='Segmenting volume'):
         sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
         sequence_mask[i,:,:] = propagate_labels(sequence_mask[i-1,:,:], sequence_mask[i,:,:], forward=True)
 
     # backward propagation from the last slice
-    '''for i in range(sequence_mask.shape[0]-1, 0, -1):
-        sequence_mask[i-1,:,:] = propagate_labels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)'''
+    for i in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Propagating labels'):
+        sequence_mask[i-1,:,:] = propagate_labels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)
     
     # removal of the agglomerates with volume smaller than smallest_volume
     sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
