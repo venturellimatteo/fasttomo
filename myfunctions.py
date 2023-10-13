@@ -49,7 +49,7 @@ def image_path(exp, time, slice, win=False):
 
 
 
-def read_sequence(exp, time=0, slice=0, first_time=0, last_time=220, first_slice=20, last_slice=260, volume=True, win=False):
+def read_sequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=20, last_slice=260, volume=True, win=False):
 
     if volume:
         test_image = imread(image_path(exp, time, first_slice, win))
@@ -58,11 +58,11 @@ def read_sequence(exp, time=0, slice=0, first_time=0, last_time=220, first_slice
             image = imread(image_path(exp, time, slice, win))
             sequence[slice-first_slice,:,:] = image
     else:
-        test_image = imread(image_path(exp, first_time, slice, win))
-        sequence = np.zeros((last_time-first_time, test_image.shape[0], test_image.shape[1]))
-        for time in range(first_time, last_time):
+        test_image = imread(image_path(exp, start_time, slice, win))
+        sequence = np.zeros((end_time-start_time, test_image.shape[0], test_image.shape[1]))
+        for time in range(start_time, end_time):
             image = imread(image_path(exp, time, slice, win))
-            sequence[time-first_time,:,:] = image
+            sequence[time-start_time,:,:] = image
 
     return sequence
 
@@ -78,7 +78,7 @@ def isAgglomerate(rps, i, smallest_area, eccentricity, volume=False):
 
 
 
-def segment(image, n_agglomerates=50, smallest_area=5, eccentricity=0.99):
+def segment(image, n_agglomerates=50, smallest_area=5, eccentricity=0.99, all=True):
     
     image = (image - np.min(image))/(np.max(image) - np.min(image))
 
@@ -91,6 +91,9 @@ def segment(image, n_agglomerates=50, smallest_area=5, eccentricity=0.99):
     idxs = np.argsort(areas)[::-1]
     new_mask = np.zeros_like(mask_labeled)
     
+    if all:
+        n_agglomerates = len(idxs)
+        
     for j, i in enumerate(idxs[:n_agglomerates]):
         if isAgglomerate(rps, i, smallest_area, eccentricity):
             new_mask[tuple(rps[i].coords.T)] = j + 1
@@ -135,12 +138,12 @@ def propagate_labels(mask, start=12, stop=0):
 # the biggest agglomerate has to be removed since it is the external shell
 def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, win):
     
-    time_steps = np.arange(start_time, min(start_time+step*time_steps_number, 220), time_steps_number, dtype=int)
+    time_steps = np.arange(start_time, min(start_time+step*time_steps_number, end_time), time_steps_number, dtype=int)
     temp_area = np.zeros((len(time_steps), last_slice-first_slice))
     temp_number = np.zeros_like(temp_area)
 
     for t, time in enumerate(time_steps):
-        sequence = read_sequence(exp, time=time, first_slice=first_slice, last_slice=last_slice,  volume=True, win=win)
+        sequence = read_sequence(exp, time=time, first_slice=first_slice, last_slice=last_slice, volume=True, win=win)
         segmented_image = (np.zeros_like(sequence)).astype(int)
 
         for z in range(sequence.shape[0]):
@@ -150,13 +153,17 @@ def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_step
         for z in range(sequence.shape[0]):
             rps = regionprops(new_segmented_image[z,:,:])
             areas = [r.area for r in rps]
-            areas.pop(np.max(areas))
-            temp_area[t, z] = np.mean(areas)
-            temp_number[t, z] = len(areas)
+            areas.pop(np.argmax(areas))
+            if areas == []:
+                temp_area[t, z] = 0
+                temp_number[t, z] = 0
+            else:
+                temp_area[t, z] = np.mean(areas)
+                temp_number[t, z] = len(areas)
 
     volume_area = feature(np.mean(temp_area, axis=1), np.mean(temp_area), np.std(temp_area))
     volume_number = feature(np.mean(temp_number, axis=1), np.mean(temp_number), np.std(temp_number))
-
+    
     return volume_number, volume_area
 
 
@@ -167,7 +174,8 @@ def rotate180(image):
     N = image.shape[1]
     for i in range(M):
         for j in range(N):
-            rotated_image[i, N-1-j] = image[M-1-i, j]
+            rotated_image[i,j] = image[M-1-i, N-1-j]
+    return rotated_image
             
 
 
@@ -178,22 +186,24 @@ def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_nu
     temp_number = np.zeros_like(temp_area)
 
     for z, slice in enumerate(slices):
-        sequence = read_sequence(exp, slice=slice, first_slice=first_slice, last_slice=last_slice,  volume=True, win=win)
+        sequence = read_sequence(exp, slice=slice, start_time=start_time, end_time=end_time,  volume=False, win=win)
         for i in range(0, sequence.shape[0], 2):
             sequence[i,:,:] = rotate180(sequence[i,:,:])
         segmented_image = (np.zeros_like(sequence)).astype(int)
 
-        for t in range(start_time, end_time):
+        for t in range(sequence.shape[0]):
             segmented_image[t,:,:] = segment(sequence[t,:,:])
         new_segmented_image = propagate_labels(segmented_image)
-
-        for t in range(start_time, end_time):
+        for t in range(sequence.shape[0]):
             rps = regionprops(new_segmented_image[t,:,:])
             areas = [r.area for r in rps]
-            areas.pop(np.max(areas))
-            temp_area[z, t] = np.mean(areas)
-            temp_number[z, t] = len(areas)
-
+            areas.pop(np.argmax(areas))
+            if areas == []:
+                temp_area[z, t] = 0
+                temp_number[z, t] = 0
+            else:
+                temp_area[z, t] = np.mean(areas)
+                temp_number[z, t] = len(areas)
     slice_area = feature(np.mean(temp_area, axis=1), np.mean(temp_area), np.std(temp_area))
     slice_number = feature(np.mean(temp_number, axis=1), np.mean(temp_number), np.std(temp_number))
     slice_stability_time = slice_number
