@@ -135,7 +135,7 @@ def remove_small_agglomerates(sequence_mask, smallest_volume):
 
 
 
-def segment(sequence, threshold, smallest_volume=50):
+def segment(sequence, threshold, smallest_volume=100):
 
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
