@@ -120,11 +120,11 @@ def read_4Dsequence(exp, first_slice, last_slice, end_time=220, win=False):
 
 
 
-def propagate_3Dlabels(previous_mask, current_mask, forward=True):
+def propagate_labels(previous_mask, current_mask, forward=True):
     if forward:
         current_mask[current_mask > 0] = current_mask[current_mask > 0] + np.max(previous_mask)
-    labels = [r.label for r in regionprops(previous_mask)]
-    ordered_labels = [labels[i] for i in np.argsort([r.area for r in regionprops(previous_mask)])]
+    unique_labels, label_counts = np.unique(previous_mask, return_counts=True)
+    ordered_labels = unique_labels[np.argsort(label_counts)]
     for previous_slice_label in ordered_labels:
         bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
         if len(bincount) <= 1:
@@ -141,12 +141,12 @@ def segment3D(sequence, threshold, smallest_volume=100, filtering=True):
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
     # masking of current slice and forward propagation from the first slice
-    for i in tqdm(range(1, sequence.shape[0]), desc='Segmenting volume'):
+    for i in range(1, sequence.shape[0]):
         sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
-        sequence_mask[i,:,:] = propagate_3Dlabels(sequence_mask[i-1,:,:], sequence_mask[i,:,:], forward=True)
+        sequence_mask[i,:,:] = propagate_labels(sequence_mask[i-1,:,:], sequence_mask[i,:,:], forward=True)
     # backward propagation from the last slice
-    for i in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Propagating labels'):
-        sequence_mask[i-1,:,:] = propagate_3Dlabels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)
+    for i in range(sequence_mask.shape[0]-1, 0, -1):
+        sequence_mask[i-1,:,:] = propagate_labels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)
     # removal of the agglomerates with volume smaller than smallest_volume
     if filtering:
         sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
@@ -154,8 +154,19 @@ def segment3D(sequence, threshold, smallest_volume=100, filtering=True):
 
 
 
-def segment4D(sequence, threshold, smallest_volume=100):
+def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, filtering3D=False, filtering4D=True):
     sequence_mask = np.zeros_like(sequence).astype(int)
+    sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
+    # masking of current volume and forward propagation from the first volume
+    for t in tqdm(range(1, sequence.shape[0]), desc='Segmenting Volumes and Propagating Forward'):
+        sequence_mask[t,:,:,:] = segment3D(sequence[t,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
+        sequence_mask[t,:,:,:] = propagate_labels(sequence_mask[t-1,:,:,:], sequence_mask[t,:,:,:], forward=True)
+    # backward propagation from the last volume
+    for t in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Propagating Backward'):
+        sequence_mask[t-1,:,:,:] = propagate_labels(sequence_mask[t,:,:,:], sequence_mask[t-1,:,:,:], forward=False)
+    # removal of the agglomerates with volume smaller than smallest_4Dvolume
+    if filtering4D:
+        sequence_mask = remove_small_agglomerates(sequence_mask, smallest_4Dvolume)
     return sequence_mask
 
 
@@ -174,7 +185,7 @@ def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_step
 
         for z in range(sequence.shape[0]):
             segmented_image[z,:,:] = segment3D(sequence[z,:,:])
-        new_segmented_image = propagate_3Dlabels(segmented_image)
+        new_segmented_image = propagate_labels(segmented_image)
 
         for z in range(sequence.shape[0]):
             rps = regionprops(new_segmented_image[z,:,:])
@@ -208,7 +219,7 @@ def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_nu
 
         for t in range(sequence.shape[0]):
             segmented_image[t,:,:] = segment3D(sequence[t,:,:])
-        new_segmented_image = propagate_3Dlabels(segmented_image)
+        new_segmented_image = propagate_labels(segmented_image)
         for t in range(sequence.shape[0]):
             rps = regionprops(new_segmented_image[t,:,:])
             areas = [r.area for r in rps]
@@ -239,6 +250,7 @@ def explore_experiment(exp, time_steps_number=5, volumes_number=5, end_time=220,
 
 
 # this function has to be optimized since it is very slow
+# da utilizzare il bincount!!!
 def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
 
     flag = False
