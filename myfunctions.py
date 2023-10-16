@@ -3,9 +3,9 @@ from skimage.measure import label, regionprops      # type: ignore
 from skimage.io import imread                       # type: ignore
 from tqdm import tqdm                               # type: ignore
 from dataclasses import dataclass
+import time as clock
 import shutil
 import os
-import time as clock
 
 
 
