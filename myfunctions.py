@@ -1,11 +1,11 @@
 import numpy as np                                  # type: ignore
 from skimage.measure import label, regionprops      # type: ignore
 from skimage.io import imread                       # type: ignore
-from dataclasses import dataclass
 from tqdm import tqdm                               # type: ignore
+from dataclasses import dataclass
 import shutil
 import os
-import time as time_lib
+import time as clock
 
 
 
@@ -24,28 +24,33 @@ class experiment:
     slice_area: feature                     # area of the agglomerates contained in a fixed slice at different time instants
     slice_stability_time: feature           # time needed to see stabilization in the number of agglomerates contained in a fixed slice
 
+# function returning the list of the experiments names
 def exp_list():
-    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3',  
-            'P28A_FT_H_Exp4_2', 'P28A_FT_H_Exp5_2',  
+    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2', 'P28A_FT_H_Exp5_2', 
             'P28A_FT_N_Exp1', 'P28A_FT_N_Exp4', 'P28B_ICS_FT_H_Exp5', 'P28B_ICS_FT_H_Exp2', 
             'P28B_ICS_FT_H_Exp3', 'P28B_ICS_FT_H_Exp4', 'P28B_ICS_FT_H_Exp4_2', 'VCT5_FT_N_Exp1', 
             'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp1',
             'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp3', 'VCT5A_FT_H_Exp4', 'VCT5A_FT_H_Exp5']
 
+# function returning the list of the time entries in which the degradation of the battery starts
 def exp_start_time():
     return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
 
+# function returning the image rotated by 180 degrees
 def rotate180(image):
     return np.rot90(np.rot90(image))
 
+# function returning the mask of an image given a threshold: agglomerates are labeled with different values
 def mask(image, threshold):
     return np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
 
+# function removing the agglomerates with volume smaller than smallest_volume: volume can be intended as both 3D and 4D
 def remove_small_agglomerates(sequence_mask, smallest_volume):
     bincount = np.bincount(sequence_mask.flatten())
     sequence_mask[np.isin(sequence_mask, np.where(bincount < smallest_volume))] = 0
     return sequence_mask
 
+# function returning the area associated to the biggest agglomerate in the sequence
 def find_biggest_area(sequence, threshold):
     sequence_mask = np.zeros_like(sequence).astype(int)
     for i in range(sequence.shape[0]):
@@ -56,12 +61,11 @@ def find_biggest_area(sequence, threshold):
 
 
 
-
+# function returning the path of the image given the experiment name, the time entry and the slice number
+# if isSrc is True, the path is the one of the source images, otherwise it is the one of the destination images
 def image_path(exp, time, slice, isSrc=True, dst='', win=False):
-
     folder_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol'
     image_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol_' + str(slice).zfill(6) + '.tiff'
-
     if isSrc:
         if win:
             path = 'Z:/Reconstructions/' + exp
@@ -71,11 +75,11 @@ def image_path(exp, time, slice, isSrc=True, dst='', win=False):
         path = os.path.join(dst, exp)
         if not os.path.exists(os.path.join(path, folder_name)):
             os.makedirs(os.path.join(path, folder_name))
-
     return os.path.join(path, folder_name, image_name)
 
 
 
+# function copying the images from the source folder to the destination folder
 def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, win=True):
     for time in range(start_time, end_time+1):
         for slice in range(first_slice, last_slice+1):
@@ -85,8 +89,35 @@ def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, win=T
 
 
 
-def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=20, last_slice=260, volume=True, win=False):
+# function returning the threshold value that allows to segment the sequence in a way that the area of the biggest agglomerate is equal to target
+def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
+    print('Finding threshold...')
+    tic = clock.time()
+    flag = False
+    add = True
+    while not flag:
+        current_area = find_biggest_area(sequence, threshold)
+        if current_area < target - delta:
+            threshold -= step
+            if add:
+                step = step/2
+                add = True
+        elif current_area > target + delta:
+            threshold += step
+            if not add:
+                step = step/2
+                add = False
+        else:
+            flag = True
+    toc = clock.time()
+    print(f'Threshold={threshold:.2f} found in {toc-tic:.2f} s\n')
+    return threshold
 
+
+
+# function returning the sequence of images given the experiment name, the time range and the slice range
+# if volume is True, the sequence is in the form (z, y, x), otherwise it is in the form (t, y, x)
+def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=20, last_slice=260, volume=True, win=False):
     if volume:
         test_image = imread(image_path(exp, time, first_slice, win=win))
         sequence = np.zeros((last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
@@ -99,15 +130,14 @@ def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slic
         for time in range(start_time, end_time):
             image = imread(image_path(exp, time, slice, win=win))
             sequence[time-start_time,:,:] = image
-
     return sequence
 
 
-
+# function returning the sequence of images given the experiment name, the time range and the slice range in the form (t, z, y, x)
+# half of the images are discarded because of the 180 degrees rotation and poor reconstruction
 def read_4Dsequence(exp, first_slice, last_slice, end_time=220, win=False):
-
     print(f'Collecting sequence for experiment {exp}...')
-    tic = time_lib.time()
+    tic = clock.time()
     start_time = exp_start_time()[exp_list().index(exp)]
     test_image = imread(image_path(exp, start_time, first_slice, win=win))
     time_steps = np.arange(start_time, end_time, 2, dtype=int)
@@ -115,15 +145,16 @@ def read_4Dsequence(exp, first_slice, last_slice, end_time=220, win=False):
     for t, time in enumerate(time_steps):
         for slice in range(first_slice, last_slice):
             image = imread(image_path(exp, time, slice, win=win))
-            # if time%2 == 0:
-            #     image = rotate180(image)
             sequence[t, slice-first_slice,:,:] = image
-    toc = time_lib.time()
+    toc = clock.time()
     print(f'Sequence collected in {toc-tic:.2f} s\n')
     return sequence
 
 
 
+# function used to propagate the previous_mask labels to the current_mask
+# the update is carried out in increasing order of the area of the agglomerates
+# in this way the agglomerates with the biggest area will most probably propagate their labels
 def propagate_labels(previous_mask, current_mask, forward=True):
     if forward:
         current_mask[current_mask > 0] = current_mask[current_mask > 0] + np.max(previous_mask)
@@ -140,8 +171,9 @@ def propagate_labels(previous_mask, current_mask, forward=True):
 
 
 
+# function returning the sequence of segmented images given the sequence of images and the threshold
+# if filtering is True, the agglomerates with volume smaller than smallest_volume are removed
 def segment3D(sequence, threshold, smallest_volume=100, filtering=True):
-
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
     # masking of current slice and forward propagation from the first slice
@@ -158,6 +190,9 @@ def segment3D(sequence, threshold, smallest_volume=100, filtering=True):
 
 
 
+# function returning the sequence of segmented volumes given the sequence of volumes and the threshold
+# if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
+# if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, filtering3D=False, filtering4D=True):
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
@@ -171,11 +206,14 @@ def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, 
     # removal of the agglomerates with volume smaller than smallest_4Dvolume
     if filtering4D:
         print('Filtering...')
-        tic = time_lib.time()
+        tic = clock.time()
         sequence_mask = remove_small_agglomerates(sequence_mask, smallest_4Dvolume)
-        toc = time_lib.time()
+        toc = clock.time()
         print(f'Filtering completed in {toc-tic:.2f} s\n')
     return sequence_mask
+
+
+
 
 
 
@@ -254,32 +292,3 @@ def explore_experiment(exp, time_steps_number=5, volumes_number=5, end_time=220,
     slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, win)
     
     return experiment(exp, volume_number, volume_area, slice_number, slice_area, slice_stability_time)
-
-
-
-# this function has to be optimized since it is very slow
-# da utilizzare il bincount!!!
-def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
-
-    print('Finding threshold...')
-    tic = time_lib.time()
-    flag = False
-    add = True
-    while not flag:
-        current_area = find_biggest_area(sequence, threshold)
-        if current_area < target - delta:
-            threshold -= step
-            if add:
-                step = step/2
-                add = True
-        elif current_area > target + delta:
-            threshold += step
-            if not add:
-                step = step/2
-                add = False
-        else:
-            flag = True
-    toc = time_lib.time()
-    print(f'Threshold={threshold:.2f} found in {toc-tic:.2f} s\n')
-
-    return threshold
