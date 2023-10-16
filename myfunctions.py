@@ -108,13 +108,10 @@ def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
     return threshold
 
 
-# the problem is that the label propagation is overriden because of the order in which the labels appear
-# one solution would be to do the label update from the smallest area to the largest one
-# this problem is solved but still there's not consistent labeling everywhere
+
 def propagate_labels(previous_mask, current_mask, forward=True):
     if forward:
         current_mask[current_mask > 0] = current_mask[current_mask > 0] + np.max(previous_mask)
-    # here I order np.unique(previous_mask) from the smallest to the largest area
     labels = [r.label for r in regionprops(previous_mask)]
     ordered_labels = [labels[i] for i in np.argsort([r.area for r in regionprops(previous_mask)])]
     for previous_slice_label in ordered_labels:
@@ -155,6 +152,7 @@ def segment(sequence, threshold, smallest_volume=100):
 
 
 
+# these exploration algorithm have to be adapted to the new segmentation algorithm (applied on segmented masks)
 # the biggest agglomerate has to be removed since it is the external shell
 def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, win):
     
