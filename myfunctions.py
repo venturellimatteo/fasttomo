@@ -3,6 +3,7 @@ from skimage.measure import label, regionprops      # type: ignore
 from skimage.io import imread                       # type: ignore
 from dataclasses import dataclass
 from tqdm import tqdm                               # type: ignore
+import shutil
 import os
 
 
@@ -37,13 +38,21 @@ def exp_start_time():
 
 
 
-def image_path(exp, time, slice, win=False):
-    if win:
-        path = 'Z:/Reconstructions/' + exp
-    else:
-        path = '../MasterThesisData/' + exp
+def image_path(exp, time, slice, isSrc=True, dst='', win=False):
+
     folder_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol'
     image_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol_' + str(slice).zfill(6) + '.tiff'
+
+    if isSrc:
+        if win:
+            path = 'Z:/Reconstructions/' + exp
+        else:
+            path = '../MasterThesisData/' + exp
+    else:
+        path = os.path.join(dst, exp)
+        if not os.path.exists(os.path.join(path, folder_name)):
+            os.makedirs(os.path.join(path, folder_name))
+
     return os.path.join(path, folder_name, image_name)
 
 
@@ -64,6 +73,15 @@ def read_sequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=
             sequence[time-start_time,:,:] = image
 
     return sequence
+
+
+
+def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, win=True):
+    for time in range(start_time, end_time+1):
+        for slice in range(first_slice, last_slice+1):
+            src_dir = image_path(exp, time, slice, isSrc=True, win=win)
+            dst_dir = image_path(exp, time, slice, isSrc=False, dst=dst, win=win)
+            shutil.copyfile(src_dir, dst_dir)
 
 
 
