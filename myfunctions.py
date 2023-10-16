@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from tqdm import tqdm                               # type: ignore
 import shutil
 import os
+import time as time_lib
 
 
 
@@ -46,14 +47,13 @@ def remove_small_agglomerates(sequence_mask, smallest_volume):
     return sequence_mask
 
 def find_biggest_area(sequence, threshold):
-    area = np.zeros(sequence.shape[0])
+    sequence_mask = np.zeros_like(sequence).astype(int)
     for i in range(sequence.shape[0]):
-        image = sequence[i,:,:]
-        mask_labeled = mask(image, threshold)
-        rps = regionprops(mask_labeled)
-        areas = [r.area for r in rps]
-        area[i] = np.max(areas)
-    return np.mean(area)
+        sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
+    unique_labels, label_counts = np.unique(sequence_mask, return_counts=True)
+    label_counts[label_counts == np.max(label_counts)] = 0
+    return np.max(label_counts)/sequence.shape[0]
+
 
 
 
@@ -106,16 +106,20 @@ def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slic
 
 def read_4Dsequence(exp, first_slice, last_slice, end_time=220, win=False):
 
+    print(f'Collecting sequence for experiment {exp}...')
+    tic = time_lib.time()
     start_time = exp_start_time()[exp_list().index(exp)]
     test_image = imread(image_path(exp, start_time, first_slice, win=win))
-    sequence = np.zeros((end_time-start_time, last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
-    for time in range(start_time, end_time):
+    time_steps = np.arange(start_time, end_time, 2, dtype=int)
+    sequence = np.zeros((len(time_steps), last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
+    for t, time in enumerate(time_steps):
         for slice in range(first_slice, last_slice):
             image = imread(image_path(exp, time, slice, win=win))
-            if time%2 == 0:
-                image = rotate180(image)
-            sequence[time-start_time, slice-first_slice,:,:] = image
-
+            # if time%2 == 0:
+            #     image = rotate180(image)
+            sequence[t, slice-first_slice,:,:] = image
+    toc = time_lib.time()
+    print(f'Sequence collected in {toc-tic:.2f} s\n')
     return sequence
 
 
@@ -158,15 +162,19 @@ def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, 
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
     # masking of current volume and forward propagation from the first volume
-    for t in tqdm(range(1, sequence.shape[0]), desc='Segmenting Volumes and Propagating Forward'):
+    for t in tqdm(range(1, sequence.shape[0]), desc='Volume segmentation and forward propagation'):
         sequence_mask[t,:,:,:] = segment3D(sequence[t,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
         sequence_mask[t,:,:,:] = propagate_labels(sequence_mask[t-1,:,:,:], sequence_mask[t,:,:,:], forward=True)
     # backward propagation from the last volume
-    for t in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Propagating Backward'):
+    for t in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Backward propagation'):
         sequence_mask[t-1,:,:,:] = propagate_labels(sequence_mask[t,:,:,:], sequence_mask[t-1,:,:,:], forward=False)
     # removal of the agglomerates with volume smaller than smallest_4Dvolume
     if filtering4D:
+        print('Filtering...')
+        tic = time_lib.time()
         sequence_mask = remove_small_agglomerates(sequence_mask, smallest_4Dvolume)
+        toc = time_lib.time()
+        print(f'Filtering completed in {toc-tic:.2f} s\n')
     return sequence_mask
 
 
@@ -253,8 +261,10 @@ def explore_experiment(exp, time_steps_number=5, volumes_number=5, end_time=220,
 # da utilizzare il bincount!!!
 def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
 
+    print('Finding threshold...')
+    tic = time_lib.time()
     flag = False
-    add = False
+    add = True
     while not flag:
         current_area = find_biggest_area(sequence, threshold)
         if current_area < target - delta:
@@ -269,5 +279,7 @@ def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
                 add = False
         else:
             flag = True
+    toc = time_lib.time()
+    print(f'Threshold={threshold:.2f} found in {toc-tic:.2f} s\n')
 
     return threshold
