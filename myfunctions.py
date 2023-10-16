@@ -34,7 +34,26 @@ def exp_list():
 def exp_start_time():
     return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
 
+def rotate180(image):
+    return np.rot90(np.rot90(image))
 
+def mask(image, threshold):
+    return np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
+
+def remove_small_agglomerates(sequence_mask, smallest_volume):
+    bincount = np.bincount(sequence_mask.flatten())
+    sequence_mask[np.isin(sequence_mask, np.where(bincount < smallest_volume))] = 0
+    return sequence_mask
+
+def find_biggest_area(sequence, threshold):
+    area = np.zeros(sequence.shape[0])
+    for i in range(sequence.shape[0]):
+        image = sequence[i,:,:]
+        mask_labeled = mask(image, threshold)
+        rps = regionprops(mask_labeled)
+        areas = [r.area for r in rps]
+        area[i] = np.max(areas)
+    return np.mean(area)
 
 
 
@@ -57,25 +76,6 @@ def image_path(exp, time, slice, isSrc=True, dst='', win=False):
 
 
 
-def read_sequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=20, last_slice=260, volume=True, win=False):
-
-    if volume:
-        test_image = imread(image_path(exp, time, first_slice, win))
-        sequence = np.zeros((last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
-        for slice in range(first_slice, last_slice):
-            image = imread(image_path(exp, time, slice, win))
-            sequence[slice-first_slice,:,:] = image
-    else:
-        test_image = imread(image_path(exp, start_time, slice, win))
-        sequence = np.zeros((end_time-start_time, test_image.shape[0], test_image.shape[1]))
-        for time in range(start_time, end_time):
-            image = imread(image_path(exp, time, slice, win))
-            sequence[time-start_time,:,:] = image
-
-    return sequence
-
-
-
 def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, win=True):
     for time in range(start_time, end_time+1):
         for slice in range(first_slice, last_slice+1):
@@ -85,49 +85,42 @@ def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, win=T
 
 
 
-def mask(image, threshold):
-    return np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
+def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=20, last_slice=260, volume=True, win=False):
+
+    if volume:
+        test_image = imread(image_path(exp, time, first_slice, win=win))
+        sequence = np.zeros((last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
+        for slice in range(first_slice, last_slice):
+            image = imread(image_path(exp, time, slice, win=win))
+            sequence[slice-first_slice,:,:] = image
+    else:
+        test_image = imread(image_path(exp, start_time, slice, win))
+        sequence = np.zeros((end_time-start_time, test_image.shape[0], test_image.shape[1]))
+        for time in range(start_time, end_time):
+            image = imread(image_path(exp, time, slice, win=win))
+            sequence[time-start_time,:,:] = image
+
+    return sequence
 
 
 
-def find_biggest_area(sequence, threshold):
+def read_4Dsequence(exp, first_slice, last_slice, end_time=220, win=False):
 
-    area = np.zeros(sequence.shape[0])
-    for i in range(sequence.shape[0]):
-        image = sequence[i,:,:]
-        mask_labeled = mask(image, threshold)
-        rps = regionprops(mask_labeled)
-        areas = [r.area for r in rps]
-        area[i] = np.max(areas)
+    start_time = exp_start_time()[exp_list().index(exp)]
+    test_image = imread(image_path(exp, start_time, first_slice, win=win))
+    sequence = np.zeros((end_time-start_time, last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
+    for time in range(start_time, end_time):
+        for slice in range(first_slice, last_slice):
+            image = imread(image_path(exp, time, slice, win=win))
+            if time%2 == 0:
+                image = rotate180(image)
+            sequence[time-start_time, slice-first_slice,:,:] = image
 
-    return np.mean(area)
-
-
-
-def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
-
-    flag = False
-    add = False
-    while not flag:
-        current_area = find_biggest_area(sequence, threshold)
-        if current_area < target - delta:
-            threshold -= step
-            if add:
-                step = step/2
-                add = True
-        elif current_area > target + delta:
-            threshold += step
-            if not add:
-                step = step/2
-                add = False
-        else:
-            flag = True
-
-    return threshold
+    return sequence
 
 
 
-def propagate_labels(previous_mask, current_mask, forward=True):
+def propagate_3Dlabels(previous_mask, current_mask, forward=True):
     if forward:
         current_mask[current_mask > 0] = current_mask[current_mask > 0] + np.max(previous_mask)
     labels = [r.label for r in regionprops(previous_mask)]
@@ -143,34 +136,31 @@ def propagate_labels(previous_mask, current_mask, forward=True):
 
 
 
-def remove_small_agglomerates(sequence_mask, smallest_volume):
-    bincount = np.bincount(sequence_mask.flatten())
-    sequence_mask[np.isin(sequence_mask, np.where(bincount < smallest_volume))] = 0
-    return sequence_mask
-
-
-
-def segment(sequence, threshold, smallest_volume=100):
+def segment3D(sequence, threshold, smallest_volume=100, filtering=True):
 
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
-
     # masking of current slice and forward propagation from the first slice
     for i in tqdm(range(1, sequence.shape[0]), desc='Segmenting volume'):
         sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
-        sequence_mask[i,:,:] = propagate_labels(sequence_mask[i-1,:,:], sequence_mask[i,:,:], forward=True)
-
+        sequence_mask[i,:,:] = propagate_3Dlabels(sequence_mask[i-1,:,:], sequence_mask[i,:,:], forward=True)
     # backward propagation from the last slice
     for i in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Propagating labels'):
-        sequence_mask[i-1,:,:] = propagate_labels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)
-    
+        sequence_mask[i-1,:,:] = propagate_3Dlabels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)
     # removal of the agglomerates with volume smaller than smallest_volume
-    sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
+    if filtering:
+        sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
     return sequence_mask
 
 
 
-# these exploration algorithm have to be adapted to the new segmentation algorithm (applied on segmented masks)
+def segment4D(sequence, threshold, smallest_volume=100):
+    sequence_mask = np.zeros_like(sequence).astype(int)
+    return sequence_mask
+
+
+
+# these exploration algorithms have to be adapted to the new segmentation algorithm (applied on segmented masks)
 # the biggest agglomerate has to be removed since it is the external shell
 def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, win):
     
@@ -179,12 +169,12 @@ def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_step
     temp_number = np.zeros_like(temp_area)
 
     for t, time in enumerate(time_steps):
-        sequence = read_sequence(exp, time=time, first_slice=first_slice, last_slice=last_slice, volume=True, win=win)
+        sequence = read_3Dsequence(exp, time=time, first_slice=first_slice, last_slice=last_slice, volume=True, win=win)
         segmented_image = (np.zeros_like(sequence)).astype(int)
 
         for z in range(sequence.shape[0]):
-            segmented_image[z,:,:] = segment(sequence[z,:,:])
-        new_segmented_image = propagate_labels(segmented_image)
+            segmented_image[z,:,:] = segment3D(sequence[z,:,:])
+        new_segmented_image = propagate_3Dlabels(segmented_image)
 
         for z in range(sequence.shape[0]):
             rps = regionprops(new_segmented_image[z,:,:])
@@ -201,17 +191,6 @@ def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_step
     volume_number = feature(np.mean(temp_number, axis=1), np.mean(temp_number), np.std(temp_number))
     
     return volume_number, volume_area
-
-
-
-def rotate180(image):
-    rotated_image = np.zeros_like(image)
-    M = image.shape[0]
-    N = image.shape[1]
-    for i in range(M):
-        for j in range(N):
-            rotated_image[i,j] = image[M-1-i, N-1-j]
-    return rotated_image
             
 
 
@@ -222,14 +201,14 @@ def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_nu
     temp_number = np.zeros_like(temp_area)
 
     for z, slice in enumerate(slices):
-        sequence = read_sequence(exp, slice=slice, start_time=start_time, end_time=end_time,  volume=False, win=win)
+        sequence = read_3Dsequence(exp, slice=slice, start_time=start_time, end_time=end_time,  volume=False, win=win)
         for i in range(0, sequence.shape[0], 2):
             sequence[i,:,:] = rotate180(sequence[i,:,:])
         segmented_image = (np.zeros_like(sequence)).astype(int)
 
         for t in range(sequence.shape[0]):
-            segmented_image[t,:,:] = segment(sequence[t,:,:])
-        new_segmented_image = propagate_labels(segmented_image)
+            segmented_image[t,:,:] = segment3D(sequence[t,:,:])
+        new_segmented_image = propagate_3Dlabels(segmented_image)
         for t in range(sequence.shape[0]):
             rps = regionprops(new_segmented_image[t,:,:])
             areas = [r.area for r in rps]
@@ -256,3 +235,27 @@ def explore_experiment(exp, time_steps_number=5, volumes_number=5, end_time=220,
     slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, win)
     
     return experiment(exp, volume_number, volume_area, slice_number, slice_area, slice_stability_time)
+
+
+
+# this function has to be optimized since it is very slow
+def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
+
+    flag = False
+    add = False
+    while not flag:
+        current_area = find_biggest_area(sequence, threshold)
+        if current_area < target - delta:
+            threshold -= step
+            if add:
+                step = step/2
+                add = True
+        elif current_area > target + delta:
+            threshold += step
+            if not add:
+                step = step/2
+                add = False
+        else:
+            flag = True
+
+    return threshold
