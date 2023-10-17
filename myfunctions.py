@@ -90,9 +90,13 @@ def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, win=T
 
 
 # function returning the threshold value that allows to segment the sequence in a way that the area of the biggest agglomerate is equal to target
-def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50):
+def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50, slices=10):
     print('Finding threshold...')
     tic = clock.time()
+    if len(sequence.shape) == 4:
+        sequence = sequence[0,:,:,:]
+    if sequence.shape[0] > slices:
+        sequence = np.array([sequence[i,:,:] for i in np.linspace(0, sequence.shape[0]-1, slices).astype(int)])
     flag = False
     add = True
     while not flag:
@@ -155,25 +159,32 @@ def read_4Dsequence(exp, first_slice, last_slice, end_time=220, win=False):
 # function used to propagate the previous_mask labels to the current_mask
 # the update is carried out in increasing order of the area of the agglomerates
 # in this way the agglomerates with the biggest area will most probably propagate their labels
-def propagate_labels(previous_mask, current_mask, forward=True):
+# if biggest is True, only the agglomerate with biggest overlap in current mask is considered for each label
+def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, propagation_threshold=10):
     if forward:
         current_mask[current_mask > 0] = current_mask[current_mask > 0] + np.max(previous_mask)
     unique_labels, label_counts = np.unique(previous_mask, return_counts=True)
     ordered_labels = unique_labels[np.argsort(label_counts)]
     for previous_slice_label in ordered_labels:
+        if previous_slice_label == 0:
+            continue
         bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
         if len(bincount) <= 1:
             continue
         bincount[0] = 0
-        current_slice_label = np.argmax(bincount)
-        current_mask[current_mask == current_slice_label] = previous_slice_label
+        if not biggest:
+            for current_slice_label in np.where(bincount > propagation_threshold)[0]:
+                current_mask[current_mask == current_slice_label] = previous_slice_label
+        else:
+            current_slice_label = np.argmax(bincount)
+            current_mask[current_mask == current_slice_label] = previous_slice_label
     return current_mask
 
 
 
 # function returning the sequence of segmented images given the sequence of images and the threshold
 # if filtering is True, the agglomerates with volume smaller than smallest_volume are removed
-def segment3D(sequence, threshold, smallest_volume=100, filtering=True):
+def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
     # masking of current slice and forward propagation from the first slice
@@ -193,7 +204,7 @@ def segment3D(sequence, threshold, smallest_volume=100, filtering=True):
 # function returning the sequence of segmented volumes given the sequence of volumes and the threshold
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
-def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, filtering3D=False, filtering4D=True):
+def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, filtering3D=False, filtering4D=True, backward=True):
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
     # masking of current volume and forward propagation from the first volume
@@ -201,8 +212,9 @@ def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, 
         sequence_mask[t,:,:,:] = segment3D(sequence[t,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
         sequence_mask[t,:,:,:] = propagate_labels(sequence_mask[t-1,:,:,:], sequence_mask[t,:,:,:], forward=True)
     # backward propagation from the last volume
-    for t in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Backward propagation'):
-        sequence_mask[t-1,:,:,:] = propagate_labels(sequence_mask[t,:,:,:], sequence_mask[t-1,:,:,:], forward=False)
+    if backward:
+        for t in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Backward propagation'):
+            sequence_mask[t-1,:,:,:] = propagate_labels(sequence_mask[t,:,:,:], sequence_mask[t-1,:,:,:], forward=False)
     # removal of the agglomerates with volume smaller than smallest_4Dvolume
     if filtering4D:
         print('Filtering...')
