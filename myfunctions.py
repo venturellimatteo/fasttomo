@@ -36,6 +36,13 @@ def exp_list():
 def exp_start_time():
     return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
 
+# function returning an iterator if verbose=False, otherwise it returns a tqdm iterator
+def iterator(iterable, verbose=False):
+    if verbose:
+        return tqdm(iterable)
+    else:
+        return iterable
+
 # function returning the image rotated by 180 degrees
 def rotate180(image):
     return np.rot90(np.rot90(image))
@@ -49,6 +56,44 @@ def remove_small_agglomerates(sequence_mask, smallest_volume):
     bincount = np.bincount(sequence_mask.flatten())
     sequence_mask[np.isin(sequence_mask, np.where(bincount < smallest_volume))] = 0
     return sequence_mask
+
+# function used to remove the agglomerates that are not present in neighboring slices
+# the same condition should be added for the first and last slices
+def remove_isolated_agglomerates(sequence_mask, verbose=False):
+    for i in iterator(range(sequence_mask.shape[0]), verbose):
+        current_slice = sequence_mask[i,:,:]
+        if not i == 0:
+            previous_slice = sequence_mask[i-1,:,:]
+        else:
+            previous_slice = np.zeros_like(current_slice)
+        if not i == sequence_mask.shape[0]-1:
+            next_slice = sequence_mask[i+1,:,:]
+        else:
+            next_slice = np.zeros_like(current_slice)
+        current_labels = np.unique(current_slice)
+        for current_label in current_labels:
+            if current_label == 0:
+                continue
+            if current_label not in previous_slice and current_label not in next_slice:
+                current_slice[current_slice == current_label] = 0
+        sequence_mask[i,:,:] = current_slice
+    return sequence_mask
+
+# function used to remove the agglomerates that are not appearing consecutively for some time instants
+def remove_inconsistent_agglomerates(sequence_mask, time_steps=10):
+    for i in tqdm(range(sequence_mask.shape[0]-time_steps), desc='Inconsistent agglomerates removal'):
+        current_slice = sequence_mask[i,:,:]
+        next_volume = sequence_mask[i+1:i+time_steps,:,:]
+        current_labels = np.unique(current_slice)
+        for current_label in current_labels:
+            if current_label == 0:
+                continue
+            for j in range(next_volume.shape[0]):
+                if current_label not in next_volume[j,:,:]:
+                    sequence_mask[sequence_mask == current_label] = 0
+                    break
+    return sequence_mask
+
 
 # function returning the area associated to the biggest agglomerate in the sequence
 def find_biggest_area(sequence, threshold):
@@ -196,6 +241,7 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
         sequence_mask[i-1,:,:] = propagate_labels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)
     # removal of the agglomerates with volume smaller than smallest_volume
     if filtering:
+        sequence_mask = remove_isolated_agglomerates(sequence_mask)
         sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
     return sequence_mask
 
@@ -204,7 +250,7 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
 # function returning the sequence of segmented volumes given the sequence of volumes and the threshold
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
-def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, filtering3D=False, filtering4D=True, backward=True):
+def segment4D(sequence, threshold, smallest_3Dvolume=25, smallest_4Dvolume=100, filtering3D=False, filtering4D=False, backward=True):
     sequence_mask = np.zeros_like(sequence).astype(int)
     sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
     # masking of current volume and forward propagation from the first volume
@@ -219,7 +265,9 @@ def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=200, 
     if filtering4D:
         print('Filtering...')
         tic = clock.time()
+        # sequence_mask = remove_isolated_agglomerates(sequence_mask, verbose=True)
         sequence_mask = remove_small_agglomerates(sequence_mask, smallest_4Dvolume)
+        sequence_mask = remove_inconsistent_agglomerates(sequence_mask)
         toc = clock.time()
         print(f'Filtering completed in {toc-tic:.2f} s\n')
     return sequence_mask
