@@ -82,14 +82,14 @@ def remove_isolated_agglomerates(sequence_mask, verbose=False):
 # function used to remove the agglomerates that are not appearing consecutively for some time instants
 def remove_inconsistent_agglomerates(sequence_mask, time_steps=10):
     for i in tqdm(range(sequence_mask.shape[0]-time_steps), desc='Inconsistent agglomerates removal'):
-        current_slice = sequence_mask[i,:,:]
-        next_volume = sequence_mask[i+1:i+time_steps,:,:]
-        current_labels = np.unique(current_slice)
+        current_volume = sequence_mask[i,:,:,:]
+        next_volumes = sequence_mask[i+1:i+time_steps,:,:,:]
+        current_labels = np.unique(current_volume)
         for current_label in current_labels:
             if current_label == 0:
                 continue
-            for j in range(next_volume.shape[0]):
-                if current_label not in next_volume[j,:,:]:
+            for j in range(next_volumes.shape[0]):
+                if current_label not in next_volumes[j,:,:]:
                     sequence_mask[sequence_mask == current_label] = 0
                     break
     return sequence_mask
@@ -108,14 +108,18 @@ def find_biggest_area(sequence, threshold):
 
 # function returning the path of the image given the experiment name, the time entry and the slice number
 # if isSrc is True, the path is the one of the source images, otherwise it is the one of the destination images
-def image_path(exp, time, slice, isSrc=True, dst='', win=False):
+def image_path(exp, time, slice, isSrc=True, dst='', OS='MacOS'):
     folder_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol'
     image_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol_' + str(slice).zfill(6) + '.tiff'
     if isSrc:
-        if win:
+        if OS=='Windows':
             path = 'Z:/Reconstructions/' + exp
-        else:
+        elif OS=='MacOS':
             path = '../MasterThesisData/' + exp
+        elif OS=='Linux':
+            path = '/data/projects/whaitiri/Data/Data_Processing_July2022/Reconstructions/' + exp
+        else:
+            raise ValueError('OS not recognized')
     else:
         path = os.path.join(dst, exp)
         if not os.path.exists(os.path.join(path, folder_name)):
@@ -125,11 +129,11 @@ def image_path(exp, time, slice, isSrc=True, dst='', win=False):
 
 
 # function copying the images from the source folder to the destination folder
-def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, win=True):
+def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, OS='Windows'):
     for time in range(start_time, end_time+1):
         for slice in range(first_slice, last_slice+1):
-            src_dir = image_path(exp, time, slice, isSrc=True, win=win)
-            dst_dir = image_path(exp, time, slice, isSrc=False, dst=dst, win=win)
+            src_dir = image_path(exp, time, slice, isSrc=True, OS=OS)
+            dst_dir = image_path(exp, time, slice, isSrc=False, dst=dst, OS=OS)
             shutil.copyfile(src_dir, dst_dir)
 
 
@@ -166,34 +170,34 @@ def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50, slices=
 
 # function returning the sequence of images given the experiment name, the time range and the slice range
 # if volume is True, the sequence is in the form (z, y, x), otherwise it is in the form (t, y, x)
-def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=20, last_slice=260, volume=True, win=False):
+def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=20, last_slice=260, volume=True, OS='MacOS'):
     if volume:
-        test_image = imread(image_path(exp, time, first_slice, win=win))
+        test_image = imread(image_path(exp, time, first_slice, OS=OS))
         sequence = np.zeros((last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
         for slice in range(first_slice, last_slice):
-            image = imread(image_path(exp, time, slice, win=win))
+            image = imread(image_path(exp, time, slice, OS=OS))
             sequence[slice-first_slice,:,:] = image
     else:
-        test_image = imread(image_path(exp, start_time, slice, win))
+        test_image = imread(image_path(exp, start_time, slice, OS=OS))
         sequence = np.zeros((end_time-start_time, test_image.shape[0], test_image.shape[1]))
         for time in range(start_time, end_time):
-            image = imread(image_path(exp, time, slice, win=win))
+            image = imread(image_path(exp, time, slice, OS=OS))
             sequence[time-start_time,:,:] = image
     return sequence
 
 
 # function returning the sequence of images given the experiment name, the time range and the slice range in the form (t, z, y, x)
 # half of the images are discarded because of the 180 degrees rotation and poor reconstruction
-def read_4Dsequence(exp, first_slice, last_slice, end_time=220, win=False):
+def read_4Dsequence(exp, first_slice, last_slice, end_time=220, OS='MacOS'):
     print(f'Collecting sequence for experiment {exp}...')
     tic = clock.time()
     start_time = exp_start_time()[exp_list().index(exp)]
-    test_image = imread(image_path(exp, start_time, first_slice, win=win))
+    test_image = imread(image_path(exp, start_time, first_slice, OS=OS))
     time_steps = np.arange(start_time, end_time, 2, dtype=int)
     sequence = np.zeros((len(time_steps), last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
     for t, time in enumerate(time_steps):
         for slice in range(first_slice, last_slice):
-            image = imread(image_path(exp, time, slice, win=win))
+            image = imread(image_path(exp, time, slice, OS=OS))
             sequence[t, slice-first_slice,:,:] = image
     toc = clock.time()
     print(f'Sequence collected in {toc-tic:.2f} s\n')
@@ -279,14 +283,14 @@ def segment4D(sequence, threshold, smallest_3Dvolume=25, smallest_4Dvolume=100, 
 
 # these exploration algorithms have to be adapted to the new segmentation algorithm (applied on segmented masks)
 # the biggest agglomerate has to be removed since it is the external shell
-def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, win):
+def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, OS):
     
     time_steps = np.arange(start_time, min(start_time+step*time_steps_number, end_time), time_steps_number, dtype=int)
     temp_area = np.zeros((len(time_steps), last_slice-first_slice))
     temp_number = np.zeros_like(temp_area)
 
     for t, time in enumerate(time_steps):
-        sequence = read_3Dsequence(exp, time=time, first_slice=first_slice, last_slice=last_slice, volume=True, win=win)
+        sequence = read_3Dsequence(exp, time=time, first_slice=first_slice, last_slice=last_slice, volume=True, OS=OS)
         segmented_image = (np.zeros_like(sequence)).astype(int)
 
         for z in range(sequence.shape[0]):
@@ -311,14 +315,14 @@ def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_step
             
 
 
-def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, win):
+def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, OS):
 
     slices = np.linspace(first_slice, last_slice, volumes_number, dtype=int)
     temp_area = np.zeros((len(slices), end_time-start_time)) 
     temp_number = np.zeros_like(temp_area)
 
     for z, slice in enumerate(slices):
-        sequence = read_3Dsequence(exp, slice=slice, start_time=start_time, end_time=end_time,  volume=False, win=win)
+        sequence = read_3Dsequence(exp, slice=slice, start_time=start_time, end_time=end_time,  volume=False, OS=OS)
         for i in range(0, sequence.shape[0], 2):
             sequence[i,:,:] = rotate180(sequence[i,:,:])
         segmented_image = (np.zeros_like(sequence)).astype(int)
@@ -344,11 +348,11 @@ def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_nu
 
 
 
-def explore_experiment(exp, time_steps_number=5, volumes_number=5, end_time=220, first_slice=20, last_slice=260, step=5, win=True):
+def explore_experiment(exp, time_steps_number=5, volumes_number=5, end_time=220, first_slice=20, last_slice=260, step=5, OS='Windows'):
 
     start_time = exp_start_time()[exp_list().index(exp)]
 
-    volume_number, volume_area = explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, win)
-    slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, win)
+    volume_number, volume_area = explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, OS)
+    slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, OS)
     
     return experiment(exp, volume_number, volume_area, slice_number, slice_area, slice_stability_time)
