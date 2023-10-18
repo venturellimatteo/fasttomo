@@ -37,9 +37,9 @@ def exp_start_time():
     return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
 
 # function returning an iterator if verbose=False, otherwise it returns a tqdm iterator
-def iterator(iterable, verbose=False):
+def iterator(iterable, verbose=False, desc=''):
     if verbose:
-        return tqdm(iterable)
+        return tqdm(iterable, desc=desc)
     else:
         return iterable
 
@@ -51,6 +51,15 @@ def rotate180(image):
 def mask(image, threshold):
     return np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
 
+# function used to rearrange the labels of the mask in order to have a sequence of consecutive labels
+def rearrange_labels(sequence_mask, verbose=False):
+    unique_labels = np.unique(sequence_mask)
+    for i, label in iterator(enumerate(unique_labels), verbose=verbose, desc='Rearranging labels'):
+        if label == 0:
+            continue
+        sequence_mask[sequence_mask == label] = i
+    return sequence_mask
+
 # function removing the agglomerates with volume smaller than smallest_volume: volume can be intended as both 3D and 4D
 def remove_small_agglomerates(sequence_mask, smallest_volume):
     bincount = np.bincount(sequence_mask.flatten())
@@ -60,7 +69,7 @@ def remove_small_agglomerates(sequence_mask, smallest_volume):
 # function used to remove the agglomerates that are not present in neighboring slices
 # the same condition should be added for the first and last slices
 def remove_isolated_agglomerates(sequence_mask, verbose=False):
-    for i in iterator(range(sequence_mask.shape[0]), verbose):
+    for i in iterator(range(sequence_mask.shape[0]), verbose, desc='Isolated agglomerates removal'):
         current_slice = sequence_mask[i,:,:]
         if not i == 0:
             previous_slice = sequence_mask[i-1,:,:]
@@ -247,6 +256,8 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
     if filtering:
         sequence_mask = remove_isolated_agglomerates(sequence_mask)
         sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
+    # rearranging the labels in order to have a sequence of consecutive labels and not a sparse representation
+    sequence_mask = rearrange_labels(sequence_mask)
     return sequence_mask
 
 
@@ -261,6 +272,9 @@ def segment4D(sequence, threshold, smallest_3Dvolume=25, smallest_4Dvolume=100, 
     for t in tqdm(range(1, sequence.shape[0]), desc='Volume segmentation and forward propagation'):
         sequence_mask[t,:,:,:] = segment3D(sequence[t,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
         sequence_mask[t,:,:,:] = propagate_labels(sequence_mask[t-1,:,:,:], sequence_mask[t,:,:,:], forward=True)
+    print(np.max(sequence_mask))
+    # rearranging the labels in order to have a sequence of consecutive labels and not a sparse representation
+    sequence_mask = rearrange_labels(sequence_mask, verbose=True)
     # backward propagation from the last volume
     if backward:
         for t in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Backward propagation'):
@@ -274,6 +288,8 @@ def segment4D(sequence, threshold, smallest_3Dvolume=25, smallest_4Dvolume=100, 
         sequence_mask = remove_inconsistent_agglomerates(sequence_mask)
         toc = clock.time()
         print(f'Filtering completed in {toc-tic:.2f} s\n')
+    # rearranging the labels in order to have a sequence of consecutive labels and not a sparse representation
+    sequence_mask = rearrange_labels(sequence_mask, verbose=True)
     return sequence_mask
 
 
