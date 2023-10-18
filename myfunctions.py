@@ -104,20 +104,24 @@ def find_biggest_area(sequence, threshold):
     label_counts[label_counts == np.max(label_counts)] = 0
     return np.max(label_counts)/sequence.shape[0]
 
+# function returning the path of the experiment given the experiment name and the OS
+def OS_path(exp, OS):
+    if OS=='Windows':
+        return 'Z:/Reconstructions/' + exp
+    elif OS=='MacOS':
+        return '../MasterThesisData/' + exp
+    elif OS=='Linux':
+        return '/data/projects/whaitiri/Data/Data_Processing_July2022/Reconstructions/' + exp
+    else:
+        raise ValueError('OS not recognized')
+
 # function returning the path of the image given the experiment name, the time entry and the slice number
 # if isSrc is True, the path is the one of the source images, otherwise it is the one of the destination images
 def image_path(exp, time, slice, isSrc=True, dst='', OS='MacOS'):
     folder_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol'
     image_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol_' + str(slice).zfill(6) + '.tiff'
     if isSrc:
-        if OS=='Windows':
-            path = 'Z:/Reconstructions/' + exp
-        elif OS=='MacOS':
-            path = '../MasterThesisData/' + exp
-        elif OS=='Linux':
-            path = '/data/projects/whaitiri/Data/Data_Processing_July2022/Reconstructions/' + exp
-        else:
-            raise ValueError('OS not recognized')
+        path = OS_path(exp, OS)
     else:
         path = os.path.join(dst, exp)
         if not os.path.exists(os.path.join(path, folder_name)):
@@ -133,11 +137,20 @@ def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, OS='W
             src_dir = image_path(exp, time, slice, isSrc=True, OS=OS)
             dst_dir = image_path(exp, time, slice, isSrc=False, dst=dst, OS=OS)
             shutil.copyfile(src_dir, dst_dir)
+    return None
+
+
+def save_segmentation_map(segmented_sequence, exp, OS):
+    try:
+        np.save(os.path.join(OS_path(exp, OS), f'{exp}_segmented'), segmented_sequence)
+    except:
+        print('Error saving segmentation map')
+    return None 
 
 
 
 # function returning the threshold value that allows to segment the sequence in a way that the area of the biggest agglomerate is equal to target
-def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50, slices=10):
+def find_threshold(sequence, threshold=0, step=1, target=5700, delta=50, slices=10):
     print('\nFinding threshold...')
     tic = clock.time()
     if len(sequence.shape) == 4:                # if the sequence is in the form (t, z, y, x), it is converted to (z, y, x)
@@ -190,10 +203,10 @@ def read_4Dsequence(exp, first_slice, last_slice, end_time=220, OS='MacOS'):
     print(f'Collecting sequence for experiment {exp}...')
     start_time = exp_start_time()[exp_list().index(exp)]    # start_time is the time entry in which the degradation of the battery starts (picked from exp_start_time)
     test_image = imread(image_path(exp, start_time, first_slice, OS=OS))
-    time_steps = np.arange(start_time, end_time, 2, dtype=np.ushort)
-    sequence = np.zeros((len(time_steps), last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
+    time_steps = np.arange(start_time, end_time+1, 2, dtype=np.ushort)
+    sequence = np.zeros((len(time_steps), last_slice-first_slice+1, test_image.shape[0], test_image.shape[1]))
     for t, time in enumerate(iterator(time_steps, verbose=True, desc='Collecting sequence')):
-        for slice in range(first_slice, last_slice):
+        for slice in range(first_slice, last_slice+1):
             image = imread(image_path(exp, time, slice, OS=OS))
             sequence[t, slice-first_slice,:,:] = image
     return sequence
@@ -255,7 +268,7 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
-def segment4D(sequence, threshold, smallest_3Dvolume=25, smallest_4Dvolume=100, time_steps=10, filtering3D=False, filtering4D=False, backward=True):
+def segment4D(sequence, threshold, smallest_3Dvolume=10, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, backward=True):
     print('\nSegmenting and propagating labels...')
     sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
     sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
@@ -275,6 +288,7 @@ def segment4D(sequence, threshold, smallest_3Dvolume=25, smallest_4Dvolume=100, 
         toc = clock.time()
         print(f'Small agglomerates removed in {toc-tic:.2f} s')
         sequence_mask = remove_inconsistent_agglomerates(sequence_mask, time_steps=time_steps)
+        print('\n\n')
     return sequence_mask
 
 
