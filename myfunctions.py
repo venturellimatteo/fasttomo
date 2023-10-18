@@ -54,7 +54,7 @@ def mask(image, threshold):
 # function used to rearrange the labels of the mask in order to have a sequence of consecutive labels
 def rearrange_labels(sequence_mask, verbose=False):
     unique_labels = np.unique(sequence_mask)
-    for i, label in iterator(enumerate(unique_labels), verbose=verbose, desc='Rearranging labels'):
+    for i, label in enumerate(iterator(unique_labels, verbose=verbose, desc='Rearranging labels')):
         if label == 0:
             continue
         sequence_mask[sequence_mask == label] = i
@@ -106,7 +106,7 @@ def remove_inconsistent_agglomerates(sequence_mask, time_steps=10):
 
 # function returning the area associated to the biggest agglomerate in the sequence
 def find_biggest_area(sequence, threshold):
-    sequence_mask = np.zeros_like(sequence).astype(int)
+    sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
     for i in range(sequence.shape[0]):
         sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
     unique_labels, label_counts = np.unique(sequence_mask, return_counts=True)
@@ -149,12 +149,12 @@ def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, OS='W
 
 # function returning the threshold value that allows to segment the sequence in a way that the area of the biggest agglomerate is equal to target
 def find_threshold(sequence, threshold=0, step=1, target=5000, delta=50, slices=10):
-    print('Finding threshold...')
+    print('\nFinding threshold...')
     tic = clock.time()
     if len(sequence.shape) == 4:
         sequence = sequence[0,:,:,:]
     if sequence.shape[0] > slices:
-        sequence = np.array([sequence[i,:,:] for i in np.linspace(0, sequence.shape[0]-1, slices).astype(int)])
+        sequence = np.array([sequence[i,:,:] for i in np.linspace(0, sequence.shape[0]-1, slices)], dtype=np.ushort)
     flag = False
     add = True
     while not flag:
@@ -199,17 +199,14 @@ def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slic
 # half of the images are discarded because of the 180 degrees rotation and poor reconstruction
 def read_4Dsequence(exp, first_slice, last_slice, end_time=220, OS='MacOS'):
     print(f'Collecting sequence for experiment {exp}...')
-    tic = clock.time()
     start_time = exp_start_time()[exp_list().index(exp)]
     test_image = imread(image_path(exp, start_time, first_slice, OS=OS))
-    time_steps = np.arange(start_time, end_time, 2, dtype=int)
+    time_steps = np.arange(start_time, end_time, 2, dtype=np.ushort)
     sequence = np.zeros((len(time_steps), last_slice-first_slice, test_image.shape[0], test_image.shape[1]))
-    for t, time in enumerate(time_steps):
+    for t, time in enumerate(iterator(time_steps, verbose=True, desc='Collecting sequence')):
         for slice in range(first_slice, last_slice):
             image = imread(image_path(exp, time, slice, OS=OS))
             sequence[t, slice-first_slice,:,:] = image
-    toc = clock.time()
-    print(f'Sequence collected in {toc-tic:.2f} s\n')
     return sequence
 
 
@@ -236,6 +233,11 @@ def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, p
         else:
             current_slice_label = np.argmax(bincount)
             current_mask[current_mask == current_slice_label] = previous_slice_label
+    # the new labels that didn't exist in the previous mask are renamed in order to achieve low values for the labels
+    if forward:
+        new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
+        for i, new_label in enumerate(new_labels):
+            current_mask[current_mask == new_label] = np.max(previous_mask) + i + 1
     return current_mask
 
 
@@ -243,7 +245,7 @@ def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, p
 # function returning the sequence of segmented images given the sequence of images and the threshold
 # if filtering is True, the agglomerates with volume smaller than smallest_volume are removed
 def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
-    sequence_mask = np.zeros_like(sequence).astype(int)
+    sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
     sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
     # masking of current slice and forward propagation from the first slice
     for i in range(1, sequence.shape[0]):
@@ -257,7 +259,7 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
         sequence_mask = remove_isolated_agglomerates(sequence_mask)
         sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
     # rearranging the labels in order to have a sequence of consecutive labels and not a sparse representation
-    sequence_mask = rearrange_labels(sequence_mask)
+    # sequence_mask = rearrange_labels(sequence_mask)
     return sequence_mask
 
 
@@ -266,30 +268,30 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 def segment4D(sequence, threshold, smallest_3Dvolume=25, smallest_4Dvolume=100, filtering3D=False, filtering4D=False, backward=True):
-    sequence_mask = np.zeros_like(sequence).astype(int)
+    print('\nSegmenting and propagating labels...')
+    sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
     sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
     # masking of current volume and forward propagation from the first volume
     for t in tqdm(range(1, sequence.shape[0]), desc='Volume segmentation and forward propagation'):
         sequence_mask[t,:,:,:] = segment3D(sequence[t,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
         sequence_mask[t,:,:,:] = propagate_labels(sequence_mask[t-1,:,:,:], sequence_mask[t,:,:,:], forward=True)
-    print(np.max(sequence_mask))
     # rearranging the labels in order to have a sequence of consecutive labels and not a sparse representation
-    sequence_mask = rearrange_labels(sequence_mask, verbose=True)
+    # sequence_mask = rearrange_labels(sequence_mask, verbose=True)
     # backward propagation from the last volume
     if backward:
         for t in tqdm(range(sequence_mask.shape[0]-1, 0, -1), desc='Backward propagation'):
             sequence_mask[t-1,:,:,:] = propagate_labels(sequence_mask[t,:,:,:], sequence_mask[t-1,:,:,:], forward=False)
     # removal of the agglomerates with volume smaller than smallest_4Dvolume
     if filtering4D:
-        print('Filtering...')
+        print('\nFiltering...')
         tic = clock.time()
-        # sequence_mask = remove_isolated_agglomerates(sequence_mask, verbose=True)
         sequence_mask = remove_small_agglomerates(sequence_mask, smallest_4Dvolume)
-        sequence_mask = remove_inconsistent_agglomerates(sequence_mask)
         toc = clock.time()
-        print(f'Filtering completed in {toc-tic:.2f} s\n')
+        print(f'Small agglomerates removed in {toc-tic:.2f} s')
+        sequence_mask = remove_inconsistent_agglomerates(sequence_mask)
+        
     # rearranging the labels in order to have a sequence of consecutive labels and not a sparse representation
-    sequence_mask = rearrange_labels(sequence_mask, verbose=True)
+    # sequence_mask = rearrange_labels(sequence_mask, verbose=True)
     return sequence_mask
 
 
@@ -301,13 +303,13 @@ def segment4D(sequence, threshold, smallest_3Dvolume=25, smallest_4Dvolume=100, 
 # the biggest agglomerate has to be removed since it is the external shell
 def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, OS):
     
-    time_steps = np.arange(start_time, min(start_time+step*time_steps_number, end_time), time_steps_number, dtype=int)
+    time_steps = np.arange(start_time, min(start_time+step*time_steps_number, end_time), time_steps_number, dtype=np.ushort)
     temp_area = np.zeros((len(time_steps), last_slice-first_slice))
     temp_number = np.zeros_like(temp_area)
 
     for t, time in enumerate(time_steps):
         sequence = read_3Dsequence(exp, time=time, first_slice=first_slice, last_slice=last_slice, volume=True, OS=OS)
-        segmented_image = (np.zeros_like(sequence)).astype(int)
+        segmented_image = np.zeros_like(sequence, dtype=np.ushort)
 
         for z in range(sequence.shape[0]):
             segmented_image[z,:,:] = segment3D(sequence[z,:,:])
@@ -333,7 +335,7 @@ def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_step
 
 def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, OS):
 
-    slices = np.linspace(first_slice, last_slice, volumes_number, dtype=int)
+    slices = np.linspace(first_slice, last_slice, volumes_number, dtype=np.ushort)
     temp_area = np.zeros((len(slices), end_time-start_time)) 
     temp_number = np.zeros_like(temp_area)
 
@@ -341,7 +343,7 @@ def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_nu
         sequence = read_3Dsequence(exp, slice=slice, start_time=start_time, end_time=end_time,  volume=False, OS=OS)
         for i in range(0, sequence.shape[0], 2):
             sequence[i,:,:] = rotate180(sequence[i,:,:])
-        segmented_image = (np.zeros_like(sequence)).astype(int)
+        segmented_image = np.zeros_like(sequence, dtype=np.ushort)
 
         for t in range(sequence.shape[0]):
             segmented_image[t,:,:] = segment3D(sequence[t,:,:])
