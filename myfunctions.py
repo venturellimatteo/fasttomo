@@ -98,11 +98,13 @@ def remove_inconsistent_agglomerates(sequence_mask, time_steps=10):
 # function returning the area associated to the biggest agglomerate in the sequence
 def find_biggest_area(sequence, threshold):
     sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
+    max_area = np.zeros(sequence.shape[0])
     for i in range(sequence.shape[0]):
         sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
-    unique_labels, label_counts = np.unique(sequence_mask, return_counts=True)
-    label_counts[label_counts == np.max(label_counts)] = 0
-    return np.max(label_counts)/sequence.shape[0]
+        _, label_counts = np.unique(sequence_mask[i,:,:], return_counts=True)
+        label_counts[0] = 0
+        max_area[i] = np.max(label_counts)
+    return np.mean(max_area)
 
 # function returning the path of the experiment given the experiment name and the OS
 def OS_path(exp, OS):
@@ -150,29 +152,30 @@ def save_segmentation_map(segmented_sequence, exp, OS):
 
 
 # function returning the threshold value that allows to segment the sequence in a way that the area of the biggest agglomerate is equal to target
-def find_threshold(sequence, threshold=0, step=1, target=5700, delta=50, slices=10):
+def find_threshold(sequence, threshold=0, step=1, target=5700, delta=500, slices=5):
     print('\nFinding threshold...')
     tic = clock.time()
     if len(sequence.shape) == 4:                # if the sequence is in the form (t, z, y, x), it is converted to (z, y, x)
         sequence = sequence[0,:,:,:]
     if sequence.shape[0] > slices:              # if the sequence is too long, it is reduced to n=slices slices
-        sequence = np.array([sequence[i,:,:] for i in np.linspace(0, sequence.shape[0]-1, slices)], dtype=np.ushort)
+        sequence = np.array([sequence[i,:,:] for i in np.linspace(0, sequence.shape[0]-1, slices, dtype=int)])
     flag = False                                # flag used to stop the while loop
     add = True                                  # flag used to decide whether to add or subtract the step
     while not flag:
         current_area = find_biggest_area(sequence, threshold)
         if current_area > target + delta:       # if the area is larger than target, the threshold is increased in order to reduce the area
-            threshold += step
             if not add:
                 step = step/2                   # step is halved every time the direction of the step is changed
-                add = False
+            threshold += step
+            add = True
         elif current_area < target - delta:     # if the area is smaller than target, the threshold is decreased in order to increase the area
-            threshold -= step
             if add:
                 step = step/2               
-                add = True
+            threshold -= step
+            add = False
         else:                                   # if the area is close to target, the threshold is found
             flag = True
+        clock.sleep(1)
     toc = clock.time()
     print(f'Threshold={threshold:.2f} found in {toc-tic:.2f} s\n')
     return threshold
