@@ -19,14 +19,19 @@ class experiment:
 # function returning the list of the experiments names
 def exp_list():
     return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2', 'P28A_FT_H_Exp5_2', 
-            'P28A_FT_N_Exp1', 'P28A_FT_N_Exp4', 'P28B_ICS_FT_H_Exp5', 'P28B_ICS_FT_H_Exp2', 
-            'P28B_ICS_FT_H_Exp3', 'P28B_ICS_FT_H_Exp4', 'P28B_ICS_FT_H_Exp4_2', 'VCT5_FT_N_Exp1', 
+            'P28A_FT_N_Exp1', 'P28A_FT_N_Exp4', 'P28B_ICS_FT_H_Exp5', 'P28B_ISC_FT_H_Exp2', 
+            'P28B_ISC_FT_H_Exp3', 'P28B_ISC_FT_H_Exp4', 'P28B_ISC_FT_H_Exp4_2', 'VCT5_FT_N_Exp1', 
             'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp1',
             'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp3', 'VCT5A_FT_H_Exp4', 'VCT5A_FT_H_Exp5']
 
 # function returning the list of the time entries in which the degradation of the battery starts
 def exp_start_time():
-    return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 66]
+    return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 65]
+
+# function
+def exp_flag():
+    return [False, False, False, True, True, False, True, True, False, True, False, False, False, False, False, 
+            True, False, False, True, False, False]
 
 # function returning an iterator if verbose=False, otherwise it returns a tqdm iterator
 def iterator(iterable, verbose=False, desc=''):
@@ -111,9 +116,10 @@ def OS_path(exp, OS):
 
 # function returning the path of the image given the experiment name, the time entry and the slice number
 # if isSrc is True, the path is the one of the source images, otherwise it is the one of the destination images
-def image_path(exp, time, slice, isSrc=True, dst='', OS='MacOS'):
-    folder_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol'
-    image_name = 'entry' + str(time).zfill(4) + '_no_extpag_db0100_vol_' + str(slice).zfill(6) + '.tiff'
+def image_path(exp, time, slice, isSrc=True, dst='', OS='MacOS', flag=False):
+    vol = '0050' if flag else '0100'
+    folder_name = 'entry' + str(time).zfill(4) + '_no_extpag_db' + vol + '_vol'
+    image_name = 'entry' + str(time).zfill(4) + '_no_extpag_db' + vol + '_vol_' + str(slice).zfill(6) + '.tiff'
     if isSrc:
         path = OS_path(exp, OS)
     else:
@@ -214,15 +220,17 @@ def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slic
 
 # function returning the sequence of images given the experiment name, the time range and the slice range in the form (t, z, y, x)
 # half of the images are discarded because of the 180 degrees rotation and poor reconstruction
-def read_4Dsequence(exp, first_slice, last_slice, end_time=220, OS='MacOS'):
+def read_4Dsequence(exp, first_slice, last_slice, end_time=220, OS='MacOS', skip180=True):
+    step = 2 if skip180 else 1
     print(f'Collecting sequence for experiment {exp}...')
     start_time = exp_start_time()[exp_list().index(exp)]    # start_time is the time entry in which the degradation of the battery starts (picked from exp_start_time)
-    test_image = imread(image_path(exp, start_time, first_slice, OS=OS))
-    time_steps = np.arange(start_time, end_time+1, 2, dtype=np.ushort)
+    flag = exp_flag()[exp_list().index(exp)]                # flag is True if the experiment is 0050, False if it is 0100
+    test_image = imread(image_path(exp, start_time, first_slice, OS=OS, flag=flag))  # test_image is used to determine the shape of the sequence
+    time_steps = np.arange(start_time, end_time+1, step, dtype=np.ushort)
     sequence = np.zeros((len(time_steps), last_slice-first_slice+1, test_image.shape[0], test_image.shape[1]))
     for t, time in enumerate(iterator(time_steps, verbose=True, desc='Collecting sequence')):
         for slice in range(first_slice, last_slice+1):
-            image = imread(image_path(exp, time, slice, OS=OS))
+            image = imread(image_path(exp, time, slice, OS=OS, flag=flag))
             sequence[t, slice-first_slice,:,:] = image
     return sequence
 
