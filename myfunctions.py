@@ -11,12 +11,10 @@ import os
 # class defined for data exploration purposes
 @dataclass
 class experiment:
-    name: str                                    # name of the experiment
     fixed_t_area: np.ndarray                     # area of the agglomerates contained in each slice of a volume
     fixed_t_number: np.ndarray                   # number of agglomerates contained in each slice of a volume
     fixed_z_area: np.ndarray                     # area of the agglomerates contained in a fixed slice at different time instants
     fixed_z_number: np.ndarray                   # number of agglomerates contained in a fixed slice at different time instants
-    slice_stability_time: np.ndarray             # time needed to see stabilization in the number of agglomerates contained in a fixed slice
 
 # function returning the list of the experiments names
 def exp_list():
@@ -138,9 +136,12 @@ def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, OS='W
 
 # function to save the segmentation map as a numpy array in (t, z, y, x) form
 def save_segmentation_map(segmented_sequence, exp, OS):
+    print('Saving segmentation map...')
     try:
+        tic = clock.time()
         np.save(os.path.join(OS_path(exp, OS), f'{exp}_segmented.npy'), segmented_sequence)
-        print('Segmentation map saved successfully')
+        toc = clock.time()
+        print(f'Segmentation map saved successfully in {toc-tic:.2f} s')
     except:
         print('Error saving segmentation map')
     return None
@@ -149,9 +150,12 @@ def save_segmentation_map(segmented_sequence, exp, OS):
 
 # function to load the saved segmentation map as a numpy array in (t, z, y, x) form
 def load_segmentation_map(exp, OS):
+    print('Loading segmentation map...')
     try:
+        tic = clock.time()
         segmented_sequence = np.load(os.path.join(OS_path(exp, OS), f'{exp}_segmented.npy'))
-        print('Segmentation map loaded successfully')
+        toc = clock.time()
+        print(f'Segmentation map loaded successfully in {toc-tic:.2f} s')
     except:
         print('Error loading segmentation map')
     return segmented_sequence
@@ -307,23 +311,15 @@ def segment4D(sequence, threshold, smallest_3Dvolume=10, smallest_4Dvolume=100, 
 
 
 # function returning the mean area and number of agglomerates (mean computed with respect to time and to z)
-def explore_experiment(segmented_sequence):
-
+# the removal of the external shell can surely be done in a better way
+def explore_experiment(segmented_sequence, threshold=1000):
     areas = np.zeros((segmented_sequence.shape[0], segmented_sequence.shape[1]), dtype=np.ushort)
     numbers = np.zeros_like(areas, dtype=np.ushort)
-    # slice_stability_time = np.zeros(segmented_sequence.shape[0], dtype=np.ushort)
-
-    for t in range(segmented_sequence.shape[0]):
+    for t in iterator(range(segmented_sequence.shape[0]), verbose=True, desc='Evaluating agglomerates areas and numbers'):
         for z in range(segmented_sequence.shape[1]):
-            # here it has to be taken into account that the biggest agglomerate has to be removed since it is the external shell
             rps = regionprops(segmented_sequence[t,z,:,:])
-            areas[t,z] = np.mean([r.area for r in rps])
-            numbers[t,z] = len(rps)
-
-    fixed_t_area = np.mean(areas, axis=1)
-    fixed_t_number = np.mean(numbers, axis=1)
-    fixed_z_area = np.mean(areas, axis=0)
-    fixed_z_number = np.mean(numbers, axis=0)
-    # here I have to add the slice_stability_time
-    
-    return experiment(fixed_t_area, fixed_t_number, fixed_z_area, fixed_z_number)
+            slice_areas = np.array([r.area for r in rps])
+            slice_areas = slice_areas[slice_areas<threshold] # agglomerates with area larger than threshold are not considered (removal of external shell)
+            areas[t,z] = np.mean(slice_areas)
+            numbers[t,z] = len(slice_areas)
+    return experiment(fixed_t_area=np.mean(areas, axis=0), fixed_t_number=np.mean(numbers, axis=0), fixed_z_area=np.mean(areas, axis=1), fixed_z_number=np.mean(numbers, axis=1))
