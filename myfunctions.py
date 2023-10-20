@@ -8,21 +8,15 @@ import shutil
 import os
 
 
-# feature and experiment are classes defined for data exploration purposes
-@dataclass
-class feature:
-    values: np.ndarray                      # values mediated by the different samples considered
-    mean: float                             # mean of all the values
-    std: float                              # standard deviation of all the values
-
+# class defined for data exploration purposes
 @dataclass
 class experiment:
-    name: str                               # name of the experiment
-    volume_number: feature                  # number of agglomerates contained in each slice of a volume
-    volume_area: feature                    # area of the agglomerates contained in each slice of a volume
-    slice_number: feature                   # number of agglomerates contained in a fixed slice at different time instants
-    slice_area: feature                     # area of the agglomerates contained in a fixed slice at different time instants
-    slice_stability_time: feature           # time needed to see stabilization in the number of agglomerates contained in a fixed slice
+    name: str                                    # name of the experiment
+    fixed_t_area: np.ndarray                     # area of the agglomerates contained in each slice of a volume
+    fixed_t_number: np.ndarray                   # number of agglomerates contained in each slice of a volume
+    fixed_z_area: np.ndarray                     # area of the agglomerates contained in a fixed slice at different time instants
+    fixed_z_number: np.ndarray                   # number of agglomerates contained in a fixed slice at different time instants
+    slice_stability_time: np.ndarray             # time needed to see stabilization in the number of agglomerates contained in a fixed slice
 
 # function returning the list of the experiments names
 def exp_list():
@@ -142,12 +136,25 @@ def move_sequence(exp, first_slice, last_slice, start_time, end_time, dst, OS='W
     return None
 
 
+# function to save the segmentation map as a numpy array in (t, z, y, x) form
 def save_segmentation_map(segmented_sequence, exp, OS):
     try:
-        np.save(os.path.join(OS_path(exp, OS), f'{exp}_segmented'), segmented_sequence)
+        np.save(os.path.join(OS_path(exp, OS), f'{exp}_segmented.npy'), segmented_sequence)
+        print('Segmentation map saved successfully')
     except:
         print('Error saving segmentation map')
-    return None 
+    return None
+
+
+
+# function to load the saved segmentation map as a numpy array in (t, z, y, x) form
+def load_segmentation_map(exp, OS):
+    try:
+        segmented_sequence = np.load(os.path.join(OS_path(exp, OS), f'{exp}_segmented.npy'))
+        print('Segmentation map loaded successfully')
+    except:
+        print('Error loading segmentation map')
+    return segmented_sequence
 
 
 
@@ -198,6 +205,7 @@ def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slic
             image = imread(image_path(exp, time, slice, OS=OS))
             sequence[time-start_time,:,:] = image
     return sequence
+
 
 
 # function returning the sequence of images given the experiment name, the time range and the slice range in the form (t, z, y, x)
@@ -271,7 +279,7 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
-def segment4D(sequence, threshold, smallest_3Dvolume=10, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, backward=True):
+def segment4D(sequence, threshold, smallest_3Dvolume=10, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, backward=True, save=False, exp='', OS='Windows'):
     print('\nSegmenting and propagating labels...')
     sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
     sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
@@ -291,86 +299,31 @@ def segment4D(sequence, threshold, smallest_3Dvolume=10, smallest_4Dvolume=100, 
         toc = clock.time()
         print(f'Small agglomerates removed in {toc-tic:.2f} s')
         sequence_mask = remove_inconsistent_agglomerates(sequence_mask, time_steps=time_steps)
-        print('\n\n')
+    if save and exp in exp_list():
+        save_segmentation_map(sequence_mask, exp, OS)
+    print('\n\n')
     return sequence_mask
 
 
 
+# function returning the mean area and number of agglomerates (mean computed with respect to time and to z)
+def explore_experiment(segmented_sequence):
 
+    areas = np.zeros((segmented_sequence.shape[0], segmented_sequence.shape[1]), dtype=np.ushort)
+    numbers = np.zeros_like(areas, dtype=np.ushort)
+    # slice_stability_time = np.zeros(segmented_sequence.shape[0], dtype=np.ushort)
 
+    for t in range(segmented_sequence.shape[0]):
+        for z in range(segmented_sequence.shape[1]):
+            # here it has to be taken into account that the biggest agglomerate has to be removed since it is the external shell
+            rps = regionprops(segmented_sequence[t,z,:,:])
+            areas[t,z] = np.mean([r.area for r in rps])
+            numbers[t,z] = len(rps)
 
-# these exploration algorithms have to be adapted to the new segmentation algorithm (applied on segmented masks)
-# the biggest agglomerate has to be removed since it is the external shell
-def explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, OS):
+    fixed_t_area = np.mean(areas, axis=1)
+    fixed_t_number = np.mean(numbers, axis=1)
+    fixed_z_area = np.mean(areas, axis=0)
+    fixed_z_number = np.mean(numbers, axis=0)
+    # here I have to add the slice_stability_time
     
-    time_steps = np.arange(start_time, min(start_time+step*time_steps_number, end_time), time_steps_number, dtype=np.ushort)
-    temp_area = np.zeros((len(time_steps), last_slice-first_slice))
-    temp_number = np.zeros_like(temp_area)
-
-    for t, time in enumerate(time_steps):
-        sequence = read_3Dsequence(exp, time=time, first_slice=first_slice, last_slice=last_slice, volume=True, OS=OS)
-        segmented_image = np.zeros_like(sequence, dtype=np.ushort)
-
-        for z in range(sequence.shape[0]):
-            segmented_image[z,:,:] = segment3D(sequence[z,:,:])
-        new_segmented_image = propagate_labels(segmented_image)
-
-        for z in range(sequence.shape[0]):
-            rps = regionprops(new_segmented_image[z,:,:])
-            areas = [r.area for r in rps]
-            areas.pop(np.argmax(areas))
-            if areas == []:
-                temp_area[t, z] = 0
-                temp_number[t, z] = 0
-            else:
-                temp_area[t, z] = np.mean(areas)
-                temp_number[t, z] = len(areas)
-
-    volume_area = feature(np.mean(temp_area, axis=1), np.mean(temp_area), np.std(temp_area))
-    volume_number = feature(np.mean(temp_number, axis=1), np.mean(temp_number), np.std(temp_number))
-    
-    return volume_number, volume_area
-            
-
-
-def explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, OS):
-
-    slices = np.linspace(first_slice, last_slice, volumes_number, dtype=np.ushort)
-    temp_area = np.zeros((len(slices), end_time-start_time)) 
-    temp_number = np.zeros_like(temp_area)
-
-    for z, slice in enumerate(slices):
-        sequence = read_3Dsequence(exp, slice=slice, start_time=start_time, end_time=end_time,  volume=False, OS=OS)
-        for i in range(0, sequence.shape[0], 2):
-            sequence[i,:,:] = rotate180(sequence[i,:,:])
-        segmented_image = np.zeros_like(sequence, dtype=np.ushort)
-
-        for t in range(sequence.shape[0]):
-            segmented_image[t,:,:] = segment3D(sequence[t,:,:])
-        new_segmented_image = propagate_labels(segmented_image)
-        for t in range(sequence.shape[0]):
-            rps = regionprops(new_segmented_image[t,:,:])
-            areas = [r.area for r in rps]
-            areas.pop(np.argmax(areas))
-            if areas == []:
-                temp_area[z, t] = 0
-                temp_number[z, t] = 0
-            else:
-                temp_area[z, t] = np.mean(areas)
-                temp_number[z, t] = len(areas)
-    slice_area = feature(np.mean(temp_area, axis=1), np.mean(temp_area), np.std(temp_area))
-    slice_number = feature(np.mean(temp_number, axis=1), np.mean(temp_number), np.std(temp_number))
-    slice_stability_time = slice_number
-
-    return slice_number, slice_area, slice_stability_time
-
-
-
-def explore_experiment(exp, time_steps_number=5, volumes_number=5, end_time=220, first_slice=20, last_slice=260, step=5, OS='Windows'):
-
-    start_time = exp_start_time()[exp_list().index(exp)]
-
-    volume_number, volume_area = explore_volume(exp, start_time, end_time, first_slice, last_slice, time_steps_number, step, OS)
-    slice_number, slice_area, slice_stability_time = explore_slice(exp, start_time, end_time, first_slice, last_slice, volumes_number, OS)
-    
-    return experiment(exp, volume_number, volume_area, slice_number, slice_area, slice_stability_time)
+    return experiment(fixed_t_area, fixed_t_number, fixed_z_area, fixed_z_number)
