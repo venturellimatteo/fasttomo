@@ -111,6 +111,8 @@ def OS_path(exp, OS):
         return '../MasterThesisData/' + exp
     elif OS=='Linux':
         return '/data/projects/whaitiri/Data/Data_Processing_July2022/Reconstructions/' + exp
+    elif OS=='Tyrex':
+        return 'U:/whaitiri/Data/Data_Processing_July2022/Reconstructions/' + exp
     else:
         raise ValueError('OS not recognized')
 
