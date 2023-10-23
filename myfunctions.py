@@ -1,5 +1,5 @@
 import numpy as np                                  # type: ignore
-from skimage.measure import label, regionprops      # type: ignore
+from skimage.measure import label                   # type: ignore
 from skimage.io import imread                       # type: ignore
 from tqdm import tqdm                               # type: ignore
 from dataclasses import dataclass
@@ -11,9 +11,9 @@ import os
 # class defined for data exploration purposes
 @dataclass
 class experiment:
-    fixed_t_area: np.ndarray                     # area of the agglomerates contained in each slice of a volume
+    fixed_t_volume: np.ndarray                   # volume of the agglomerates contained in each slice of a volume
     fixed_t_number: np.ndarray                   # number of agglomerates contained in each slice of a volume
-    fixed_z_area: np.ndarray                     # area of the agglomerates contained in a fixed slice at different time instants
+    fixed_z_volume: np.ndarray                   # volume of the agglomerates contained in a fixed slice at different time instants
     fixed_z_number: np.ndarray                   # number of agglomerates contained in a fixed slice at different time instants
 
 # function returning the list of the experiments names
@@ -220,7 +220,7 @@ def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slic
 
 # function returning the sequence of images given the experiment name, the time range and the slice range in the form (t, z, y, x)
 # half of the images are discarded because of the 180 degrees rotation and poor reconstruction
-def read_4Dsequence(exp, first_slice, last_slice, end_time=220, OS='MacOS', skip180=True):
+def read_4Dsequence(exp, first_slice=0, last_slice=279, end_time=220, OS='MacOS', skip180=True):
     step = 2 if skip180 else 1
     print(f'Collecting sequence for experiment {exp}...')
     start_time = exp_start_time()[exp_list().index(exp)]    # start_time is the time entry in which the degradation of the battery starts (picked from exp_start_time)
@@ -321,13 +321,29 @@ def segment4D(sequence, threshold, smallest_3Dvolume=10, smallest_4Dvolume=100, 
 # function returning the mean area and number of agglomerates (mean computed with respect to time and to z)
 # the removal of the external shell can surely be done in a better way
 def explore_experiment(segmented_sequence, threshold=1000):
-    areas = np.zeros((segmented_sequence.shape[0], segmented_sequence.shape[1]), dtype=np.ushort)
-    numbers = np.zeros_like(areas, dtype=np.ushort)
-    for t in iterator(range(segmented_sequence.shape[0]), verbose=True, desc='Evaluating agglomerates areas and numbers'):
-        for z in range(segmented_sequence.shape[1]):
-            rps = regionprops(segmented_sequence[t,z,:,:])
-            slice_areas = np.array([r.area for r in rps])
-            slice_areas = slice_areas[slice_areas<threshold] # agglomerates with area larger than threshold are not considered (removal of external shell)
-            areas[t,z] = np.mean(slice_areas)
-            numbers[t,z] = len(slice_areas)
-    return experiment(fixed_t_area=np.mean(areas, axis=0), fixed_t_number=np.mean(numbers, axis=0), fixed_z_area=np.mean(areas, axis=1), fixed_z_number=np.mean(numbers, axis=1))
+
+    fixed_t_volume = np.zeros(segmented_sequence.shape[0], dtype=np.ushort)
+    fixed_t_number = np.zeros(segmented_sequence.shape[0], dtype=np.ushort)
+    fixed_z_volume = np.zeros(segmented_sequence.shape[1], dtype=np.ushort)
+    fixed_z_number = np.zeros(segmented_sequence.shape[1], dtype=np.ushort)
+
+    for t in iterator(range(segmented_sequence.shape[0]), verbose=True, desc='Evaluating the t axis'):
+        _, label_counts = np.unique(segmented_sequence[t,:,:,:], return_counts=True)
+        if len(label_counts) > 1:
+            label_counts = label_counts[2:] # here the background and the external shell are removed
+            fixed_t_volume[t] = np.mean(label_counts)
+            fixed_t_number[t] = len(label_counts)
+        else:
+            fixed_t_volume[t] = 0
+            fixed_t_number[t] = 0
+    for z in iterator(range(segmented_sequence.shape[1]), verbose=True, desc='Evaluating the z axis'):
+        _, label_counts = np.unique(segmented_sequence[:,z,:,:], return_counts=True)
+        if len(label_counts) > 1:
+            label_counts = label_counts[2:] # here the background and the external shell are removed
+            fixed_z_volume[z] = np.mean(label_counts)
+            fixed_z_number[z] = len(label_counts)
+        else:
+            fixed_z_volume[z] = 0
+            fixed_z_number[z] = 0
+
+    return experiment(fixed_t_volume=fixed_t_volume, fixed_t_number=fixed_t_number, fixed_z_volume=fixed_z_volume, fixed_z_number=fixed_z_number)
