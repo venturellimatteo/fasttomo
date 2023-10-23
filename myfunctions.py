@@ -220,18 +220,22 @@ def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slic
 
 # function returning the sequence of images given the experiment name, the time range and the slice range in the form (t, z, y, x)
 # half of the images are discarded because of the 180 degrees rotation and poor reconstruction
-def read_4Dsequence(exp, first_slice=0, last_slice=279, end_time=220, OS='MacOS', skip180=True):
+def read_4Dsequence(exp, first_slice=0, last_slice=279, start_time=0, end_time=220, OS='MacOS', skip180=True):
     step = 2 if skip180 else 1
     print(f'Collecting sequence for experiment {exp}...')
-    start_time = exp_start_time()[exp_list().index(exp)]    # start_time is the time entry in which the degradation of the battery starts (picked from exp_start_time)
-    flag = exp_flag()[exp_list().index(exp)]                # flag is True if the experiment is 0050, False if it is 0100
+    if start_time == 0:
+        start_time = exp_start_time()[exp_list().index(exp)]    # start_time is the time entry in which the degradation of the battery starts (picked from exp_start_time)
+    flag = exp_flag()[exp_list().index(exp)]                    # flag is True if the experiment is 0050, False if it is 0100
     test_image = imread(image_path(exp, start_time, first_slice, OS=OS, flag=flag))  # test_image is used to determine the shape of the sequence
     time_steps = np.arange(start_time, end_time+1, step, dtype=np.ushort)
     sequence = np.zeros((len(time_steps), last_slice-first_slice+1, test_image.shape[0], test_image.shape[1]))
     for t, time in enumerate(iterator(time_steps, verbose=True, desc='Collecting sequence')):
         for slice in range(first_slice, last_slice+1):
-            image = imread(image_path(exp, time, slice, OS=OS, flag=flag))
-            sequence[t, slice-first_slice,:,:] = image
+            try:
+                image = imread(image_path(exp, time, slice, OS=OS, flag=flag))
+                sequence[t, slice-first_slice,:,:] = image
+            except:
+                print(f'Error reading image {image_path(exp, time, slice, OS=OS, flag=flag)}')
     return sequence
 
 
