@@ -1,12 +1,9 @@
 import numpy as np                                  # type: ignore
 from skimage.measure import label                   # type: ignore
-from skimage.io import imread                       # type: ignore
 from tqdm import tqdm                               # type: ignore
-from numba import jit                               # type: ignore
 import napari                                       # type: ignore
 from dataclasses import dataclass
 import time as clock
-import shutil
 import os
 
 
