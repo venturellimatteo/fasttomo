@@ -2,6 +2,7 @@ import numpy as np                                  # type: ignore
 from skimage.measure import label                   # type: ignore
 from skimage.io import imread                       # type: ignore
 from tqdm import tqdm                               # type: ignore
+from numba import jit                               # type: ignore
 from dataclasses import dataclass
 import time as clock
 import shutil
@@ -41,20 +42,24 @@ def iterator(iterable, verbose=False, desc=''):
         return iterable
 
 # function returning the image rotated by 180 degrees
+@jit
 def rotate180(image):
     return np.rot90(np.rot90(image))
 
 # function returning the mask of an image given a threshold: agglomerates are labeled with different values
+@jit
 def mask(image, threshold):
     return np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
 
 # function removing the agglomerates with volume smaller than smallest_volume. volume can be intended as both 3D and 4D
+@jit
 def remove_small_agglomerates(sequence_mask, smallest_volume):
     bincount = np.bincount(sequence_mask.flatten())
     sequence_mask[np.isin(sequence_mask, np.where(bincount < smallest_volume))] = 0
     return sequence_mask
 
 # function used to remove the agglomerates that are not present in neighboring slices
+@jit
 def remove_isolated_agglomerates(sequence_mask, verbose=False):
     for i in iterator(range(sequence_mask.shape[0]), verbose, desc='Isolated agglomerates removal'):
         current_slice = sequence_mask[i,:,:]
@@ -78,6 +83,7 @@ def remove_isolated_agglomerates(sequence_mask, verbose=False):
 # function used to remove the agglomerates that are not appearing consecutively for at least (time_steps) time instants
 # THIS HAS TO BE REVISED: IN THIS WAY THE AGGLOMERATES THAT ARE NOT PRESENT IN ONE OF THE TIME INSTANTS AFTER APPEARENCE ARE REMOVED
 # INSTEAD ONLY AGGLOMERATES WHICH APPEAR FOR A SHORT TIME AND THEN DISAPPEAR SHOULD BE REMOVED
+@jit
 def remove_inconsistent_agglomerates(sequence_mask, time_steps=10):
     for i in tqdm(range(sequence_mask.shape[0]-time_steps), desc='Inconsistent agglomerates removal'):
         current_volume = sequence_mask[i,:,:,:]
@@ -93,6 +99,7 @@ def remove_inconsistent_agglomerates(sequence_mask, time_steps=10):
     return sequence_mask
 
 # function returning the area associated to the biggest agglomerate in the sequence
+@jit
 def find_biggest_area(sequence, threshold):
     sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
     max_area = np.zeros(sequence.shape[0])
@@ -171,6 +178,7 @@ def load_segmentation_map(exp, OS):
 
 
 # function returning the threshold value that allows to segment the sequence in a way that the area of the biggest agglomerate is equal to target
+@jit
 def find_threshold(sequence, threshold=0, step=1, target=5700, delta=500, slices=5):
     print('\nFinding threshold...')
     tic = clock.time()
@@ -203,6 +211,7 @@ def find_threshold(sequence, threshold=0, step=1, target=5700, delta=500, slices
 
 # function returning the sequence of images given the experiment name, the time range and the slice range
 # if volume is True, the sequence is in the form (z, y, x), otherwise it is in the form (t, y, x)
+@jit
 def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slice=20, last_slice=260, volume=True, OS='MacOS'):
     if volume:
         test_image = imread(image_path(exp, time, first_slice, OS=OS))  # test_image is used to determine the shape of the sequence
@@ -222,6 +231,7 @@ def read_3Dsequence(exp, time=0, slice=0, start_time=0, end_time=220, first_slic
 
 # function returning the sequence of images given the experiment name, the time range and the slice range in the form (t, z, y, x)
 # half of the images are discarded because of the 180 degrees rotation and poor reconstruction
+@jit
 def read_4Dsequence(exp, first_slice=0, last_slice=279, start_time=0, end_time=220, OS='MacOS', skip180=True):
     step = 2 if skip180 else 1
     print(f'Collecting sequence for experiment {exp}...')
@@ -248,6 +258,7 @@ def read_4Dsequence(exp, first_slice=0, last_slice=279, start_time=0, end_time=2
 # if biggest=True, only the agglomerate with biggest overlap in current mask is considered for each label
 # otherwise all the agglomerates with overlap>propagation_threshold in current mask are considered for each label
 # if forward=True the new labels that didn't exist in the previous mask are renamed in order to achieve low values for the labels
+@jit
 def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, propagation_threshold=10, verbose=False):
     if forward:
         max_label = np.max(previous_mask)
@@ -257,8 +268,7 @@ def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, p
     for previous_slice_label in iterator(ordered_labels, verbose=verbose, desc='Propagating labels'):
         if previous_slice_label == 0:   # the background is not considered
             continue
-        current_slice_labels = current_mask[previous_mask == previous_slice_label]
-        bincount = np.bincount(current_slice_labels)
+        bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
         if len(bincount) <= 1:      # if the agglomerate is not present in the current mask (i.e. bincount contains only background), the propagation is skipped
             continue
         bincount[0] = 0     # the background is not considered
@@ -269,14 +279,17 @@ def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, p
                 current_mask[current_mask == current_slice_label] = previous_slice_label
     if forward:
         new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
-        for i, new_label in enumerate(new_labels):
-            current_mask[current_mask == new_label] = max_label + i + 1
+        label_mapping = {new_label: max_label + i + 1 for i, new_label in enumerate(new_labels)}
+        current_mask = np.vectorize(label_mapping.get)(current_mask, current_mask)
+        # for i, new_label in enumerate(new_labels):
+        #     current_mask[current_mask == new_label] = max_label + i + 1
     return current_mask
 
 
 
 # function returning the sequence of segmented images given the sequence of images and the threshold
 # if filtering is True, the agglomerates with volume smaller than smallest_volume are removed
+@jit
 def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
     sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
     sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
@@ -299,6 +312,7 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
+@jit
 def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, backward=True, save=False, exp='', OS='Windows'):
     print('\nSegmenting and propagating labels...')
     sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
