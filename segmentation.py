@@ -5,6 +5,5 @@ if __name__ == '__main__':
     for exp in mf.exp_list():
         sequence = mf.read_4Dsequence(exp, OS='Tyrex')
         threshold = mf.find_threshold(sequence)
-        segmented_sequence = mf.segment4D(sequence, threshold)
-        mf.save_segmented_sequence(segmented_sequence, exp, OS='Linux')
+        segmented_sequence = mf.segment4D(sequence, threshold, save=True, OS='Tyrex')
     print('Done!')

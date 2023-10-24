@@ -248,15 +248,17 @@ def read_4Dsequence(exp, first_slice=0, last_slice=279, start_time=0, end_time=2
 # if biggest=True, only the agglomerate with biggest overlap in current mask is considered for each label
 # otherwise all the agglomerates with overlap>propagation_threshold in current mask are considered for each label
 # if forward=True the new labels that didn't exist in the previous mask are renamed in order to achieve low values for the labels
-def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, propagation_threshold=10):
+def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, propagation_threshold=10, verbose=False):
     if forward:
-        current_mask[current_mask > 0] = current_mask[current_mask > 0] + np.max(previous_mask)
+        max_label = np.max(previous_mask)
+        current_mask[current_mask > 0] += max_label
     unique_labels, label_counts = np.unique(previous_mask, return_counts=True)
     ordered_labels = unique_labels[np.argsort(label_counts)]
-    for previous_slice_label in ordered_labels:
+    for previous_slice_label in iterator(ordered_labels, verbose=verbose, desc='Propagating labels'):
         if previous_slice_label == 0:   # the background is not considered
             continue
-        bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
+        current_slice_labels = current_mask[previous_mask == previous_slice_label]
+        bincount = np.bincount(current_slice_labels)
         if len(bincount) <= 1:      # if the agglomerate is not present in the current mask (i.e. bincount contains only background), the propagation is skipped
             continue
         bincount[0] = 0     # the background is not considered
@@ -268,7 +270,7 @@ def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, p
     if forward:
         new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
         for i, new_label in enumerate(new_labels):
-            current_mask[current_mask == new_label] = np.max(previous_mask) + i + 1
+            current_mask[current_mask == new_label] = max_label + i + 1
     return current_mask
 
 
@@ -297,7 +299,7 @@ def segment3D(sequence, threshold, smallest_volume=50, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
-def segment4D(sequence, threshold, smallest_3Dvolume=10, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, backward=True, save=False, exp='', OS='Windows'):
+def segment4D(sequence, threshold, smallest_3Dvolume=50, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, backward=True, save=False, exp='', OS='Windows'):
     print('\nSegmenting and propagating labels...')
     sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
     sequence_mask[0,:,:,:] = segment3D(sequence[0,:,:,:], threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
