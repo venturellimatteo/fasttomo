@@ -239,7 +239,9 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
     print('Loading first volume...')
     previous_volume = load_volume(exp=exp, time=0, isImage=True, OS=OS)
     threshold = find_threshold(previous_volume)
+    print('Segmenting first volume...')    
     previous_mask = segment3D(previous_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
+    print('Saving first volume...')
     save_volume(volume=previous_mask, exp=exp, time=0, OS=OS)
     time_steps = range(start_time, end_time+1, 2) if skip180 else range(start_time, end_time+1)
 
