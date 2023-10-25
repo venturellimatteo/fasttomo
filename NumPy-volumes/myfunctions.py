@@ -1,7 +1,7 @@
 import numpy as np                                  # type: ignore
 from skimage.measure import label                   # type: ignore
 from tqdm import tqdm                               # type: ignore
-import napari                                       # type: ignore
+# import napari                                       # type: ignore
 from dataclasses import dataclass
 import time as clock
 import os
@@ -126,10 +126,10 @@ def volume_path(exp, time, isImage=True, OS='Windows', flag=False):
 
 
 def save_volume(volume, exp, time, OS):
-    try:
-        np.save(volume_path(exp=exp, time=time, isImage=False, OS=OS), volume)
-    except:
-        print('Error saving segmentation map')
+    # try:
+    np.save(volume_path(exp=exp, time=time, isImage=False, OS=OS), volume)
+    # except:
+        # print('Error saving segmentation map')
     return None
 
 
@@ -237,7 +237,10 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
     previous_volume = load_volume(exp=exp, time=0, isImage=True, OS=OS)
     threshold = find_threshold(previous_volume)
     print('Segmenting first volume...')    
+    tic = clock.time()
     previous_mask = segment3D(previous_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
+    toc = clock.time()
+    print(f'First volume segmented in {toc-tic:.2f} s')
     print('Saving first volume...')
     save_volume(volume=previous_mask, exp=exp, time=0, OS=OS)
     time_steps = range(start_time, end_time+1, 2) if skip180 else range(start_time, end_time+1)
@@ -264,18 +267,18 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
         mask = remove_small_agglomerates(mask, smallest_4Dvolume)
         mask = remove_inconsistent_agglomerates(mask, time_steps=10)
 
-    if show:
-        viewer = napari.Viewer()
-        vol4D = np.zeros((len(time_steps), current_mask.shape[0], current_mask.shape[1], current_mask.shape[2]))
-        seg4D = np.zeros((len(time_steps), current_mask.shape[0], current_mask.shape[1], current_mask.shape[2]), dtype=np.ushort)
-        for i, time in enumerate(time_steps):
-            vol4D[i,:,:,:] = load_volume(exp=exp, time=time, isImage=True, OS=OS)
-            seg4D[i,:,:,:] = load_volume(exp=exp, time=time, isImage=False, OS=OS)
-        images = [viewer.add_image(vol4D, name='Volume', opacity=0.4)]
-        labels = [viewer.add_labels(seg4D, name='Labels', blending='additive', opacity=0.8)]
-        settings = napari.settings.get_settings()
-        settings.application.playback_fps = 5
-        viewer.dims.current_step = (0, 0)
+    # if show:
+    #     viewer = napari.Viewer()
+    #     vol4D = np.zeros((len(time_steps), current_mask.shape[0], current_mask.shape[1], current_mask.shape[2]))
+    #     seg4D = np.zeros((len(time_steps), current_mask.shape[0], current_mask.shape[1], current_mask.shape[2]), dtype=np.ushort)
+    #     for i, time in enumerate(time_steps):
+    #         vol4D[i,:,:,:] = load_volume(exp=exp, time=time, isImage=True, OS=OS)
+    #         seg4D[i,:,:,:] = load_volume(exp=exp, time=time, isImage=False, OS=OS)
+    #     images = [viewer.add_image(vol4D, name='Volume', opacity=0.4)]
+    #     labels = [viewer.add_labels(seg4D, name='Labels', blending='additive', opacity=0.8)]
+    #     settings = napari.settings.get_settings()
+    #     settings.application.playback_fps = 5
+    #     viewer.dims.current_step = (0, 0)
 
     print(f'\nExp {exp} segmentation completed\n')
     return None

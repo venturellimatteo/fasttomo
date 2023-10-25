@@ -1,0 +1,3 @@
+- Crop the images in order to have smaller dimension of the array
+- Convert numpy volumes in lighter format in order to occupy less memory and hopefully have lighter calculations
+- Verify if the last part in propagate_labels function is working correctly or not
