@@ -184,24 +184,22 @@ def propagate_labels(previous_mask, current_mask, forward=True, propagation_thre
 
 
 # function used to create the memmaps for the 4D volume and the 4D segmentation map
-def create_memmaps(exp, time_steps, OS='Windows'):
+def create_memmaps(exp, time_steps, OS='Windows', cropping=True):
     print(f'\nExp {exp} memmaps creation started\n')
-    volume = open_memmap(volume_path(exp=exp, time=time_steps[0], OS=OS, isImage=True), mode='r')
-    print('Creating hypervolume memmap...')
-    tic = clock.time()
-    hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), 
-                              dtype=np.half, mode='w+', shape=(len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2]))
-    toc = clock.time()
-    print(f'Memmap created in {toc-tic:.2f} s')
-    for time in tqdm(time_steps, desc='Loading hypervolume memmap'):
+    # define shape as (len(time_steps), 270, 500, 500) if cropping is True, otherwise as (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
+    if cropping:
+        shape = (len(time_steps), 270, 500, 500)
+    else:
+        volume = open_memmap(volume_path(exp=exp, time=time_steps[0], OS=OS, isImage=True), mode='r')
+        shape = (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
+    # create the 4D volume memmap and load it with already existing volumes in .npy files
+    hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), dtype=np.half, mode='w+', shape=shape)
+    for t, time in tqdm(enumerate(time_steps), desc='Loading hypervolume memmap', total=len(time_steps)):
         volume = open_memmap(volume_path(exp=exp, time=time, OS=OS, isImage=True), mode='r')
-        hypervolume[time,:,:,:] = volume
-    print('Creating hypervolume_mask memmap...')
-    tic = clock.time()
-    hypervolume_mask = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume_mask.npy'), 
-                                   dtype=np.ushort, mode='w+', shape=(len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2]))
-    toc = clock.time()
-    print(f'Memmap created in {toc-tic:.2f} s')
+        hypervolume[t,:,:,:] = volume[10:,208:708,244:744] if cropping else volume
+    # create the 4D segmentation mask memmap
+    hypervolume_mask = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume_mask.npy'), dtype=np.ushort, mode='w+', shape=shape)
+    print('Hypervolume_mask memmap created\n')
     return hypervolume, hypervolume_mask
 
 
@@ -212,11 +210,11 @@ def segment3D(volume, threshold, smallest_volume=10, filtering=True):
     volume_mask = np.zeros_like(volume, dtype=np.ushort)
     volume_mask[0,:,:] = mask(volume[0,:,:], threshold)
     # masking of current slice and forward propagation from the first slice
-    for i in tqdm(range(1, volume.shape[0]), desc='Segmenting volume', leave=False):
+    for i in tqdm(range(1, volume.shape[0]), desc='Volume masking and forward propagation', leave=False):
         volume_mask[i,:,:] = mask(volume[i,:,:], threshold)
         volume_mask[i,:,:] = propagate_labels(volume_mask[i-1,:,:], volume_mask[i,:,:], forward=True)
     # backward propagation from the last slice
-    for i in range(volume_mask.shape[0]-1, 0, -1):
+    for i in tqdm(range(volume_mask.shape[0]-1, 0, -1), desc='Volume backward propagation', leave=False):
         volume_mask[i-1,:,:] = propagate_labels(volume_mask[i,:,:], volume_mask[i-1,:,:], forward=False)
     # removal of the agglomerates with volume smaller than smallest_volume and of the agglomerates that are not present in neighboring slices
     if filtering:
@@ -235,12 +233,15 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
     # defining the time steps for the current experiment
     start_time = exp_start_time()[exp_list().index(exp)]
     time_steps = range(start_time, end_time+1, 2) if skip180 else range(start_time, end_time+1)
+    time_index = range(len(time_steps))
     hypervolume, hypervolume_mask = create_memmaps(exp, time_steps, OS)
     previous_volume = hypervolume[0]
     # evaluating the threshold on the first volume
     threshold = find_threshold(previous_volume)  
     # segmenting the first volume
+    print('Segmenting first volume...')
     previous_mask = segment3D(previous_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
+    print('First volume segmentation completed\n')
     # reassigning the labels after the filtering
     for i, new_label in enumerate(np.unique(previous_mask)):
         if new_label == 0:
@@ -249,14 +250,14 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
     # writing the first mask in the hypervolume_mask memmap
     hypervolume_mask[0] = previous_mask
     # segmenting the remaining volumes and propagating the labels from previous volumes
-    for time in tqdm(time_steps[1:], desc='Volume segmentation and forward propagation'):
+    for time in tqdm(time_index[1:], desc='Volume segmentation and forward propagation'):
         current_volume = hypervolume[time]
         current_mask = segment3D(current_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
         current_mask = propagate_labels(previous_mask, current_mask, forward=True, verbose=True, leave=False)
         hypervolume_mask[time] = current_mask
         previous_mask = current_mask
     # propagating the labels from the last volume to the previous ones
-    for time in tqdm(time_steps[:-1][::-1], desc='Backward propagation'):
+    for time in tqdm(time_index[:-1][::-1], desc='Backward propagation'):
         current_volume = hypervolume[time]
         current_mask = propagate_labels(previous_mask, current_mask, forward=False, verbose=True, leave=False)
         hypervolume_mask[time] = current_mask
