@@ -269,10 +269,8 @@ def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, p
                 current_mask[current_mask == current_slice_label] = previous_slice_label
     if forward:
         new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
-        label_mapping = {new_label: max_label + i + 1 for i, new_label in enumerate(new_labels)}
-        current_mask = np.vectorize(label_mapping.get)(current_mask, current_mask)
-        # for i, new_label in enumerate(new_labels):
-        #     current_mask[current_mask == new_label] = max_label + i + 1
+        for i, new_label in enumerate(new_labels):
+            current_mask[current_mask == new_label] = max_label + i + 1
     return current_mask
 
 

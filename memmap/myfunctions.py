@@ -1,7 +1,7 @@
-import numpy as np                                  # type: ignore
-from skimage.measure import label                   # type: ignore
-from tqdm import tqdm                               # type: ignore
-# import napari                                       # type: ignore
+import numpy as np                                 
+from skimage.measure import label                  
+from tqdm import tqdm                               
+from numpy.lib.format import open_memmap
 from dataclasses import dataclass
 import time as clock
 import os
@@ -115,8 +115,7 @@ def OS_path(exp, OS):
     else:
         raise ValueError('OS not recognized')
 
-
-
+# function returning the path of the volume or the segmentation map given the experiment name, the time instant and the OS
 def volume_path(exp, time, isImage=True, OS='Windows'):
     flag = exp_flag()[exp_list().index(exp)]
     vol = '0050' if flag else '0100'
@@ -126,22 +125,8 @@ def volume_path(exp, time, isImage=True, OS='Windows'):
 
 
 
-def save_volume(volume, exp, time, OS):
-    np.save(volume_path(exp=exp, time=time, isImage=False, OS=OS), volume)
-    return None
-
-
-
-def load_volume(exp, time, isImage, OS):
-    if isImage:
-        return np.load(volume_path(exp=exp, time=time, isImage=isImage, OS=OS))[10:,208:707,244:743]
-    else:
-        return np.load(volume_path(exp=exp, time=time, isImage=isImage, OS=OS))
-
-
-
 # function returning the threshold value that allows to segment the sequence in a way that the area of the biggest agglomerate is equal to target
-def find_threshold(sequence, threshold=0, step=1, target=5500, delta=500, slices=5):
+def find_threshold(sequence, threshold=0, step=1, target=5500, delta=250, slices=5):
     print('\nFinding threshold...')
     tic = clock.time()
     if sequence.shape[0] > slices:              # if the sequence is too long, it is reduced to n=slices slices
@@ -171,10 +156,9 @@ def find_threshold(sequence, threshold=0, step=1, target=5500, delta=500, slices
 # function used to propagate labels from previous_mask to current_mask
 # the update is carried out in increasing order of the area of the agglomerates -> the agglomerates with the biggest area are updated last
 # in this way the agglomerates with the biggest area will most probably propagate their labels and overwrite the labels of the smaller agglomerates
-# if biggest=True, only the agglomerate with biggest overlap in current mask is considered for each label
-# otherwise all the agglomerates with overlap>propagation_threshold in current mask are considered for each label
+# all the agglomerates with overlap>propagation_threshold in current mask are considered for each label
 # if forward=True the new labels that didn't exist in the previous mask are renamed in order to achieve low values for the labels
-def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, propagation_threshold=10, verbose=False, leave=False):
+def propagate_labels(previous_mask, current_mask, forward=True, propagation_threshold=10, verbose=False, leave=False):
     if forward:
         max_label = np.max(previous_mask)
         current_mask[current_mask > 0] += max_label
@@ -184,14 +168,13 @@ def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, p
         if previous_slice_label == 0:   # the background is not considered
             continue
         bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
-        if len(bincount) <= 1:      # if the agglomerate is not present in the current mask (i.e. bincount contains only background), the propagation is skipped
+        if len(bincount) <= 1:  # if the agglomerate is not present in the current mask (i.e. bincount contains only background), the propagation is skipped
             continue
         bincount[0] = 0     # the background is not considered
         current_slice_label = np.argmax(bincount)
         current_mask[current_mask == current_slice_label] = previous_slice_label
-        if not biggest:
-            for current_slice_label in np.where(bincount > propagation_threshold)[0]:
-                current_mask[current_mask == current_slice_label] = previous_slice_label
+        for current_slice_label in np.where(bincount > propagation_threshold)[0]:
+            current_mask[current_mask == current_slice_label] = previous_slice_label
     if forward:
         new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
         for i, new_label in enumerate(new_labels):
@@ -200,23 +183,46 @@ def propagate_labels(previous_mask, current_mask, forward=True, biggest=False, p
 
 
 
+# function used to create the memmaps for the 4D volume and the 4D segmentation map
+def create_memmaps(exp, time_steps, OS='Windows'):
+    print(f'\nExp {exp} memmaps creation started\n')
+    volume = open_memmap(volume_path(exp=exp, time=time_steps[0], OS=OS, isImage=True), mode='r')
+    print('Creating hypervolume memmap...')
+    tic = clock.time()
+    hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), 
+                              dtype=np.half, mode='w+', shape=(len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2]))
+    toc = clock.time()
+    print(f'Memmap created in {toc-tic:.2f} s')
+    for time in tqdm(time_steps, desc='Loading hypervolume memmap'):
+        volume = open_memmap(volume_path(exp=exp, time=time, OS=OS, isImage=True), mode='r')
+        hypervolume[time,:,:,:] = volume
+    print('Creating hypervolume_mask memmap...')
+    tic = clock.time()
+    hypervolume_mask = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume_mask.npy'), 
+                                   dtype=np.ushort, mode='w+', shape=(len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2]))
+    toc = clock.time()
+    print(f'Memmap created in {toc-tic:.2f} s')
+    return hypervolume, hypervolume_mask
+
+
+
 # function returning the sequence of segmented images given the sequence of images and the threshold
 # if filtering is True, the agglomerates with volume smaller than smallest_volume are removed
-def segment3D(sequence, threshold, smallest_volume=10, filtering=True):
-    sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
-    sequence_mask[0,:,:] = mask(sequence[0,:,:], threshold)
+def segment3D(volume, threshold, smallest_volume=10, filtering=True):
+    volume_mask = np.zeros_like(volume, dtype=np.ushort)
+    volume_mask[0,:,:] = mask(volume[0,:,:], threshold)
     # masking of current slice and forward propagation from the first slice
-    for i in tqdm(range(1, sequence.shape[0]), desc='Segmenting volume', leave=False):
-        sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
-        sequence_mask[i,:,:] = propagate_labels(sequence_mask[i-1,:,:], sequence_mask[i,:,:], forward=True)
+    for i in tqdm(range(1, volume.shape[0]), desc='Segmenting volume', leave=False):
+        volume_mask[i,:,:] = mask(volume[i,:,:], threshold)
+        volume_mask[i,:,:] = propagate_labels(volume_mask[i-1,:,:], volume_mask[i,:,:], forward=True)
     # backward propagation from the last slice
-    for i in range(sequence_mask.shape[0]-1, 0, -1):
-        sequence_mask[i-1,:,:] = propagate_labels(sequence_mask[i,:,:], sequence_mask[i-1,:,:], forward=False)
+    for i in range(volume_mask.shape[0]-1, 0, -1):
+        volume_mask[i-1,:,:] = propagate_labels(volume_mask[i,:,:], volume_mask[i-1,:,:], forward=False)
     # removal of the agglomerates with volume smaller than smallest_volume and of the agglomerates that are not present in neighboring slices
     if filtering:
-        sequence_mask = remove_isolated_agglomerates(sequence_mask)
-        sequence_mask = remove_small_agglomerates(sequence_mask, smallest_volume)
-    return sequence_mask
+        volume_mask = remove_isolated_agglomerates(volume_mask)
+        volume_mask = remove_small_agglomerates(volume_mask, smallest_volume)
+    return volume_mask
 
 
 
@@ -224,14 +230,14 @@ def segment3D(sequence, threshold, smallest_volume=10, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
-def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, OS='Windows', show=False):
-    
+def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, OS='Windows'):
     print(f'\nExp {exp} segmentation started\n')
-    # getting the start time of the experiment
+    # defining the time steps for the current experiment
     start_time = exp_start_time()[exp_list().index(exp)]
-    # loading the first volume
-    previous_volume = load_volume(exp=exp, time=start_time, isImage=True, OS=OS)
-    # finding the threshold used for the whole segmentation process
+    time_steps = range(start_time, end_time+1, 2) if skip180 else range(start_time, end_time+1)
+    hypervolume, hypervolume_mask = create_memmaps(exp, time_steps, OS)
+    previous_volume = hypervolume[0]
+    # evaluating the threshold on the first volume
     threshold = find_threshold(previous_volume)  
     # segmenting the first volume
     previous_mask = segment3D(previous_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
@@ -240,50 +246,26 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
         if new_label == 0:
             continue
         previous_mask[previous_mask == new_label] = i
-    # saving the segmented mask
-    save_volume(volume=previous_mask, exp=exp, time=0, OS=OS)
-    # defining the time steps for the current experiment
-    time_steps = range(start_time, end_time+1, 2) if skip180 else range(start_time, end_time+1)
-
+    # writing the first mask in the hypervolume_mask memmap
+    hypervolume_mask[0] = previous_mask
     # segmenting the remaining volumes and propagating the labels from previous volumes
     for time in tqdm(time_steps[1:], desc='Volume segmentation and forward propagation'):
-        current_volume = load_volume(exp=exp, time=time, isImage=True, OS=OS)
+        current_volume = hypervolume[time]
         current_mask = segment3D(current_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
         current_mask = propagate_labels(previous_mask, current_mask, forward=True, verbose=True, leave=False)
-        save_volume(volume=current_mask, exp=exp, time=time, OS=OS)
+        hypervolume_mask[time] = current_mask
         previous_mask = current_mask
-
     # propagating the labels from the last volume to the previous ones
     for time in tqdm(time_steps[:-1][::-1], desc='Backward propagation'):
-        current_volume = load_volume(exp=exp, time=time, isImage=False, OS=OS)
+        current_volume = hypervolume[time]
         current_mask = propagate_labels(previous_mask, current_mask, forward=False, verbose=True, leave=False)
-        save_volume(volume=current_mask, exp=exp, time=time, OS=OS)
+        hypervolume_mask[time] = current_mask
         previous_mask = current_mask
         # HERE IN BACKWARD LABEL PROPAGATION I CAN ADD THE UPDATE OF AN ARRAY CONTAINING THE BINCOUNT OF THE LABELS
         # THIS CAN BE USED LATER TO REMOVE THE AGGLOMERATES WHOSE VOLUME IS LOWER THAN THRESHOLD
         # SOMETHING ELSE SHOULD BE DONE IN ORDER TO REMOVE THE AGGLOMERATES THAT ARE NOT CONSISTENT (MAYBE A BINCOUNT FOR EACH TIME INSTANT!)
 
-    if filtering4D:
-        print('Loading 4D volume...')
-        mask = np.zeros((len(time_steps), current_mask.shape[0], current_mask.shape[1], current_mask.shape[2]) , dtype=np.ushort)
-        for i, time in enumerate(time_steps):
-            mask[i,:,:,:] = load_volume(exp=exp, time=time, isImage=False, OS=OS)
-        print('Removing small agglomerates...')
-        mask = remove_small_agglomerates(mask, smallest_4Dvolume)
-        mask = remove_inconsistent_agglomerates(mask, time_steps=10)
-
-    # if show:
-    #     viewer = napari.Viewer()
-    #     vol4D = np.zeros((len(time_steps), current_mask.shape[0], current_mask.shape[1], current_mask.shape[2]))
-    #     seg4D = np.zeros((len(time_steps), current_mask.shape[0], current_mask.shape[1], current_mask.shape[2]), dtype=np.ushort)
-    #     for i, time in enumerate(time_steps):
-    #         vol4D[i,:,:,:] = load_volume(exp=exp, time=time, isImage=True, OS=OS)
-    #         seg4D[i,:,:,:] = load_volume(exp=exp, time=time, isImage=False, OS=OS)
-    #     images = [viewer.add_image(vol4D, name='Volume', opacity=0.4)]
-    #     labels = [viewer.add_labels(seg4D, name='Labels', blending='additive', opacity=0.8)]
-    #     settings = napari.settings.get_settings()
-    #     settings.application.playback_fps = 5
-    #     viewer.dims.current_step = (0, 0)
+    # HERE FILTERING SHOULD BE PERFORMED ON THE 4D VOLUME!!!
 
     print(f'\nExp {exp} segmentation completed\n')
     return None
