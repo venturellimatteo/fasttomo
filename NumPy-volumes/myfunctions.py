@@ -117,7 +117,8 @@ def OS_path(exp, OS):
 
 
 
-def volume_path(exp, time, isImage=True, OS='Windows', flag=False):
+def volume_path(exp, time, isImage=True, OS='Windows'):
+    flag = exp_flag()[exp_list().index(exp)]
     vol = '0050' if flag else '0100'
     folder_name = 'entry' + str(time).zfill(4) + '_no_extpag_db' + vol + '_vol'
     volume_name = 'volume_v2.npy' if isImage else 'segmented.npy'
@@ -126,20 +127,16 @@ def volume_path(exp, time, isImage=True, OS='Windows', flag=False):
 
 
 def save_volume(volume, exp, time, OS):
-    # try:
     np.save(volume_path(exp=exp, time=time, isImage=False, OS=OS), volume)
-    # except:
-        # print('Error saving segmentation map')
     return None
 
 
 
 def load_volume(exp, time, isImage, OS):
-    try:
+    if isImage:
+        return np.load(volume_path(exp=exp, time=time, isImage=isImage, OS=OS))[10:,208:707,244:743]
+    else:
         return np.load(volume_path(exp=exp, time=time, isImage=isImage, OS=OS))
-    except:
-        print('Error loading segmentation map')
-    return None
 
 
 
@@ -234,7 +231,7 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
     print(f'\nExp {exp} segmentation started\n')
     start_time = exp_start_time()[exp_list().index(exp)]
     print('Loading first volume...')
-    previous_volume = load_volume(exp=exp, time=0, isImage=True, OS=OS)
+    previous_volume = load_volume(exp=exp, time=start_time, isImage=True, OS=OS)
     threshold = find_threshold(previous_volume)
     print('Segmenting first volume...')    
     tic = clock.time()
