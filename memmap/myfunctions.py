@@ -39,10 +39,6 @@ def iterator(iterable, verbose=False, desc='', leave=True):
     else:
         return iterable
 
-# function returning the image rotated by 180 degrees
-def rotate180(image):
-    return np.rot90(np.rot90(image))
-
 # function returning the mask of an image given a threshold: agglomerates are labeled with different values
 def mask(image, threshold):
     return np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
@@ -167,6 +163,7 @@ def propagate_labels(previous_mask, current_mask, forward=True, propagation_thre
 
 
 # function used to create the memmaps for the 4D volume and the 4D segmentation map
+# if cropping is True, the volume is cropped in order to reduce the size of the memmap
 def create_memmaps(exp, time_steps, OS='Windows', cropping=True):
     print(f'\nExp {exp} memmaps creation started\n')
     # define shape as (len(time_steps), 270, 500, 500) if cropping is True, otherwise as (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
@@ -187,7 +184,8 @@ def create_memmaps(exp, time_steps, OS='Windows', cropping=True):
 
 
 
-# function used to compute the 4D filtering
+# function used to compute the 4D filtering consisting in the removal of small agglomerates and the removal of inconsistent ones
+# inconsistent agglomerates are the ones that disappear at a certain time instant
 def compute_4Dfiltering (hypervolume_mask, bincounts, time_index, smallest_4Dvolume=100):
     # computation of the total bincount in the 4D mask
     max_label = np.max(hypervolume_mask[-1])
@@ -218,15 +216,17 @@ def compute_4Dfiltering (hypervolume_mask, bincounts, time_index, smallest_4Dvol
 
 
 
-# function used to rename the labels in the 4D segmentation map
+# function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
+# using a set to store the labels allows analyze the labels present in each volume separately instead of computing np.unique on the whole 4D mask
 def rename_labels(hypervolume_mask, time_index):
     unique_labels = set()
     for time in time_index:
         for label in np.unique(hypervolume_mask[time]):
             unique_labels.add(label)
-    for new_label, old_label in tqdm(enumerate(unique_labels), desc='Renaming labels', total=len(unique_labels)):
-        for time in time_index:
+    for time in tqdm(time_index, desc='Renaming labels'):
+        for new_label, old_label in enumerate(unique_labels):
             hypervolume_mask[time][hypervolume_mask[time] == old_label] = new_label
+    return None
 
 
 
@@ -254,7 +254,7 @@ def segment3D(volume, threshold, smallest_volume=10, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
-def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4Dvolume=100, time_steps=10, filtering3D=True, filtering4D=True, OS='Windows'):
+def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4Dvolume=100, filtering3D=True, filtering4D=True, OS='Windows'):
     print(f'\nExp {exp} segmentation started\n')
     # defining the time steps for the current experiment
     start_time = exp_start_time()[exp_list().index(exp)]
@@ -286,7 +286,7 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
         current_volume = hypervolume[time]
         current_mask = segment3D(current_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
         current_mask = propagate_labels(previous_mask, current_mask, forward=True, verbose=True, leave=False)
-        if filtering4D:
+        if filtering4D:     # computing the bincount of the current mask that will be used for the 4D filtering
             bincounts.append(np.bincount(current_mask.flatten()))
         hypervolume_mask[time] = current_mask
         previous_mask = current_mask
@@ -297,10 +297,10 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=10, smallest_4D
     #     hypervolume_mask[time] = current_mask
     #     previous_mask = current_mask
 
+    # removing the agglomerates with volume smaller than smallest_4Dvolume and the agglomerates that disappear after a certain time instant
     if filtering4D:
         compute_4Dfiltering(hypervolume_mask, bincounts, time_index, smallest_4Dvolume)
         rename_labels(hypervolume_mask, time_index)    
     
-
     print(f'\nExp {exp} segmentation completed!\n')
     return None
