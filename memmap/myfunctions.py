@@ -220,13 +220,14 @@ def compute_4Dfiltering (hypervolume_mask, bincounts, time_index, smallest_4Dvol
 
 # function used to rename the labels in the 4D segmentation map
 def rename_labels(hypervolume_mask, time_index):
-    unique_labels = {}
+    unique_labels = set()
     for time in time_index:
         for label in np.unique(hypervolume_mask[time]):
             unique_labels.add(label)
     for new_label, old_label in tqdm(enumerate(unique_labels), desc='Renaming labels', total=len(unique_labels)):
         for time in time_index:
             hypervolume_mask[time][hypervolume_mask[time] == old_label] = new_label
+
 
 
 # function returning the sequence of segmented images given the sequence of images and the threshold
