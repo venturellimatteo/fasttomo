@@ -196,8 +196,8 @@ def compute_4Dfiltering (hypervolume_mask, bincounts, time_index, smallest_4Dvol
     for label in tqdm(np.where(total_bincount < smallest_4Dvolume)[0], desc='Removing small agglomerates'):
         for time in time_index:
             hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-    # removing the agglomerates that are not appearing consecutively for at least (min_presence) time instants
-    labels_to_remove = []
+    # removing the agglomerates that are disappearing after a certain time instant
+    labels_to_remove = set()
     print('Removing inconsistent agglomerates...')
     # finding the labels to remove
     for i, bincount in tqdm(enumerate(bincounts[:-1]), total=len(bincounts)-1, desc='Finding labels to remove'):
@@ -206,7 +206,7 @@ def compute_4Dfiltering (hypervolume_mask, bincounts, time_index, smallest_4Dvol
             if count == 0 or label in labels_to_remove:
                 continue
             if next_bincount[label] == 0:
-                labels_to_remove.append(label)
+                labels_to_remove.add(label)
                 break
     # removing the labels
     for time in tqdm(time_index, desc='Removing labels'):
