@@ -177,56 +177,6 @@ def create_memmaps(exp, time_steps, OS='Windows', cropping=True):
 
 
 
-# function used to remove small agglomerates in terms of 4D volume
-def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, smallest_4Dvolume=100):
-    # computation of the total bincount in the 4D mask
-    max_label = np.max(hypervolume_mask[-1])
-    total_bincount = np.zeros(max_label+1)
-    for bincount in bincounts:
-        total_bincount[:len(bincount)] += bincount
-    # removing the agglomerates with volume smaller than smallest_4Dvolume
-    for time in tqdm(time_index, desc='Removing small agglomerates'):
-        for label in np.where(total_bincount < smallest_4Dvolume)[0]:
-            if bincounts[time][label] > 0:
-                hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-    return None
-
-
-
-# function used to remove the agglomerates that are not present in each of the following n_steps bincounts
-def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index, n_steps=10):
-    # remove list is a list containing the labels that will be removed from start_time to end_time volumes in the format [label, start_time, end_time]
-    remove_list = []
-    max_label = np.max(hypervolume_mask[-1])
-    print('Removing inconsistent agglomerates...')
-    # looping through the bincounts related to each time instant
-    for i, bincount in tqdm(enumerate(bincounts[:-n_steps]), total=len(bincounts)-n_steps, desc='Finding labels to remove'):
-        # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
-        prev_bincount = bincounts[i-1] if i != 0 else np.zeros_like(bincount)
-        # looping through the labels in the current bincount
-        for label, count in enumerate(bincount):
-            # if the label is contained in the previous bincount, it is not considered (we check only for the first time a label appears)
-            if prev_bincount[label] != 0 or count == 0:
-                continue
-            # if the label is not contained in each of the following n_steps bincounts, it is added to the set of labels to remove
-            for j in range(i+1, i+1+n_steps):
-                next_bincount = bincounts[j]
-                if next_bincount[label] == 0:
-                    remove_list.append(np.array([label, i, j]))
-                    break
-    # converting the remove_list to more useful format for looping
-    # remove_array is a boolean array of shape (len(time_index), max_label) where each row contains True for the labels that will be removed in that time instant
-    remove_array = np.zeros((len(time_index), int(max_label)), dtype=bool)
-    for element in remove_list:
-        remove_array[element[1]:element[2]+1, element[0]] = True
-    # removing the labels
-    for time in tqdm(time_index, desc='Removing labels'):
-        for label in np.where(remove_array[time])[0]:
-            hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-    return None
-
-
-
 # function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
 # using a set to store the labels allows analyze the labels present in each volume separately instead of computing np.unique on the whole 4D mask
 def rename_labels(hypervolume_mask, time_index):
@@ -302,6 +252,58 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=50, filtering3D
 
 
 
+# function used to remove small agglomerates in terms of 4D volume
+def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, smallest_4Dvolume=100):
+    # computation of the total bincount in the 4D mask
+    max_label = np.max(hypervolume_mask[-1])
+    total_bincount = np.zeros(max_label+1)
+    for bincount in bincounts:
+        total_bincount[:len(bincount)] += bincount
+    # removing the agglomerates with volume smaller than smallest_4Dvolume
+    for time in tqdm(time_index, desc='Removing small agglomerates'):
+        for label in np.where(total_bincount < smallest_4Dvolume)[0]:
+            if label < len(bincounts[time]):
+                if bincounts[time][label] > 0:
+                    hypervolume_mask[time][hypervolume_mask[time] == label] = 0
+    return None
+
+
+
+# function used to remove the agglomerates that are not present in each of the following n_steps bincounts
+def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index, n_steps=10):
+    # remove list is a list containing the labels that will be removed from start_time to end_time volumes in the format [label, start_time, end_time]
+    remove_list = []
+    max_label = np.max(hypervolume_mask)
+    print('Removing inconsistent agglomerates...')
+    # looping through the bincounts related to each time instant
+    for i, bincount in tqdm(enumerate(bincounts[:-n_steps]), total=len(bincounts)-n_steps, desc='Finding labels to remove'):
+        # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
+        prev_bincount = bincounts[i-1] if i != 0 else np.zeros_like(bincount)
+        # looping through the labels in the current bincount
+        for label, count in enumerate(bincount):
+            # if the label is contained in the previous bincount, it is not considered (we check only for the first time a label appears)
+            if label < len(prev_bincount):
+                if prev_bincount[label] != 0 or count == 0:
+                    continue
+            # if the label is not contained in each of the following n_steps bincounts, it is added to the set of labels to remove
+            for j in range(i+1, i+1+n_steps):
+                next_bincount = bincounts[j]
+                if next_bincount[label] == 0:
+                    remove_list.append(np.array([label, i, j]))
+                    break
+    # converting the remove_list to more useful format for looping
+    # remove_array is a boolean array of shape (len(time_index), max_label) where each row contains True for the labels that will be removed in that time instant
+    remove_array = np.zeros((len(time_index), int(max_label)), dtype=bool)
+    for element in remove_list:
+        remove_array[element[1]:element[2]+1, element[0]] = True
+    # removing the labels
+    for time in tqdm(time_index, desc='Removing labels'):
+        for label in np.where(remove_array[time])[0]:
+            hypervolume_mask[time][hypervolume_mask[time] == label] = 0
+    return None
+
+
+
 # function used to compute the 4-dimensional filtering of the segmentation map
 def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
     print('\n4D filtering started\n')
@@ -314,3 +316,20 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
     rename_labels(hypervolume_mask, time_index)
     print(f'\n4D filtering completed!\n')
     return None
+
+
+
+# function returning the position and the volume of the agglomerates in the 4D segmentation map
+def motion_matrix(hypervolume_mask):
+    max_label = np.max(hypervolume_mask)
+    position = np.zeros((hypervolume_mask.shape[0], max_label-1, 3))
+    volume = np.zeros((hypervolume_mask.shape[0], max_label-1))
+    for t in range(hypervolume_mask.shape[0]):
+        labels, counts = np.unique(hypervolume_mask[t], return_counts=True)
+        for label in labels:
+            if label <= 1:  # the background and the external shell are not considered
+                continue
+            position[t, label-2] = np.mean(np.where(hypervolume_mask[t] == label), axis=1)
+            volume[t, label-2] = counts[label]
+    # for the speed and volume expansion rate computation, the exact relation between pixels and physical units is needed
+    return position, volume
