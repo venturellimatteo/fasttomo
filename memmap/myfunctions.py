@@ -1,5 +1,5 @@
 import numpy as np                                 
-from skimage.measure import label                  
+from skimage.measure import label, regionprops                  
 from tqdm import tqdm                               
 from numpy.lib.format import open_memmap
 # from dataclasses import dataclass
@@ -274,9 +274,8 @@ def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index
     # remove list is a list containing the labels that will be removed from start_time to end_time volumes in the format [label, start_time, end_time]
     remove_list = []
     max_label = np.max(hypervolume_mask)
-    print('Removing inconsistent agglomerates...')
     # looping through the bincounts related to each time instant
-    for i, bincount in tqdm(enumerate(bincounts[:-n_steps]), total=len(bincounts)-n_steps, desc='Finding labels to remove'):
+    for i, bincount in tqdm(enumerate(bincounts[:-n_steps]), total=len(bincounts)-n_steps, desc='Finding labels to remove', leave=False):
         # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
         prev_bincount = bincounts[i-1] if i != 0 else np.zeros_like(bincount)
         # looping through the labels in the current bincount
@@ -297,7 +296,7 @@ def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index
     for element in remove_list:
         remove_array[element[1]:element[2]+1, element[0]] = True
     # removing the labels
-    for time in tqdm(time_index, desc='Removing labels'):
+    for time in tqdm(time_index, desc='Removing inconsistent agglomerates'):
         for label in np.where(remove_array[time])[0]:
             hypervolume_mask[time][hypervolume_mask[time] == label] = 0
     return None
@@ -319,17 +318,73 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
 
 
 
+# function used to compute the ratio between pixels and physical units in meters, and the ratio between time steps and physical units in seconds
+def find_ratio(hypervolume_mask, exp):
+    if 'P28A' in exp:
+        um_diameter = 0.0186
+    elif 'P28B' in exp:
+        um_diameter = 0.0186
+    elif 'VCT5A' in exp:
+        um_diameter = 0.01835
+    elif 'VCT5' in exp:
+        um_diameter = 0.0182
+    else:
+        raise ValueError('Experiment not recognized')
+    # here I find the pixel width of the external shell
+    rps = regionprops(hypervolume_mask[0,135])
+    shell_index = np.argmax([rp.area for rp in rps])
+    pixel_diameter = rps[shell_index].major_axis_length
+    um_z = 0.012 # total field of view in z direction in micrometers
+    pixel_z = 280 # total field of view in z direction in pixels
+    fps = 20 # frames per second
+    # computing the actual quantities
+    x_ratio = um_diameter/pixel_diameter
+    y_ratio = x_ratio
+    z_ratio = um_z/pixel_z
+    v_ratio = x_ratio * y_ratio * z_ratio
+    t_ratio = 1/fps
+    radius = pixel_diameter/2
+    return x_ratio, y_ratio, z_ratio, v_ratio, t_ratio, radius
+
+
+
 # function returning the position and the volume of the agglomerates in the 4D segmentation map
-def motion_matrix(hypervolume_mask):
+def motion_matrix(hypervolume_mask, exp, steps=3):
+    print('\nComputing motion matrix...')
     max_label = np.max(hypervolume_mask)
-    position = np.zeros((hypervolume_mask.shape[0], max_label-1, 3))
-    volume = np.zeros((hypervolume_mask.shape[0], max_label-1))
-    for t in range(hypervolume_mask.shape[0]):
+    n_slices = hypervolume_mask.shape[1]
+    n_time_instants = hypervolume_mask.shape[0]
+    # the ratios between pixels and physical units are computed
+    print('Computing ratios...')
+    x_ratio, y_ratio, z_ratio, v_ratio, t_ratio, radius = find_ratio(hypervolume_mask, exp)
+    # radii and slices are the values used to divide the volume in <steps> regions
+    radii = np.linspace(0, radius, steps+1)
+    slices = np.linspace(0, n_slices, steps+1)
+    # position is a matrix containing the position of each agglomerate in each time instant, x and y coordinates are centered [m, m, m]
+    position = np.zeros((n_time_instants, max_label-1, 3))
+    # volume is a matrix containing the volume of each agglomerate in each time instant [m^3]
+    volume = np.zeros((n_time_instants, max_label-1))
+    for t in tqdm(range(n_time_instants), desc='Computing positions and volumes', leave=False):
         labels, counts = np.unique(hypervolume_mask[t], return_counts=True)
-        for label in labels:
+        for index, label in enumerate(labels):
             if label <= 1:  # the background and the external shell are not considered
                 continue
-            position[t, label-2] = np.mean(np.where(hypervolume_mask[t] == label), axis=1)
-            volume[t, label-2] = counts[label]
-    # for the speed and volume expansion rate computation, the exact relation between pixels and physical units is needed
-    return position, volume
+            position[t, label-2] = (np.mean(np.where(hypervolume_mask[t] == label), axis=1) - np.array([0, 249.5, 249.5])) * np.array([z_ratio, y_ratio, x_ratio])
+            volume[t, label-2] = counts[index] * v_ratio
+    # speed is a matrix containing the speed of each agglomerate in each time instant [m/s, m/s, m/s]
+    speed = np.diff(position, axis=0) * t_ratio
+    # volume_exp_rate is a matrix containing the expansion rate of each agglomerate in each time instant [m^3/s]
+    volume_exp_rate = np.diff(volume, axis=0) * t_ratio
+    # avg_volume is a matrix containing the average volume of the agglomerates each region of the battery [m^3]
+    avg_volume = np.zeros((n_time_instants, steps, steps))
+    # agg_number is a matrix containing the number of agglomerates each region of the battery [-]
+    agg_number = np.zeros((n_time_instants, steps, steps), dtype=np.ushort)
+    for t in tqdm(range(n_time_instants), desc='Computing average volume and number of agglomerates', leave=False):
+        for z in range(steps):
+            for r in range(steps):
+                for label in range(max_label-1):
+                    if (slices[z] <= position[t, label, 0] < slices[z] and radii[r] <= np.linalg.norm(position[t, label, 1:]) < radii[r+1]):
+                        avg_volume[t, z, r] += volume[t, label]
+                        agg_number[t, z, r] += 1
+    avg_volume = avg_volume / agg_number
+    return position, volume, speed, volume_exp_rate, avg_volume, agg_number
