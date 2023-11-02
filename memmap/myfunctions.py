@@ -4,6 +4,7 @@ from tqdm import tqdm
 from numpy.lib.format import open_memmap
 # from dataclasses import dataclass
 import time as clock
+import pandas as pd
 import os
 
 
@@ -338,13 +339,12 @@ def find_ratio(hypervolume_mask, exp):
     pixel_z = 280 # total field of view in z direction in pixels
     fps = 20 # frames per second
     # computing the actual quantities
-    x_ratio = m_diameter/pixel_diameter
-    y_ratio = x_ratio
+    xy_ratio = m_diameter/pixel_diameter
     z_ratio = m_z/pixel_z
-    v_ratio = x_ratio * y_ratio * z_ratio
+    v_ratio = xy_ratio * xy_ratio * z_ratio
     t_ratio = 1/fps
     radius = pixel_diameter/2
-    return x_ratio, y_ratio, z_ratio, v_ratio, t_ratio, radius
+    return xy_ratio, z_ratio, v_ratio, t_ratio, radius
 
 
 
@@ -391,3 +391,57 @@ def motion_matrix(hypervolume_mask, exp, steps=3):
     agg_number[agg_number == 0] = 1
     avg_volume = avg_volume / agg_number
     return position, volume, speed, volume_exp_rate, avg_volume, agg_number
+
+
+
+# function returning the dataframe containing the motion properties of the agglomerates
+def motion_df(hypervolume_mask, exp):
+    print('\nComputing motion matrix...')
+    df = pd.DataFrame(columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])
+    # max_label = np.max(hypervolume_mask)
+    n_time_instants = hypervolume_mask.shape[0]
+    n_slices = hypervolume_mask.shape[1]
+    # the ratios between pixels and physical units are computed
+    xy_ratio, z_ratio, v_ratio, t_ratio, radius = find_ratio(hypervolume_mask, exp)
+    center = np.array([0, 249.5, 249.5])
+    rescale = np.array([z_ratio, xy_ratio, xy_ratio])
+    # radii and slices are the values used to divide the volume in <steps> regions
+    radii = np.linspace(0, radius*xy_ratio, 4)
+    radii[3] = 1    # the last value is set to 1 in order to avoid going out of bounds
+    slices = np.linspace(0, n_slices*z_ratio, 4)
+    slices[3] = 1   # the last value is set to 1 in order to avoid going out of bounds
+    r_sect_str = ['Core', 'Intermediate', 'External']
+    z_sect_str = ['Top', 'Middle', 'Bottom'] # HERE I HAVE TO DOUBLE CHECK THE ORDER OF THE SECTIONS!!!
+    # computing the actual quantities
+    for time in tqdm(range(n_time_instants), desc='Computing motion dataframe'):
+        labels, counts = np.unique(hypervolume_mask[time], return_counts=True)
+        for index, label in enumerate(labels):
+            if label <= 1:
+                continue
+            # converting the time index into seconds
+            t = time * t_ratio
+            # evaluating the position of the centroid of the agglomerate
+            z, y, x = (np.mean(np.where(hypervolume_mask[time] == label), axis=1) - center) * rescale
+            # evaluating the distance of the agglomerate from the central axis of the battery
+            r = np.linalg.norm([x, y])
+            # assigning the agglomerate to a section of the battery
+            for i in range(3):
+                if slices[i] <= z and z < slices[i+1]:
+                    z_sect = z_sect_str[i]
+                if radii[i] <= r and r < radii[i+1]:
+                    r_sect = r_sect_str[i]
+            # evaluating the volume of the agglomerate
+            V = counts[index] * v_ratio
+            # evaluating the velocity and volume expansion rate of the agglomerate if it was present in the previous time instant
+            # otherwise set these values to 0
+            if len(df[(df['t'] == time-1) & (df['label'] == label)])!=0:
+                x0, y0, z0 = df[(df['t'] == time-1) & (df['label'] == label)][['x', 'y', 'z']].values[0]
+                vx, vy, vz = (x-x0)/t_ratio, (y-y0)/t_ratio, (z-z0)/t_ratio
+                v = np.linalg.norm([vx, vy, vz])
+                dVdt = (V - df[(df['t'] == time-1) & (df['label'] == label)]['V'].values[0])/t_ratio
+            else:
+                vx, vy, vz, v, dVdt = 0, 0, 0, 0, 0
+            # adding the row to the dataframe
+            df = pd.concat([df, pd.DataFrame([[t, label, x, y, z, r, vx, vy, vz, v, V, dVdt, r_sect, z_sect]], 
+                                             columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])], ignore_index=True)
+    return df
