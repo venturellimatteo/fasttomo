@@ -321,26 +321,26 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
 # function used to compute the ratio between pixels and physical units in meters, and the ratio between time steps and physical units in seconds
 def find_ratio(hypervolume_mask, exp):
     if 'P28A' in exp:
-        um_diameter = 0.0186
+        m_diameter = 0.0186
     elif 'P28B' in exp:
-        um_diameter = 0.0186
+        m_diameter = 0.0186
     elif 'VCT5A' in exp:
-        um_diameter = 0.01835
+        m_diameter = 0.01835
     elif 'VCT5' in exp:
-        um_diameter = 0.0182
+        m_diameter = 0.0182
     else:
         raise ValueError('Experiment not recognized')
     # here I find the pixel width of the external shell
     rps = regionprops(hypervolume_mask[0,135])
     shell_index = np.argmax([rp.area for rp in rps])
     pixel_diameter = np.sqrt(rps[shell_index].area_bbox)
-    um_z = 0.012 # total field of view in z direction in meters
+    m_z = 0.012 # total field of view in z direction in meters
     pixel_z = 280 # total field of view in z direction in pixels
     fps = 20 # frames per second
     # computing the actual quantities
-    x_ratio = um_diameter/pixel_diameter
+    x_ratio = m_diameter/pixel_diameter
     y_ratio = x_ratio
-    z_ratio = um_z/pixel_z
+    z_ratio = m_z/pixel_z
     v_ratio = x_ratio * y_ratio * z_ratio
     t_ratio = 1/fps
     radius = pixel_diameter/2
@@ -358,7 +358,7 @@ def motion_matrix(hypervolume_mask, exp, steps=3):
     print('Computing ratios...')
     x_ratio, y_ratio, z_ratio, v_ratio, t_ratio, radius = find_ratio(hypervolume_mask, exp)
     # radii and slices are the values used to divide the volume in <steps> regions
-    radii = np.linspace(0, radius, steps+1)
+    radii = np.linspace(0, radius*x_ratio, steps+1)
     slices = np.linspace(0, n_slices*z_ratio, steps+1)
     # position is a matrix containing the position of each agglomerate in each time instant, x and y coordinates are centered [m, m, m]
     position = np.zeros((n_time_instants, max_label-1, 3), dtype=np.double)
