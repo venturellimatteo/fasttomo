@@ -79,7 +79,7 @@ def OS_path(exp, OS):
     if OS=='Windows':
         return 'Z:/rot_datasets/' + exp
     elif OS=='MacOS':
-        return '../MasterThesisData/' + exp
+        return '../../MasterThesisData/' + exp
     elif OS=='Linux':
         return '/data/projects/whaitiri/Data/Data_Processing_July2022/rot_datasets/' + exp
     elif OS=='Tyrex':
@@ -333,8 +333,8 @@ def find_ratio(hypervolume_mask, exp):
     # here I find the pixel width of the external shell
     rps = regionprops(hypervolume_mask[0,135])
     shell_index = np.argmax([rp.area for rp in rps])
-    pixel_diameter = rps[shell_index].major_axis_length
-    um_z = 0.012 # total field of view in z direction in micrometers
+    pixel_diameter = np.sqrt(rps[shell_index].area_bbox)
+    um_z = 0.012 # total field of view in z direction in meters
     pixel_z = 280 # total field of view in z direction in pixels
     fps = 20 # frames per second
     # computing the actual quantities
@@ -359,12 +359,12 @@ def motion_matrix(hypervolume_mask, exp, steps=3):
     x_ratio, y_ratio, z_ratio, v_ratio, t_ratio, radius = find_ratio(hypervolume_mask, exp)
     # radii and slices are the values used to divide the volume in <steps> regions
     radii = np.linspace(0, radius, steps+1)
-    slices = np.linspace(0, n_slices, steps+1)
+    slices = np.linspace(0, n_slices*z_ratio, steps+1)
     # position is a matrix containing the position of each agglomerate in each time instant, x and y coordinates are centered [m, m, m]
-    position = np.zeros((n_time_instants, max_label-1, 3))
+    position = np.zeros((n_time_instants, max_label-1, 3), dtype=np.double)
     # volume is a matrix containing the volume of each agglomerate in each time instant [m^3]
-    volume = np.zeros((n_time_instants, max_label-1))
-    for t in tqdm(range(n_time_instants), desc='Computing positions and volumes', leave=False):
+    volume = np.zeros((n_time_instants, max_label-1), dtype=np.double)
+    for t in tqdm(range(n_time_instants), desc='Computing agglomerates position and volume'):
         labels, counts = np.unique(hypervolume_mask[t], return_counts=True)
         for index, label in enumerate(labels):
             if label <= 1:  # the background and the external shell are not considered
@@ -376,15 +376,18 @@ def motion_matrix(hypervolume_mask, exp, steps=3):
     # volume_exp_rate is a matrix containing the expansion rate of each agglomerate in each time instant [m^3/s]
     volume_exp_rate = np.diff(volume, axis=0) * t_ratio
     # avg_volume is a matrix containing the average volume of the agglomerates each region of the battery [m^3]
-    avg_volume = np.zeros((n_time_instants, steps, steps))
+    avg_volume = np.zeros((n_time_instants, steps, steps), dtype=np.double)
     # agg_number is a matrix containing the number of agglomerates each region of the battery [-]
     agg_number = np.zeros((n_time_instants, steps, steps), dtype=np.ushort)
-    for t in tqdm(range(n_time_instants), desc='Computing average volume and number of agglomerates', leave=False):
+    for t in tqdm(range(n_time_instants), desc='Computing average volume and number of agglomerates'):
         for z in range(steps):
             for r in range(steps):
                 for label in range(max_label-1):
-                    if (slices[z] <= position[t, label, 0] < slices[z] and radii[r] <= np.linalg.norm(position[t, label, 1:]) < radii[r+1]):
+                    if (position[t, label, 0] != 0 and position[t, label, 1] != 0 and position[t, label, 2] != 0 and 
+                        slices[z] <= position[t, label, 0] and position[t, label, 0] < slices[z+1] and 
+                        radii[r] <= np.linalg.norm(position[t, label, 1:]) and np.linalg.norm(position[t, label, 1:]) < radii[r+1]):
                         avg_volume[t, z, r] += volume[t, label]
                         agg_number[t, z, r] += 1
+    agg_number[agg_number == 0] = 1
     avg_volume = avg_volume / agg_number
     return position, volume, speed, volume_exp_rate, avg_volume, agg_number
