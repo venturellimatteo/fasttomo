@@ -413,6 +413,7 @@ def motion_df(hypervolume_mask, exp):
     r_sect_str = ['Core', 'Intermediate', 'External']
     z_sect_str = ['Top', 'Middle', 'Bottom'] # HERE I HAVE TO DOUBLE CHECK THE ORDER OF THE SECTIONS!!!
     current_labels = []
+    prev_t = 0
     # computing the actual quantities
     for time in tqdm(range(n_time_instants), desc='Computing motion dataframe'):
         prev_labels = current_labels
@@ -439,13 +440,14 @@ def motion_df(hypervolume_mask, exp):
             # evaluating the velocity and volume expansion rate of the agglomerate if it was present in the previous time instant
             # otherwise set these values to 0
             if label in prev_labels:
-                x0, y0, z0 = df[(df['t'] == time-1) & (df['label'] == label)][['x', 'y', 'z']].values[0]
+                x0, y0, z0 = df[(df['t'] == prev_t) & (df['label'] == label)][['x', 'y', 'z']].values[0]
                 vx, vy, vz = (x-x0)/t_ratio, (y-y0)/t_ratio, (z-z0)/t_ratio
                 v = np.linalg.norm([vx, vy, vz])
-                dVdt = (V - df[(df['t'] == time-1) & (df['label'] == label)]['V'].values[0])/t_ratio
+                dVdt = (V - df[(df['t'] == prev_t) & (df['label'] == label)]['V'].values[0])/t_ratio
             else:
                 vx, vy, vz, v, dVdt = 0, 0, 0, 0, V/t_ratio
             # adding the row to the dataframe
             df = pd.concat([df, pd.DataFrame([[t, label, x, y, z, r, vx, vy, vz, v, V, dVdt, r_sect, z_sect]], 
                                              columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])], ignore_index=True)
+        prev_t = t
     return df

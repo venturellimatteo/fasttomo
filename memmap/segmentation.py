@@ -6,7 +6,7 @@ import os
 segment = False
 filtering = False
 motion = True
-exp = mf.exp_list()[1]
+exp = mf.exp_list()[0]
 OS = 'Linux'
 
 if segment:
