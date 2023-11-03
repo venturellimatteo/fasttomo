@@ -2,7 +2,6 @@ import numpy as np
 from skimage.measure import label, regionprops                  
 from tqdm import tqdm                               
 from numpy.lib.format import open_memmap
-# from dataclasses import dataclass
 import time as clock
 import pandas as pd
 import os
@@ -27,15 +26,19 @@ def exp_flag():
             True, False, False, True, False, False]
 
 # function returning an iterator if verbose=False, otherwise it returns a tqdm iterator
-def iterator(iterable, verbose=False, desc='', leave=True):
+def iterator(iterable, verbose=False, desc='', leave=True, custom_length=None):
     if verbose:
-        return tqdm(iterable, desc=desc, leave=leave)
+        if custom_length is None:
+            return tqdm(iterable, desc=desc, leave=leave)
+        else:
+            return tqdm(iterable, desc=desc, leave=leave, total=custom_length)
     else:
         return iterable
 
 # function returning the mask of an image given a threshold: agglomerates are labeled with different values
 def mask(image, threshold):
-    m = np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
+    m = image > threshold
+    m = label(m)
     for rp in regionprops(m):
         if rp.area <= 2 or rp.axis_major_length >= 10*rp.axis_minor_length:
             m[m == rp.label] = 0
@@ -70,18 +73,13 @@ def remove_isolated_agglomerates(sequence_mask):
 
 # function used to remove agglomerates that appear in more than max_length slices
 def remove_long_agglomerates(sequence_mask, max_length=20):
-    for label in np.unique(sequence_mask):
+    slices = range(sequence_mask.shape[0])
+    unique_labels = np.unique(sequence_mask)
+    labels = [np.unique(sequence_mask[z]) for z in slices]
+    for label in unique_labels:
         if label <= 1:
             continue
-        flag = False
-        count = 0
-        for z in range(sequence_mask.shape[0]):
-            if label in sequence_mask[z,:,:]:
-                count += 1
-                if count == max_length:
-                    flag = True
-                    break
-        if flag:
+        if sum([label in labels[z] for z in slices]) > max_length:
             sequence_mask[sequence_mask == label] = 0
     return sequence_mask
 
@@ -150,31 +148,53 @@ def find_threshold(sequence, threshold=0, step=1, target=5400, delta=200, slices
 # function used to propagate labels from previous_mask to current_mask
 # the update is carried out in increasing order of the area of the agglomerates -> the agglomerates with the biggest area are updated last
 # in this way the agglomerates with the biggest area will most probably propagate their labels and overwrite the labels of the smaller agglomerates
-# all the agglomerates with overlap>propagation_threshold in current mask are considered for each label
 # if forward=True the new labels that didn't exist in the previous mask are renamed in order to achieve low values for the labels
-def propagate_labels(previous_mask, current_mask, forward=True, propagation_threshold=10, verbose=False, leave=False):
+def propagate_labels(previous_mask, current_mask, forward=True, verbose=False):
     if forward:
         max_label = np.max(previous_mask)
         current_mask[current_mask > 0] += max_label
     unique_labels, label_counts = np.unique(previous_mask, return_counts=True)
     ordered_labels = unique_labels[np.argsort(label_counts)]
-    for previous_slice_label in iterator(ordered_labels, verbose=verbose, desc='Label propagation', leave=leave):
-        if previous_slice_label == 0:   # the background is not considered
-            continue
-        bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
-        if len(bincount) <= 1:  # if the agglomerate is not present in the current mask (i.e. bincount contains only background), the propagation is skipped
-            continue
-        bincount[0] = 0     # the background is not considered
-        current_slice_label = np.argmax(bincount)
-        current_mask[current_mask == current_slice_label] = previous_slice_label
-        for current_slice_label in np.where(bincount > propagation_threshold)[0]:
-            current_mask[current_mask == current_slice_label] = previous_slice_label
+    update = dict()
+
+    for previous_mask_label in iterator(ordered_labels[:-1], verbose=verbose, desc='Label dictionary construction', leave=False):
+        current_mask_labels = current_mask[previous_mask == previous_mask_label]
+        if np.any(current_mask_labels):
+            for current_slice_label in np.unique(current_mask_labels):
+                if current_slice_label:
+                    update[current_slice_label] = previous_mask_label
+    for current_slice_label, previous_mask_label in iterator(update.items(), verbose=verbose, 
+                                                             desc='Label propagation', leave=False, custom_length=len(update)):
+        current_mask[current_mask == current_slice_label] = previous_mask_label
+
     if forward:
         new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
         for i, new_label in enumerate(new_labels):
             current_mask[current_mask == new_label] = max_label + i + 1
     return current_mask
 
+# def old_propagate_labels(previous_mask, current_mask, forward=True, propagation_threshold=10, verbose=False, leave=False):
+#     if forward:
+#         max_label = np.max(previous_mask)
+#         current_mask[current_mask > 0] += max_label
+#     unique_labels, label_counts = np.unique(previous_mask, return_counts=True)
+#     ordered_labels = unique_labels[np.argsort(label_counts)]
+#     for previous_slice_label in iterator(ordered_labels, verbose=verbose, desc='Label propagation', leave=leave):
+#         if previous_slice_label == 0:   # the background is not considered
+#             continue
+#         bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
+#         if len(bincount) <= 1:  # if the agglomerate is not present in the current mask (i.e. bincount contains only background), the propagation is skipped
+#             continue
+#         bincount[0] = 0     # the background is not considered
+#         current_slice_label = np.argmax(bincount)
+#         current_mask[current_mask == current_slice_label] = previous_slice_label
+#         for current_slice_label in np.where(bincount > propagation_threshold)[0]:
+#             current_mask[current_mask == current_slice_label] = previous_slice_label
+#     if forward:
+#         new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
+#         for i, new_label in enumerate(new_labels):
+#             current_mask[current_mask == new_label] = max_label + i + 1
+#     return current_mask
 
 
 # function used to create the memmaps for the 4D volume and the 4D segmentation map
@@ -255,10 +275,10 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=20, filtering3D
     previous_mask = segment3D(previous_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
     print('First volume segmentation completed\n')
     # reassigning the labels after the filtering
-    for new_label, old_label in enumerate(np.unique(previous_mask)):
-        if old_label == 0:
-            continue
-        previous_mask[previous_mask == old_label] = new_label
+    for new_label, old_label in iterator(enumerate(np.unique(previous_mask)), verbose=True, 
+                                         desc='Renaming labels', leave=False, custom_length=len(np.unique(previous_mask))):
+        if old_label:
+            previous_mask[previous_mask == old_label] = new_label
     # writing the first mask in the hypervolume_mask memmap
     hypervolume_mask[0] = previous_mask
 
@@ -266,7 +286,7 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=20, filtering3D
     for time in tqdm(time_index[1:], desc='Volume segmentation and forward propagation'):
         current_volume = hypervolume[time]
         current_mask = segment3D(current_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
-        current_mask = propagate_labels(previous_mask, current_mask, forward=True, verbose=True, leave=False)
+        current_mask = propagate_labels(previous_mask, current_mask, forward=True, verbose=True)
         hypervolume_mask[time] = current_mask
         previous_mask = current_mask
             
