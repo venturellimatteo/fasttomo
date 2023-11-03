@@ -78,7 +78,7 @@ def remove_long_agglomerates(sequence_mask, max_length=20):
         for z in range(sequence_mask.shape[0]):
             if label in sequence_mask[z,:,:]:
                 count += 1
-                if count = max_length:
+                if count == max_length:
                     flag = True
                     break
         if flag:
