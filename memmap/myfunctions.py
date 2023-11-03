@@ -35,7 +35,11 @@ def iterator(iterable, verbose=False, desc='', leave=True):
 
 # function returning the mask of an image given a threshold: agglomerates are labeled with different values
 def mask(image, threshold):
-    return np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
+    m = np.vectorize(label, signature='(n,m)->(n,m)')(image > threshold)
+    for rp in regionprops(m):
+        if rp.area <= 2 or rp.axis_major_length >= 10*rp.axis_minor_length:
+            m[m == rp.label] = 0
+    return m
 
 # function removing the agglomerates with volume smaller than smallest_volume. volume can be intended as both 3D and 4D
 def remove_small_agglomerates(sequence_mask, smallest_volume):
@@ -44,8 +48,8 @@ def remove_small_agglomerates(sequence_mask, smallest_volume):
     return sequence_mask
 
 # function used to remove the agglomerates that are not present in neighboring slices
-def remove_isolated_agglomerates(sequence_mask, verbose=False):
-    for i in iterator(range(sequence_mask.shape[0]), verbose, desc='Isolated agglomerates removal'):
+def remove_isolated_agglomerates(sequence_mask):
+    for i in range(sequence_mask.shape[0]):
         current_slice = sequence_mask[i,:,:]
         if not i == 0:
             previous_slice = sequence_mask[i-1,:,:]
@@ -62,6 +66,23 @@ def remove_isolated_agglomerates(sequence_mask, verbose=False):
             if current_label not in previous_slice and current_label not in next_slice:
                 current_slice[current_slice == current_label] = 0
         sequence_mask[i,:,:] = current_slice
+    return sequence_mask
+
+# function used to remove agglomerates that appear in more than max_length slices
+def remove_long_agglomerates(sequence_mask, max_length=20):
+    for label in np.unique(sequence_mask):
+        if label <= 1:
+            continue
+        flag = False
+        count = 0
+        for z in range(sequence_mask.shape[0]):
+            if label in sequence_mask[z,:,:]:
+                count += 1
+                if count = max_length:
+                    flag = True
+                    break
+        if flag:
+            sequence_mask[sequence_mask == label] = 0
     return sequence_mask
 
 # function returning the area associated to the biggest agglomerate in the sequence
@@ -208,6 +229,7 @@ def segment3D(volume, threshold, smallest_volume=10, filtering=True):
     if filtering:
         volume_mask = remove_isolated_agglomerates(volume_mask)
         volume_mask = remove_small_agglomerates(volume_mask, smallest_volume)
+        volume_mask = remove_long_agglomerates(volume_mask)
     return volume_mask
 
 
@@ -216,7 +238,7 @@ def segment3D(volume, threshold, smallest_volume=10, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
-def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=50, filtering3D=True, OS='Windows'):
+def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=20, filtering3D=True, OS='Windows'):
     print(f'\nExp {exp} segmentation started\n')
     # defining the time steps for the current experiment
     start_time = exp_start_time()[exp_list().index(exp)]
@@ -311,8 +333,8 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
     time_index = range(hypervolume_mask.shape[0])
     for t in time_index:
         bincounts.append(np.bincount(hypervolume_mask[t].flatten()))
-    remove_small_4D_agglomerates(hypervolume_mask, bincounts, time_index, smallest_4Dvolume)
     remove_inconsistent_4D_agglomerates(hypervolume_mask, bincounts, time_index, n_steps)
+    remove_small_4D_agglomerates(hypervolume_mask, bincounts, time_index, smallest_4Dvolume)
     rename_labels(hypervolume_mask, time_index)
     print(f'\n4D filtering completed!\n')
     return None
@@ -320,7 +342,7 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
 
 
 # function used to compute the ratio between pixels and physical units in meters, and the ratio between time steps and physical units in seconds
-def find_ratio(hypervolume_mask, exp):
+def find_geometry(hypervolume_mask, exp):
     if 'P28A' in exp:
         m_diameter = 0.0186
     elif 'P28B' in exp:
@@ -348,52 +370,6 @@ def find_ratio(hypervolume_mask, exp):
 
 
 
-# function returning the position and the volume of the agglomerates in the 4D segmentation map
-def motion_matrix(hypervolume_mask, exp, steps=3):
-    print('\nComputing motion matrix...')
-    max_label = np.max(hypervolume_mask)
-    n_slices = hypervolume_mask.shape[1]
-    n_time_instants = hypervolume_mask.shape[0]
-    # the ratios between pixels and physical units are computed
-    print('Computing ratios...')
-    x_ratio, y_ratio, z_ratio, v_ratio, t_ratio, radius = find_ratio(hypervolume_mask, exp)
-    # radii and slices are the values used to divide the volume in <steps> regions
-    radii = np.linspace(0, radius*x_ratio, steps+1)
-    slices = np.linspace(0, n_slices*z_ratio, steps+1)
-    # position is a matrix containing the position of each agglomerate in each time instant, x and y coordinates are centered [m, m, m]
-    position = np.zeros((n_time_instants, max_label-1, 3), dtype=np.double)
-    # volume is a matrix containing the volume of each agglomerate in each time instant [m^3]
-    volume = np.zeros((n_time_instants, max_label-1), dtype=np.double)
-    for t in tqdm(range(n_time_instants), desc='Computing agglomerates position and volume'):
-        labels, counts = np.unique(hypervolume_mask[t], return_counts=True)
-        for index, label in enumerate(labels):
-            if label <= 1:  # the background and the external shell are not considered
-                continue
-            position[t, label-2] = (np.mean(np.where(hypervolume_mask[t] == label), axis=1) - np.array([0, 249.5, 249.5])) * np.array([z_ratio, y_ratio, x_ratio])
-            volume[t, label-2] = counts[index] * v_ratio
-    # speed is a matrix containing the speed of each agglomerate in each time instant [m/s, m/s, m/s]
-    speed = np.diff(position, axis=0) * t_ratio
-    # volume_exp_rate is a matrix containing the expansion rate of each agglomerate in each time instant [m^3/s]
-    volume_exp_rate = np.diff(volume, axis=0) * t_ratio
-    # avg_volume is a matrix containing the average volume of the agglomerates each region of the battery [m^3]
-    avg_volume = np.zeros((n_time_instants, steps, steps), dtype=np.double)
-    # agg_number is a matrix containing the number of agglomerates each region of the battery [-]
-    agg_number = np.zeros((n_time_instants, steps, steps), dtype=np.ushort)
-    for t in tqdm(range(n_time_instants), desc='Computing average volume and number of agglomerates'):
-        for z in range(steps):
-            for r in range(steps):
-                for label in range(max_label-1):
-                    if (position[t, label, 0] != 0 and position[t, label, 1] != 0 and position[t, label, 2] != 0 and 
-                        slices[z] <= position[t, label, 0] and position[t, label, 0] < slices[z+1] and 
-                        radii[r] <= np.linalg.norm(position[t, label, 1:]) and np.linalg.norm(position[t, label, 1:]) < radii[r+1]):
-                        avg_volume[t, z, r] += volume[t, label]
-                        agg_number[t, z, r] += 1
-    agg_number[agg_number == 0] = 1
-    avg_volume = avg_volume / agg_number
-    return position, volume, speed, volume_exp_rate, avg_volume, agg_number
-
-
-
 # function returning the dataframe containing the motion properties of the agglomerates
 def motion_df(hypervolume_mask, exp):
     print('\nComputing motion matrix...')
@@ -402,7 +378,7 @@ def motion_df(hypervolume_mask, exp):
     n_time_instants = hypervolume_mask.shape[0]
     n_slices = hypervolume_mask.shape[1]
     # the ratios between pixels and physical units are computed
-    xy_ratio, z_ratio, V_ratio, t_ratio, radius = find_ratio(hypervolume_mask, exp)
+    xy_ratio, z_ratio, V_ratio, t_ratio, radius = find_geometry(hypervolume_mask, exp)
     center = np.array([0, 249.5, 249.5])
     rescale = np.array([z_ratio, xy_ratio, xy_ratio])
     # radii and slices are the values used to divide the volume in <steps> regions

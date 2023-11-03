@@ -3,8 +3,8 @@ from numpy.lib.format import open_memmap
 from numpy import save
 import os
 
-segment = False
-filtering = False
+segment = True
+filtering = True
 motion = True
 exp = mf.exp_list()[0]
 OS = 'Linux'
