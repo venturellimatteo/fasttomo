@@ -173,28 +173,6 @@ def propagate_labels(previous_mask, current_mask, forward=True, verbose=False):
             current_mask[current_mask == new_label] = max_label + i + 1
     return current_mask
 
-# def old_propagate_labels(previous_mask, current_mask, forward=True, propagation_threshold=10, verbose=False, leave=False):
-#     if forward:
-#         max_label = np.max(previous_mask)
-#         current_mask[current_mask > 0] += max_label
-#     unique_labels, label_counts = np.unique(previous_mask, return_counts=True)
-#     ordered_labels = unique_labels[np.argsort(label_counts)]
-#     for previous_slice_label in iterator(ordered_labels, verbose=verbose, desc='Label propagation', leave=leave):
-#         if previous_slice_label == 0:   # the background is not considered
-#             continue
-#         bincount = np.bincount(current_mask[previous_mask == previous_slice_label])
-#         if len(bincount) <= 1:  # if the agglomerate is not present in the current mask (i.e. bincount contains only background), the propagation is skipped
-#             continue
-#         bincount[0] = 0     # the background is not considered
-#         current_slice_label = np.argmax(bincount)
-#         current_mask[current_mask == current_slice_label] = previous_slice_label
-#         for current_slice_label in np.where(bincount > propagation_threshold)[0]:
-#             current_mask[current_mask == current_slice_label] = previous_slice_label
-#     if forward:
-#         new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
-#         for i, new_label in enumerate(new_labels):
-#             current_mask[current_mask == new_label] = max_label + i + 1
-#     return current_mask
 
 
 # function used to create the memmaps for the 4D volume and the 4D segmentation map
