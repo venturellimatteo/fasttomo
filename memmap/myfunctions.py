@@ -145,6 +145,16 @@ def find_threshold(sequence, threshold=0, step=1, target=5400, delta=200, slices
 
 
 
+# function used to update the propagation map dictionary used in label propagation
+def update_map(current_mask, previous_mask, previous_mask_label, propagation_map):
+    current_mask_labels = current_mask[previous_mask == previous_mask_label]
+    if np.any(current_mask_labels):
+        for current_slice_label in np.unique(current_mask_labels):
+            if current_slice_label != 0:
+                propagation_map[current_slice_label] = previous_mask_label
+    return propagation_map
+
+
 # function used to propagate labels from previous_mask to current_mask
 # the update is carried out in increasing order of the area of the agglomerates -> the agglomerates with the biggest area are updated last
 # in this way the agglomerates with the biggest area will most probably propagate their labels and overwrite the labels of the smaller agglomerates
@@ -153,22 +163,18 @@ def propagate_labels(previous_mask, current_mask, forward=True, verbose=False):
     if forward:
         max_label = np.max(previous_mask)
         current_mask[current_mask > 0] += max_label
+
     unique_labels, label_counts = np.unique(previous_mask, return_counts=True)
     ordered_labels = unique_labels[np.argsort(label_counts)]
-    update = dict()
+    propagation_map = dict()
 
     for previous_mask_label in iterator(ordered_labels[:-1], verbose=verbose, desc='Label dictionary construction', leave=False):
-        current_mask_labels = current_mask[previous_mask == previous_mask_label]
-        if np.any(current_mask_labels):
-            for current_slice_label in np.unique(current_mask_labels):
-                if current_slice_label:
-                    update[current_slice_label] = previous_mask_label
-    for current_slice_label, previous_mask_label in iterator(update.items(), verbose=verbose, 
-                                                             desc='Label propagation', leave=False, custom_length=len(update)):
+        propagation_map = update_map(current_mask, previous_mask, previous_mask_label, propagation_map)
+    for current_slice_label, previous_mask_label in iterator(propagation_map.items(), verbose=verbose, desc='Label propagation', leave=False, custom_length=len(propagation_map)):
         current_mask[current_mask == current_slice_label] = previous_mask_label
 
     if forward:
-        new_labels = np.unique(current_mask[current_mask > np.max(previous_mask)])
+        new_labels = np.unique(current_mask[current_mask > max_label])
         for i, new_label in enumerate(new_labels):
             current_mask[current_mask == new_label] = max_label + i + 1
     return current_mask
@@ -198,15 +204,16 @@ def create_memmaps(exp, time_steps, OS='Windows', cropping=True):
 
 
 # function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
-# using a set to store the labels allows analyze the labels present in each volume separately instead of computing np.unique on the whole 4D mask
 def rename_labels(hypervolume_mask, time_index):
-    unique_labels = set()
-    for time in time_index:
-        for label in np.unique(hypervolume_mask[time]):
-            unique_labels.add(label)
+    unique_labels =  np.unique(hypervolume_mask)
+    total_labels = len(unique_labels)
+    old_labels = unique_labels[unique_labels >= total_labels]
+    new_labels = np.setdiff1d(np.arange(total_labels), unique_labels)
+    timewise_labels = [np.unique(hypervolume_mask[t]) for t in time_index]
     for time in tqdm(time_index, desc='Renaming labels'):
-        for new_label, old_label in enumerate(unique_labels):
-            hypervolume_mask[time][hypervolume_mask[time] == old_label] = new_label
+        for new_label, old_label in zip(new_labels, old_labels):
+            if old_label in timewise_labels[time]:
+                hypervolume_mask[time][hypervolume_mask[time] == old_label] = new_label
     return None
 
 
@@ -290,27 +297,34 @@ def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, small
 
 
 
+# function used to update the remove_list used to remove the agglomerates that are not present in each of the following n_steps bincounts
+def update_remove_list(bincounts, bincount, remove_list, n_steps, i):
+    # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
+    prev_bincount = bincounts[i-1] if i != 0 else np.zeros_like(bincount)
+    # looping through the labels in the current bincount
+    for label, count in enumerate(bincount):
+        # if the label is contained in the previous bincount, it is not considered (we check only for the first time a label appears)
+        if label < len(prev_bincount):
+            if prev_bincount[label] != 0 or count == 0:
+                continue
+        # if the label is not contained in each of the following n_steps bincounts, it is added to the set of labels to remove
+        for j in range(i+1, i+1+n_steps):
+            next_bincount = bincounts[j]
+            if next_bincount[label] == 0:
+                remove_list.append(np.array([label, i, j]))
+                break
+    return remove_list
+
+
+
 # function used to remove the agglomerates that are not present in each of the following n_steps bincounts
 def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index, n_steps=10):
     # remove list is a list containing the labels that will be removed from start_time to end_time volumes in the format [label, start_time, end_time]
     remove_list = []
     max_label = np.max(hypervolume_mask)
-    # looping through the bincounts related to each time instant
+    # looping through the bincounts related to each time instant and updating the remove_list
     for i, bincount in tqdm(enumerate(bincounts[:-n_steps]), total=len(bincounts)-n_steps, desc='Finding labels to remove', leave=False):
-        # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
-        prev_bincount = bincounts[i-1] if i != 0 else np.zeros_like(bincount)
-        # looping through the labels in the current bincount
-        for label, count in enumerate(bincount):
-            # if the label is contained in the previous bincount, it is not considered (we check only for the first time a label appears)
-            if label < len(prev_bincount):
-                if prev_bincount[label] != 0 or count == 0:
-                    continue
-            # if the label is not contained in each of the following n_steps bincounts, it is added to the set of labels to remove
-            for j in range(i+1, i+1+n_steps):
-                next_bincount = bincounts[j]
-                if next_bincount[label] == 0:
-                    remove_list.append(np.array([label, i, j]))
-                    break
+        remove_list = update_remove_list(bincounts, bincount, remove_list, n_steps, i)
     # converting the remove_list to more useful format for looping
     # remove_array is a boolean array of shape (len(time_index), max_label) where each row contains True for the labels that will be removed in that time instant
     remove_array = np.zeros((len(time_index), int(max_label)), dtype=bool)
@@ -368,6 +382,38 @@ def find_geometry(hypervolume_mask, exp):
 
 
 
+# function used to update the dataframe containing the motion properties of the agglomerates
+def update_df(df, hypervolume_mask, time, index, label, counts, slices, radii, center, rescale,
+              z_sect_str, r_sect_str, V_ratio, t_ratio, t, prev_t, prev_labels):
+    # evaluating the position of the centroid of the agglomerate
+    z, y, x = (np.mean(np.where(hypervolume_mask[time] == label), axis=1) - center) * rescale
+    # evaluating the distance of the agglomerate from the central axis of the battery
+    r = np.linalg.norm([x, y])
+    # assigning the agglomerate to a section of the battery
+    for i in range(3):
+        if slices[i] <= z and z < slices[i+1]:
+            z_sect = z_sect_str[i]
+        if radii[i] <= r and r < radii[i+1]:
+            r_sect = r_sect_str[i]
+    # evaluating the volume of the agglomerate
+    V = counts[index] * V_ratio
+    # evaluating the velocity and volume expansion rate of the agglomerate if it was present in the previous time instant
+    # otherwise set these values to 0
+    if label in prev_labels:
+        x0, y0, z0 = df[(df['t'] == prev_t) & (df['label'] == label)][['x', 'y', 'z']].values[0]
+        vx, vy, vz = (x-x0)/t_ratio, (y-y0)/t_ratio, (z-z0)/t_ratio
+        v = np.linalg.norm([vx, vy, vz])
+        dVdt = (V - df[(df['t'] == prev_t) & (df['label'] == label)]['V'].values[0])/t_ratio
+    else:
+        vx, vy, vz, v, dVdt = 0, 0, 0, 0, V/t_ratio
+    # adding the row to the dataframe
+    df = pd.concat([df, pd.DataFrame([[t, label, x, y, z, r, vx, vy, vz, v, V, dVdt, r_sect, z_sect]],
+                                     columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])],
+                                     ignore_index=True)
+    return df
+
+
+
 # function returning the dataframe containing the motion properties of the agglomerates
 def motion_df(hypervolume_mask, exp):
     print('\nComputing motion matrix...')
@@ -399,29 +445,7 @@ def motion_df(hypervolume_mask, exp):
             if label <= 1:
                 continue
             current_labels.append(label)
-            # evaluating the position of the centroid of the agglomerate
-            z, y, x = (np.mean(np.where(hypervolume_mask[time] == label), axis=1) - center) * rescale
-            # evaluating the distance of the agglomerate from the central axis of the battery
-            r = np.linalg.norm([x, y])
-            # assigning the agglomerate to a section of the battery
-            for i in range(3):
-                if slices[i] <= z and z < slices[i+1]:
-                    z_sect = z_sect_str[i]
-                if radii[i] <= r and r < radii[i+1]:
-                    r_sect = r_sect_str[i]
-            # evaluating the volume of the agglomerate
-            V = counts[index] * V_ratio
-            # evaluating the velocity and volume expansion rate of the agglomerate if it was present in the previous time instant
-            # otherwise set these values to 0
-            if label in prev_labels:
-                x0, y0, z0 = df[(df['t'] == prev_t) & (df['label'] == label)][['x', 'y', 'z']].values[0]
-                vx, vy, vz = (x-x0)/t_ratio, (y-y0)/t_ratio, (z-z0)/t_ratio
-                v = np.linalg.norm([vx, vy, vz])
-                dVdt = (V - df[(df['t'] == prev_t) & (df['label'] == label)]['V'].values[0])/t_ratio
-            else:
-                vx, vy, vz, v, dVdt = 0, 0, 0, 0, V/t_ratio
-            # adding the row to the dataframe
-            df = pd.concat([df, pd.DataFrame([[t, label, x, y, z, r, vx, vy, vz, v, V, dVdt, r_sect, z_sect]], 
-                                             columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])], ignore_index=True)
+            df = update_df(df, hypervolume_mask, time, index, label, counts, slices, radii, center, rescale,
+                           z_sect_str, r_sect_str, V_ratio, t_ratio, t, prev_t, prev_labels)  
         prev_t = t
     return df
