@@ -96,7 +96,7 @@ def OS_path(exp, OS):
     if OS=='Windows':
         return 'Z:/rot_datasets/' + exp
     elif OS=='MacOS':
-        return '../../MasterThesisData/' + exp
+        return '/Users/matteoventurelli/Documents/VS Code/MasterThesisData/' + exp
     elif OS=='Linux':
         return '/data/projects/whaitiri/Data/Data_Processing_July2022/rot_datasets/' + exp
     elif OS=='Tyrex':
@@ -237,7 +237,7 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=20, filtering3D
     start_time = exp_start_time()[exp_list().index(exp)]
     time_steps = range(start_time, end_time+1, 2) if skip180 else range(start_time, end_time+1)
     time_index = range(len(time_steps))
-    hypervolume, hypervolume_mask = create_memmaps(exp, time_steps, OS, usenpy)
+    hypervolume, hypervolume_mask = create_memmaps(exp, time_steps, usenpy, OS)
 
     # dealing with the first volume
     previous_volume = hypervolume[0]

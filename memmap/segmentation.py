@@ -7,7 +7,7 @@ segment = True
 filtering = True
 motion = True
 exp = mf.exp_list()[1]
-OS = 'Linux'
+OS = 'MacOS'
 
 if segment:
     hypervolume_mask = mf.segment4D(exp=exp, OS=OS)
