@@ -40,7 +40,7 @@ def mask(image, threshold):
     m = image > threshold
     m = label(m)
     for rp in regionprops(m):
-        if rp.area <= 2 or rp.axis_major_length >= 10*rp.axis_minor_length:
+        if rp.area <= 5 or rp.axis_major_length >= 10*rp.axis_minor_length:
             m[m == rp.label] = 0
     return m
 
@@ -62,23 +62,21 @@ def remove_isolated_agglomerates(sequence_mask):
             next_slice = sequence_mask[i+1,:,:]
         else:
             next_slice = np.zeros_like(current_slice)       # next_slice for last slice is set ad-hoc in order to avoid going out of bounds
-        current_labels = np.unique(current_slice)
+        current_labels = [rp.label for rp in regionprops(current_slice)]
         for current_label in current_labels:
-            if current_label == 0:
-                continue
             if current_label not in previous_slice and current_label not in next_slice:
                 current_slice[current_slice == current_label] = 0
         sequence_mask[i,:,:] = current_slice
     return sequence_mask
 
 # function used to remove agglomerates that appear in more than max_length slices
-def remove_long_agglomerates(sequence_mask, max_length=20):
+def remove_long_agglomerates(sequence_mask, max_length=80):
     slices = range(sequence_mask.shape[0])
-    unique_labels = np.unique(sequence_mask)
-    labels = [np.unique(sequence_mask[z]) for z in slices]
-    for label in unique_labels:
-        if label <= 1:
-            continue
+    rps = regionprops(sequence_mask)
+    unique_labels = [rp.label for rp in rps]
+    ordered_unique_labels = np.array(unique_labels)[np.argsort([rp.area for rp in rps])[::-1]]
+    labels = [[rp.label for rp in regionprops(sequence_mask[z])] for z in slices]
+    for label in ordered_unique_labels[1:]:
         if sum([label in labels[z] for z in slices]) > max_length:
             sequence_mask[sequence_mask == label] = 0
     return sequence_mask
@@ -89,9 +87,8 @@ def find_biggest_area(sequence, threshold):
     max_area = np.zeros(sequence.shape[0])
     for i in range(sequence.shape[0]):
         sequence_mask[i,:,:] = mask(sequence[i,:,:], threshold)
-        _, label_counts = np.unique(sequence_mask[i,:,:], return_counts=True)
-        label_counts[0] = 0
-        max_area[i] = np.max(label_counts)
+        areas = [rp.area for rp in regionprops(sequence_mask[i,:,:])]
+        max_area[i] = np.max(areas)
     return np.mean(max_area)
 
 # function returning the path of the experiment given the experiment name and the OS
@@ -145,14 +142,40 @@ def find_threshold(sequence, threshold=0, step=1, target=5400, delta=200, slices
 
 
 
+# function used to create the memmaps for the 4D volume and the 4D segmentation map
+# if cropping is True, the volume is cropped in order to reduce the size of the memmap
+def create_memmaps(exp, time_steps, usenpy, OS='Windows', cropping=True):
+    print(f'\nExp {exp} memmaps creation started\n')
+    # define shape as (len(time_steps), 270, 500, 500) if cropping is True, otherwise as (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
+    if cropping:
+        shape = (len(time_steps), 270, 500, 500)
+    else:
+        volume = open_memmap(volume_path(exp=exp, time=time_steps[0], OS=OS, isImage=True), mode='r')
+        shape = (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
+    # create the 4D volume memmap and load it with already existing volumes in .npy files
+    if usenpy:
+        hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), dtype=np.half, mode='w+', shape=shape)
+        for t, time in tqdm(enumerate(time_steps), desc='Loading hypervolume memmap', total=len(time_steps)):
+            volume = open_memmap(volume_path(exp=exp, time=time, OS=OS, isImage=True), mode='r')
+            hypervolume[t,:,:,:] = volume[10:,208:708,244:744] if cropping else volume
+    else:
+        hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), mode='r')
+    # create the 4D segmentation mask memmap
+    hypervolume_mask = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume_mask.npy'), dtype=np.ushort, mode='w+', shape=shape)
+    print('Hypervolume_mask memmap created\n')
+    return hypervolume, hypervolume_mask
+
+
+
 # function used to update the propagation map dictionary used in label propagation
 def update_map(current_mask, previous_mask, previous_mask_label, propagation_map):
     current_mask_labels = current_mask[previous_mask == previous_mask_label]
     if np.any(current_mask_labels):
         for current_slice_label in np.unique(current_mask_labels):
-            if current_slice_label != 0:
+            if current_slice_label > 0:
                 propagation_map[current_slice_label] = previous_mask_label
     return propagation_map
+
 
 
 # function used to propagate labels from previous_mask to current_mask
@@ -162,13 +185,15 @@ def update_map(current_mask, previous_mask, previous_mask_label, propagation_map
 def propagate_labels(previous_mask, current_mask, forward=True, verbose=False):
     if forward:
         max_label = np.max(previous_mask)
-        current_mask[current_mask > 0] += max_label
+        current_mask[current_mask > 0] += max_label + 1
 
-    unique_labels, label_counts = np.unique(previous_mask, return_counts=True)
-    ordered_labels = unique_labels[np.argsort(label_counts)]
+    rps = regionprops(previous_mask)
+    labels = [rp.label for rp in rps]
+    areas = [rp.area for rp in rps]
+    ordered_labels = np.array(labels)[np.argsort(areas)]
     propagation_map = dict()
 
-    for previous_mask_label in iterator(ordered_labels[:-1], verbose=verbose, desc='Label dictionary construction', leave=False):
+    for previous_mask_label in iterator(ordered_labels, verbose=verbose, desc='Label dictionary construction', leave=False):
         propagation_map = update_map(current_mask, previous_mask, previous_mask_label, propagation_map)
     for current_slice_label, previous_mask_label in iterator(propagation_map.items(), verbose=verbose, desc='Label propagation', leave=False, custom_length=len(propagation_map)):
         current_mask[current_mask == current_slice_label] = previous_mask_label
@@ -178,43 +203,6 @@ def propagate_labels(previous_mask, current_mask, forward=True, verbose=False):
         for i, new_label in enumerate(new_labels):
             current_mask[current_mask == new_label] = max_label + i + 1
     return current_mask
-
-
-
-# function used to create the memmaps for the 4D volume and the 4D segmentation map
-# if cropping is True, the volume is cropped in order to reduce the size of the memmap
-def create_memmaps(exp, time_steps, OS='Windows', cropping=True):
-    print(f'\nExp {exp} memmaps creation started\n')
-    # define shape as (len(time_steps), 270, 500, 500) if cropping is True, otherwise as (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
-    if cropping:
-        shape = (len(time_steps), 270, 500, 500)
-    else:
-        volume = open_memmap(volume_path(exp=exp, time=time_steps[0], OS=OS, isImage=True), mode='r')
-        shape = (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
-    # create the 4D volume memmap and load it with already existing volumes in .npy files
-    hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), dtype=np.half, mode='w+', shape=shape)
-    for t, time in tqdm(enumerate(time_steps), desc='Loading hypervolume memmap', total=len(time_steps)):
-        volume = open_memmap(volume_path(exp=exp, time=time, OS=OS, isImage=True), mode='r')
-        hypervolume[t,:,:,:] = volume[10:,208:708,244:744] if cropping else volume
-    # create the 4D segmentation mask memmap
-    hypervolume_mask = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume_mask.npy'), dtype=np.ushort, mode='w+', shape=shape)
-    print('Hypervolume_mask memmap created\n')
-    return hypervolume, hypervolume_mask
-
-
-
-# function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
-def rename_labels(hypervolume_mask, time_index):
-    unique_labels =  np.unique(hypervolume_mask)
-    total_labels = len(unique_labels)
-    old_labels = unique_labels[unique_labels >= total_labels]
-    new_labels = np.setdiff1d(np.arange(total_labels), unique_labels)
-    timewise_labels = [np.unique(hypervolume_mask[t]) for t in time_index]
-    for time in tqdm(time_index, desc='Renaming labels'):
-        for new_label, old_label in zip(new_labels, old_labels):
-            if old_label in timewise_labels[time]:
-                hypervolume_mask[time][hypervolume_mask[time] == old_label] = new_label
-    return None
 
 
 
@@ -234,7 +222,7 @@ def segment3D(volume, threshold, smallest_volume=10, filtering=True):
     if filtering:
         volume_mask = remove_isolated_agglomerates(volume_mask)
         volume_mask = remove_small_agglomerates(volume_mask, smallest_volume)
-        volume_mask = remove_long_agglomerates(volume_mask)
+        # volume_mask = remove_long_agglomerates(volume_mask)
     return volume_mask
 
 
@@ -243,13 +231,13 @@ def segment3D(volume, threshold, smallest_volume=10, filtering=True):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
-def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=20, filtering3D=True, OS='Windows'):
+def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=20, filtering3D=True, OS='Windows', usenpy=False):
     print(f'\nExp {exp} segmentation started\n')
     # defining the time steps for the current experiment
     start_time = exp_start_time()[exp_list().index(exp)]
     time_steps = range(start_time, end_time+1, 2) if skip180 else range(start_time, end_time+1)
     time_index = range(len(time_steps))
-    hypervolume, hypervolume_mask = create_memmaps(exp, time_steps, OS)
+    hypervolume, hypervolume_mask = create_memmaps(exp, time_steps, OS, usenpy)
 
     # dealing with the first volume
     previous_volume = hypervolume[0]
@@ -260,10 +248,9 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=20, filtering3D
     previous_mask = segment3D(previous_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
     print('First volume segmentation completed\n')
     # reassigning the labels after the filtering
-    for new_label, old_label in iterator(enumerate(np.unique(previous_mask)), verbose=True, 
-                                         desc='Renaming labels', leave=False, custom_length=len(np.unique(previous_mask))):
-        if old_label:
-            previous_mask[previous_mask == old_label] = new_label
+    temp = [rp.label for rp in regionprops(previous_mask)]
+    for new_label, old_label in iterator(enumerate(temp), verbose=True, desc='Renaming labels', leave=False, custom_length=len(temp)):
+        previous_mask[previous_mask == old_label] = new_label + 1
     # writing the first mask in the hypervolume_mask memmap
     hypervolume_mask[0] = previous_mask
 
@@ -334,6 +321,25 @@ def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index
     for time in tqdm(time_index, desc='Removing inconsistent agglomerates'):
         for label in np.where(remove_array[time])[0]:
             hypervolume_mask[time][hypervolume_mask[time] == label] = 0
+    return None
+
+
+
+# function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
+def rename_labels(hypervolume_mask, time_index):
+    unique_labels = set()
+    for t in time_index:
+        for rp in regionprops(hypervolume_mask[t]):
+            unique_labels.add(rp.label)
+    unique_labels = np.array(list(unique_labels))
+    total_labels = len(unique_labels)
+    old_labels = unique_labels[unique_labels >= total_labels]
+    new_labels = np.setdiff1d(np.arange(total_labels), unique_labels)
+    timewise_labels = [[rp.label for rp in regionprops(hypervolume_mask[t])] for t in time_index]
+    for time in tqdm(time_index, desc='Renaming labels'):
+        for new_label, old_label in zip(new_labels, old_labels):
+            if old_label in timewise_labels[time]:
+                hypervolume_mask[time][hypervolume_mask[time] == old_label] = new_label
     return None
 
 
@@ -438,7 +444,9 @@ def motion_df(hypervolume_mask, exp):
     for time in tqdm(range(n_time_instants), desc='Computing motion dataframe'):
         prev_labels = current_labels
         current_labels = []
-        labels, counts = np.unique(hypervolume_mask[time], return_counts=True)
+        rps = regionprops(hypervolume_mask[time])
+        labels = [rp.label for rp in rps]
+        counts = [rp.area for rp in rps]
         # converting the time index into seconds
         t = time * t_ratio
         for index, label in enumerate(labels):
