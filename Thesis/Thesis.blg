@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2023)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: Thesis.aux
+The style file: abbrvnat.bst
+Database file #1: Thesis_bibliography.bib
+Warning--empty institution in iea-transport
+You've used 2 entries,
+            2773 wiz_defined-function locations,
+            606 strings with 4983 characters,
+and the built_in function-call counts, 898 in all, are:
+= -- 80
+> -- 49
+< -- 1
++ -- 17
+- -- 15
+* -- 76
+:= -- 150
+add.period$ -- 7
+call.type$ -- 2
+change.case$ -- 12
+chr.to.int$ -- 2
+cite$ -- 5
+duplicate$ -- 36
+empty$ -- 67
+format.name$ -- 17
+if$ -- 175
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 1
+newline$ -- 19
+num.names$ -- 8
+pop$ -- 18
+preamble$ -- 1
+purify$ -- 9
+quote$ -- 0
+skip$ -- 28
+stack$ -- 0
+substring$ -- 35
+swap$ -- 1
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 22
+warning$ -- 1
+while$ -- 8
+width$ -- 0
+write$ -- 34
+(There was 1 warning)

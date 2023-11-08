@@ -5,7 +5,7 @@ import os
 segment = True
 filtering = True
 motion = True
-exp = mf.exp_list()[0]
+exp = mf.exp_list()[2]
 OS = 'MacOS'
 
 if segment:
