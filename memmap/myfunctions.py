@@ -359,23 +359,24 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
 
 
 
-# function used to compute the ratio between pixels and physical units in meters, and the ratio between time steps and physical units in seconds
+# function used to compute the ratio between pixels and physical units in millimeters
+# and the ratio between time steps and physical units in seconds
 def find_geometry(hypervolume_mask, exp):
     if 'P28A' in exp:
-        m_diameter = 0.0186
+        m_diameter = 18.6 # [mm]
     elif 'P28B' in exp:
-        m_diameter = 0.0186
+        m_diameter = 18.6 # [mm]
     elif 'VCT5A' in exp:
-        m_diameter = 0.01835
+        m_diameter = 18.35 # [mm]
     elif 'VCT5' in exp:
-        m_diameter = 0.0182
+        m_diameter = 18.2 # [mm]
     else:
         raise ValueError('Experiment not recognized')
     # here I find the pixel width of the external shell
     rps = regionprops(hypervolume_mask[0,135])
     shell_index = np.argmax([rp.area for rp in rps])
     pixel_diameter = np.sqrt(rps[shell_index].area_bbox)
-    m_z = 0.012 # total field of view in z direction in meters
+    m_z = 12 # total field of view in z direction [mm]
     pixel_z = 280 # total field of view in z direction in pixels
     fps = 20 # frames per second
     # computing the actual quantities
@@ -389,10 +390,9 @@ def find_geometry(hypervolume_mask, exp):
 
 
 # function used to update the dataframe containing the motion properties of the agglomerates
-def update_df(df, hypervolume_mask, time, index, label, counts, slices, radii, center, rescale,
-              z_sect_str, r_sect_str, V_ratio, t_ratio, t, prev_t, prev_labels):
+def update_df(df, label, V, centroid, slices, radii, z_sect_str, r_sect_str, t_ratio, t, prev_labels):
     # evaluating the position of the centroid of the agglomerate
-    z, y, x = (np.mean(np.where(hypervolume_mask[time] == label), axis=1) - center) * rescale
+    z, y, x = centroid
     # evaluating the distance of the agglomerate from the central axis of the battery
     r = np.linalg.norm([x, y])
     # assigning the agglomerate to a section of the battery
@@ -401,21 +401,18 @@ def update_df(df, hypervolume_mask, time, index, label, counts, slices, radii, c
             z_sect = z_sect_str[i]
         if radii[i] <= r and r < radii[i+1]:
             r_sect = r_sect_str[i]
-    # evaluating the volume of the agglomerate
-    V = counts[index] * V_ratio
     # evaluating the velocity and volume expansion rate of the agglomerate if it was present in the previous time instant
     # otherwise set these values to 0
     if label in prev_labels:
-        x0, y0, z0 = df[(df['t'] == prev_t) & (df['label'] == label)][['x', 'y', 'z']].values[0]
+        x0, y0, z0 = (df.iloc[prev_labels[label]][['x', 'y', 'z']]).values
         vx, vy, vz = (x-x0)/t_ratio, (y-y0)/t_ratio, (z-z0)/t_ratio
         v = np.linalg.norm([vx, vy, vz])
-        dVdt = (V - df[(df['t'] == prev_t) & (df['label'] == label)]['V'].values[0])/t_ratio
+        dVdt = (V - (df.iloc[prev_labels[label]]['V']))/t_ratio
     else:
         vx, vy, vz, v, dVdt = 0, 0, 0, 0, V/t_ratio
     # adding the row to the dataframe
     df = pd.concat([df, pd.DataFrame([[t, label, x, y, z, r, vx, vy, vz, v, V, dVdt, r_sect, z_sect]],
-                                     columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])],
-                                     ignore_index=True)
+                                     columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])])
     return df
 
 
@@ -433,27 +430,24 @@ def motion_df(hypervolume_mask, exp):
     rescale = np.array([z_ratio, xy_ratio, xy_ratio])
     # radii and slices are the values used to divide the volume in <steps> regions
     radii = np.linspace(0, radius*xy_ratio, 4)
-    radii[3] = 1    # the last value is set to 1 in order to avoid going out of bounds
+    radii[3] = np.inf    # the last value is set to inf in order to avoid going out of bounds
     slices = np.linspace(0, n_slices*z_ratio, 4)
-    slices[3] = 1   # the last value is set to 1 in order to avoid going out of bounds
+    slices[3] = np.inf   # the last value is set to inf in order to avoid going out of bounds
     r_sect_str = ['Core', 'Intermediate', 'External']
     z_sect_str = ['Top', 'Middle', 'Bottom'] # HERE I HAVE TO DOUBLE CHECK THE ORDER OF THE SECTIONS!!!
-    current_labels = []
-    prev_t = 0
+    current_labels = dict()
     # computing the actual quantities
     for time in tqdm(range(n_time_instants), desc='Computing motion dataframe'):
         prev_labels = current_labels
-        current_labels = []
+        current_labels = dict()
         rps = regionprops(hypervolume_mask[time])
         labels = [rp.label for rp in rps]
-        counts = [rp.area for rp in rps]
+        volumes = [rp.area for rp in rps] * V_ratio
+        centroids = ([rp.centroid for rp in rps] - center) * rescale
         # converting the time index into seconds
         t = time * t_ratio
         for index, label in enumerate(labels):
-            if label <= 1:
-                continue
-            current_labels.append(label)
-            df = update_df(df, hypervolume_mask, time, index, label, counts, slices, radii, center, rescale,
-                           z_sect_str, r_sect_str, V_ratio, t_ratio, t, prev_t, prev_labels)  
-        prev_t = t
+            if label > 1:
+                current_labels[label] = len(df)
+                df = update_df(df, label, volumes[index], centroids[index], slices, radii, z_sect_str, r_sect_str, t_ratio, t, prev_labels)  
     return df

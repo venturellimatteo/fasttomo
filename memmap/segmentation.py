@@ -1,10 +1,9 @@
 import myfunctions as mf
 from numpy.lib.format import open_memmap
-from numpy import save
 import os
 
-segment = True
-filtering = True
+segment = False
+filtering = False
 motion = True
 exp = mf.exp_list()[1]
 OS = 'MacOS'
