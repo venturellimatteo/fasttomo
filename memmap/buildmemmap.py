@@ -29,12 +29,12 @@ def volume_path(exp, time, isrec, isImage=True, OS='Windows'):
     volume_name = 'volume_v2.npy' if isImage else 'segmented.npy'
     return os.path.join(OS_path(exp, OS, isrec), folder_name, volume_name)
 
-exp = mf.exp_list()[2]
+exp = mf.exp_list()[5]
 start_time = mf.exp_start_time()[mf.exp_list().index(exp)]
 end_time = 220
 skip180=True
 OS = 'Linux'
-rec = range(96,123+1)
+rec = range(127,145+1)
 
 time_steps = range(start_time, end_time+1, 2) if skip180 else range(start_time, end_time+1)
 shape = (len(time_steps), 270, 500, 500)
