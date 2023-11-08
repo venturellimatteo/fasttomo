@@ -267,23 +267,6 @@ def segment4D(exp, end_time=220, skip180=True, smallest_3Dvolume=20, filtering3D
 
 
 
-# function used to remove small agglomerates in terms of 4D volume
-def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, smallest_4Dvolume=100):
-    # computation of the total bincount in the 4D mask
-    max_label = np.max(hypervolume_mask[-1])
-    total_bincount = np.zeros(max_label+1)
-    for bincount in bincounts:
-        total_bincount[:len(bincount)] += bincount
-    # removing the agglomerates with volume smaller than smallest_4Dvolume
-    for time in tqdm(time_index, desc='Removing small agglomerates'):
-        for label in np.where(total_bincount < smallest_4Dvolume)[0]:
-            if label < len(bincounts[time]):
-                if bincounts[time][label] > 0:
-                    hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-    return None
-
-
-
 # function used to update the remove_list used to remove the agglomerates that are not present in each of the following n_steps bincounts
 def update_remove_list(bincounts, bincount, remove_list, n_steps, i):
     # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
@@ -325,6 +308,46 @@ def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index
 
 
 
+# function used to remove small agglomerates in terms of 4D volume
+def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, smallest_4Dvolume=100):
+    # computation of the total bincount in the 4D mask
+    max_label = np.max(hypervolume_mask[-1])
+    total_bincount = np.zeros(max_label+1)
+    for bincount in bincounts:
+        total_bincount[:len(bincount)] += bincount
+    # removing the agglomerates with volume smaller than smallest_4Dvolume
+    for time in tqdm(time_index, desc='Removing small agglomerates'):
+        for label in np.where(total_bincount < smallest_4Dvolume)[0]:
+            if label < len(bincounts[time]):
+                if bincounts[time][label] > 0:
+                    hypervolume_mask[time][hypervolume_mask[time] == label] = 0
+    return None
+
+
+
+# function used to remove the agglomerates that appear before the thermal runaway
+def remove_pre_TR_agglomerates(hypervolume_mask):
+    rpst = [regionprops(hypervolume_mask[t]) for t in range(hypervolume_mask.shape[0])]
+    label_count = [len(rps) for rps in rpst]
+    for t in range(hypervolume_mask.shape[0]):
+        # this condition is pretty bad, I have to figure out a better way to do this
+        # otherwise we can define the time instant ad-hoc
+        if label_count[t+1] > 3*label_count[t]:
+            break
+    if t == hypervolume_mask.shape[0]-1:
+        print('No thermal runaway detected')
+        return None
+    labels_to_remove = set()
+    for i in range(t+1):
+        for rp in rpst[i]:
+            labels_to_remove.add(rp.label)
+    for label in labels_to_remove:
+        if label > 1:
+            hypervolume_mask[hypervolume_mask == label] = 0
+    return None
+
+
+
 # function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
 def rename_labels(hypervolume_mask, time_index):
     unique_labels = set()
@@ -353,6 +376,7 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
         bincounts.append(np.bincount(hypervolume_mask[t].flatten()))
     remove_inconsistent_4D_agglomerates(hypervolume_mask, bincounts, time_index, n_steps)
     remove_small_4D_agglomerates(hypervolume_mask, bincounts, time_index, smallest_4Dvolume)
+    remove_pre_TR_agglomerates(hypervolume_mask)
     rename_labels(hypervolume_mask, time_index)
     print(f'\n4D filtering completed!\n')
     return None
@@ -442,8 +466,8 @@ def motion_df(hypervolume_mask, exp):
         current_labels = dict()
         rps = regionprops(hypervolume_mask[time])
         labels = [rp.label for rp in rps]
-        volumes = [rp.area for rp in rps] * V_ratio
-        centroids = ([rp.centroid for rp in rps] - center) * rescale
+        volumes = [(rp.area * V_ratio) for rp in rps] 
+        centroids = [((rp.centroid - center) * rescale) for rp in rps]
         # converting the time index into seconds
         t = time * t_ratio
         for index, label in enumerate(labels):
