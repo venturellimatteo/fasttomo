@@ -4,7 +4,7 @@ import os
 
 segment = True
 filtering = True
-motion = True
+motion = False
 exp = mf.exp_list()[2]
 OS = 'MacOS'
 

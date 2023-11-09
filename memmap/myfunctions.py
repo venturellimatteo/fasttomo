@@ -376,7 +376,7 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
         bincounts.append(np.bincount(hypervolume_mask[t].flatten()))
     remove_inconsistent_4D_agglomerates(hypervolume_mask, bincounts, time_index, n_steps)
     remove_small_4D_agglomerates(hypervolume_mask, bincounts, time_index, smallest_4Dvolume)
-    remove_pre_TR_agglomerates(hypervolume_mask)
+    # remove_pre_TR_agglomerates(hypervolume_mask)
     rename_labels(hypervolume_mask, time_index)
     print(f'\n4D filtering completed!\n')
     return None
