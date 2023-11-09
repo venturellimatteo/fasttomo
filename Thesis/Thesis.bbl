@@ -1,9 +1,14 @@
-\begin{thebibliography}{12}
+\begin{thebibliography}{15}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Aurbach et~al.(1995)Aurbach, Ein-Eli, Markovsky, Zaban, Luski, Carmeli, and Yamin]{aurbach1995study}
+D.~Aurbach, Y.~Ein-Eli, B.~Markovsky, A.~Zaban, S.~Luski, Y.~Carmeli, and H.~Yamin.
+\newblock The study of electrolyte solutions based on ethylene and diethyl carbonates for rechargeable li batteries: Ii. graphite electrodes.
+\newblock \emph{Journal of The Electrochemical Society}, 142\penalty0 (9):\penalty0 2882, 1995.
 
 \bibitem[Doughty and Roth(2012)]{doughty2012general}
 D.~H. Doughty and E.~P. Roth.
@@ -51,6 +56,11 @@ S.~Solomon, G.-K. Plattner, R.~Knutti, and P.~Friedlingstein.
 \newblock Irreversible climate change due to carbon dioxide emissions.
 \newblock \emph{Proceedings of the national academy of sciences}, 106\penalty0 (6):\penalty0 1704--1709, 2009.
 
+\bibitem[Song et~al.(1999)Song, Wang, and Wan]{song1999review}
+J.~Song, Y.~Wang, and C.~C. Wan.
+\newblock Review of gel-type polymer electrolytes for lithium-ion batteries.
+\newblock \emph{Journal of power sources}, 77\penalty0 (2):\penalty0 183--197, 1999.
+
 \bibitem[Stampatori et~al.(2020)Stampatori, Raimondi, and Noussan]{stampatori2020li}
 D.~Stampatori, P.~P. Raimondi, and M.~Noussan.
 \newblock Li-ion batteries: A review of a key technology for transport decarbonization.
@@ -61,6 +71,11 @@ P.~Tans and R.~Keeling.
 \newblock Trends in atmoshperic carbon dioxide.
 \newblock Technical report, NOAA/GML, 2023.
 \newblock URL \url{https://www.gml.noaa.gov/ccgg/trends/}.
+
+\bibitem[Xu(2004)]{xu2004nonaqueous}
+K.~Xu.
+\newblock Nonaqueous liquid electrolytes for lithium-based rechargeable batteries.
+\newblock \emph{Chemical reviews}, 104\penalty0 (10):\penalty0 4303--4418, 2004.
 
 \bibitem[Zubi et~al.(2018)Zubi, Dufo-L{\'o}pez, Carvalho, and Pasaoglu]{zubi2018lithium}
 G.~Zubi, R.~Dufo-L{\'o}pez, M.~Carvalho, and G.~Pasaoglu.
