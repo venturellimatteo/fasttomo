@@ -18,7 +18,7 @@ def exp_list():
 
 # function returning the list of the time entries in which the degradation of the battery starts
 def exp_start_time():
-    return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 54, 7, 71, 52, 4, 66, 65]
+    return [112, 99, 90, 90, 108, 127, 130, 114, 99, 105, 104, 115, 155, 70, 53, 7, 71, 52, 4, 66, 65]
 
 # function
 def exp_flag():
@@ -146,9 +146,9 @@ def find_threshold(sequence, threshold=0, step=1, target=5400, delta=200, slices
 # if cropping is True, the volume is cropped in order to reduce the size of the memmap
 def create_memmaps(exp, time_steps, usenpy, OS='Windows', cropping=True):
     print(f'\nExp {exp} memmaps creation started\n')
-    # define shape as (len(time_steps), 270, 500, 500) if cropping is True, otherwise as (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
+    # define shape as (len(time_steps), 260, 500, 500) if cropping is True, otherwise as (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
     if cropping:
-        shape = (len(time_steps), 270, 500, 500)
+        shape = (len(time_steps), 260, 500, 500)
     else:
         volume = open_memmap(volume_path(exp=exp, time=time_steps[0], OS=OS, isImage=True), mode='r')
         shape = (len(time_steps), volume.shape[0], volume.shape[1], volume.shape[2])
@@ -329,21 +329,23 @@ def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, small
 def remove_pre_TR_agglomerates(hypervolume_mask):
     rpst = [regionprops(hypervolume_mask[t]) for t in range(hypervolume_mask.shape[0])]
     label_count = [len(rps) for rps in rpst]
-    for t in range(hypervolume_mask.shape[0]):
+    for t in range(hypervolume_mask.shape[0]-1):
         # this condition is pretty bad, I have to figure out a better way to do this
         # otherwise we can define the time instant ad-hoc
         if label_count[t+1] > 3*label_count[t]:
             break
-    if t == hypervolume_mask.shape[0]-1:
+    if t == hypervolume_mask.shape[0]-2:
         print('No thermal runaway detected')
         return None
     labels_to_remove = set()
     for i in range(t+1):
-        for rp in rpst[i]:
-            labels_to_remove.add(rp.label)
+        labels = [rp.label for rp in rpst[i]]
+        areas = [rp.area for rp in rpst[i]]
+        ordered_labels = np.array(labels)[np.argsort(areas)]
+        for label in ordered_labels[:-1]:
+            labels_to_remove.add(label)
     for label in labels_to_remove:
-        if label > 1:
-            hypervolume_mask[hypervolume_mask == label] = 0
+        hypervolume_mask[hypervolume_mask == label] = 0
     return None
 
 
@@ -376,7 +378,7 @@ def filtering4D(hypervolume_mask, smallest_4Dvolume=250, n_steps=10):
         bincounts.append(np.bincount(hypervolume_mask[t].flatten()))
     remove_inconsistent_4D_agglomerates(hypervolume_mask, bincounts, time_index, n_steps)
     remove_small_4D_agglomerates(hypervolume_mask, bincounts, time_index, smallest_4Dvolume)
-    # remove_pre_TR_agglomerates(hypervolume_mask)
+    remove_pre_TR_agglomerates(hypervolume_mask)
     rename_labels(hypervolume_mask, time_index)
     print(f'\n4D filtering completed!\n')
     return None

@@ -1,4 +1,4 @@
-\begin{thebibliography}{15}
+\begin{thebibliography}{17}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -61,6 +61,11 @@ J.~Song, Y.~Wang, and C.~C. Wan.
 \newblock Review of gel-type polymer electrolytes for lithium-ion batteries.
 \newblock \emph{Journal of power sources}, 77\penalty0 (2):\penalty0 183--197, 1999.
 
+\bibitem[Spotte-Smith et~al.(2022)Spotte-Smith, Kam, Barter, Xie, Hou, Dwaraknath, Blau, and Persson]{spotte2022toward}
+E.~W.~C. Spotte-Smith, R.~L. Kam, D.~Barter, X.~Xie, T.~Hou, S.~Dwaraknath, S.~M. Blau, and K.~A. Persson.
+\newblock Toward a mechanistic model of solid--electrolyte interphase formation and evolution in lithium-ion batteries.
+\newblock \emph{ACS Energy Letters}, 7\penalty0 (4):\penalty0 1446--1453, 2022.
+
 \bibitem[Stampatori et~al.(2020)Stampatori, Raimondi, and Noussan]{stampatori2020li}
 D.~Stampatori, P.~P. Raimondi, and M.~Noussan.
 \newblock Li-ion batteries: A review of a key technology for transport decarbonization.
@@ -76,6 +81,11 @@ P.~Tans and R.~Keeling.
 K.~Xu.
 \newblock Nonaqueous liquid electrolytes for lithium-based rechargeable batteries.
 \newblock \emph{Chemical reviews}, 104\penalty0 (10):\penalty0 4303--4418, 2004.
+
+\bibitem[Zhu et~al.(2021)Zhu, Gastol, Marshall, Sommerville, Goodship, and Kendrick]{zhu2021review}
+P.~Zhu, D.~Gastol, J.~Marshall, R.~Sommerville, V.~Goodship, and E.~Kendrick.
+\newblock A review of current collectors for lithium-ion batteries.
+\newblock \emph{Journal of Power Sources}, 485:\penalty0 229321, 2021.
 
 \bibitem[Zubi et~al.(2018)Zubi, Dufo-L{\'o}pez, Carvalho, and Pasaoglu]{zubi2018lithium}
 G.~Zubi, R.~Dufo-L{\'o}pez, M.~Carvalho, and G.~Pasaoglu.

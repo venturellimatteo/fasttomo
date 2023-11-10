@@ -5,45 +5,45 @@ The style file: abbrvnat.bst
 Database file #1: Thesis_bibliography.bib
 Warning--empty institution in iea-transport
 Warning--empty journal in world2016ambient
-You've used 15 entries,
+You've used 17 entries,
             2773 wiz_defined-function locations,
-            696 strings with 7246 characters,
-and the built_in function-call counts, 7070 in all, are:
-= -- 621
-> -- 443
+            710 strings with 7798 characters,
+and the built_in function-call counts, 8473 in all, are:
+= -- 734
+> -- 575
 < -- 8
-+ -- 150
-- -- 135
-* -- 609
-:= -- 1121
-add.period$ -- 47
-call.type$ -- 15
-change.case$ -- 90
-chr.to.int$ -- 15
-cite$ -- 32
-duplicate$ -- 296
-empty$ -- 550
-format.name$ -- 159
-if$ -- 1442
++ -- 194
+- -- 177
+* -- 750
+:= -- 1347
+add.period$ -- 53
+call.type$ -- 17
+change.case$ -- 110
+chr.to.int$ -- 17
+cite$ -- 36
+duplicate$ -- 338
+empty$ -- 632
+format.name$ -- 203
+if$ -- 1721
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 14
-newline$ -- 85
-num.names$ -- 60
-pop$ -- 158
+missing$ -- 16
+newline$ -- 95
+num.names$ -- 68
+pop$ -- 194
 preamble$ -- 1
-purify$ -- 74
+purify$ -- 92
 quote$ -- 0
-skip$ -- 230
+skip$ -- 268
 stack$ -- 0
-substring$ -- 274
-swap$ -- 12
+substring$ -- 327
+swap$ -- 14
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 160
+type$ -- 182
 warning$ -- 2
-while$ -- 63
+while$ -- 72
 width$ -- 0
-write$ -- 202
+write$ -- 228
 (There were 2 warnings)
