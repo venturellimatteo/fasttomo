@@ -1,10 +1,11 @@
 import numpy as np    
+from numpy.lib.format import open_memmap
+import seaborn as sns
+import matplotlib.pyplot as plt           
 from skimage.segmentation import clear_border                             
 from skimage.measure import label, regionprops  
-from skimage.morphology import erosion               
+from skimage.morphology import erosion    
 from tqdm import tqdm                               
-from numpy.lib.format import open_memmap
-# import time as clock
 import pandas as pd
 import os
 
@@ -403,3 +404,92 @@ def motion_df(hypervolume_mask, exp, offset=0):
                 current_labels[label] = len(df)
                 df = update_df(df, label, volumes[index], centroids[index], slices, radii, z_sect_str, r_sect_str, t_ratio, t, prev_labels)  
     return df
+
+
+def plot_data(exp, OS, save=False):
+
+    df = pd.read_csv(os.path.join(OS_path(exp, OS), 'motion_properties.csv'))
+    plt.style.use('seaborn-v0_8-paper')
+    time_axis = np.arange(len(np.unique(df['t'])))/20
+    heigth = 3.5
+    length = 5
+    fig = plt.figure(figsize=(3*length, 4*heigth), dpi=150)
+    subfigs = fig.subfigures(4, 1, hspace=0.3)
+
+    # VOLUME
+    subfigs[0].suptitle('Agglomerates volume vs time', y=1.1, fontsize=14)
+    axs = subfigs[0].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df, x='t', y='V')
+    axs[0].set_title('Whole battery')
+    sns.lineplot(ax=axs[1], data=df, x='t', y='V', hue='r_sect')
+    axs[1].set_title('$r$ sections')
+    axs[1].legend(loc='upper right')
+    sns.lineplot(ax=axs[2], data=df, x='t', y='V', hue='z_sect')
+    axs[2].set_title('$z$ sections')
+    axs[2].legend(loc='upper right')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        ax.set_ylabel('Volume [$m^3$]')
+
+    # SPEED
+    subfigs[1].suptitle('Agglomerates speed vs time', y=1.1, fontsize=14)
+    axs = subfigs[1].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df, x='t', y='v')
+    axs[0].set_title('Whole battery')
+    sns.lineplot(ax=axs[1], data=df, x='t', y='v', hue='r_sect')
+    axs[1].set_title('$r$ sections')
+    axs[1].legend(loc='upper right')
+    sns.lineplot(ax=axs[2], data=df, x='t', y='v', hue='z_sect')
+    axs[2].set_title('$z$ sections')
+    axs[2].legend(loc='upper right')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        ax.set_ylabel('Speed [$m/s$]')
+
+    # EXPANSION RATE
+    subfigs[2].suptitle('Agglomerates volume expansion rate vs time', y=1.1, fontsize=14)
+    axs = subfigs[2].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df, x='t', y='dVdt')
+    axs[0].set_title('Whole battery')
+    sns.lineplot(ax=axs[1], data=df, x='t', y='dVdt', hue='r_sect')
+    axs[1].set_title('$r$ sections')
+    axs[1].legend(loc='upper right')
+    sns.lineplot(ax=axs[2], data=df, x='t', y='dVdt', hue='z_sect')
+    axs[2].set_title('$z$ sections')
+    axs[2].legend(loc='upper right')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        ax.set_ylabel('Volume expansion rate [$m^3/s$]')
+
+    # DENSITY
+    subfigs[3].suptitle('Agglomerates density vs time', y=1.1, fontsize=14)
+    densityfig = subfigs[3].subfigures(1, 3, width_ratios=[1, 4, 1])
+    axs = densityfig[1].subplots(1, 2)
+    agg_number_r = pd.DataFrame(columns=['Time', 'Number', 'r_sect'])
+    agg_number_z = pd.DataFrame(columns=['Time', 'Number', 'z_sect'])
+    r_sect_list = ['Core', 'Intermediate', 'External']
+    z_sect_list = ['Top', 'Middle', 'Bottom']
+    for t in (np.unique(df['t'])):
+        for r, z in zip(r_sect_list, z_sect_list):
+            agg_number_r = pd.concat([agg_number_r, pd.DataFrame([[t, 0, r]], columns=['Time', 'Number', 'r_sect'])], ignore_index=True)
+            agg_number_z = pd.concat([agg_number_z, pd.DataFrame([[t, 0, z]], columns=['Time', 'Number', 'z_sect'])], ignore_index=True)
+    for i in range(len(df)):
+        agg_number_r.loc[(agg_number_r['Time'] == df['t'][i]) & (agg_number_r['r_sect'] == df['r_sect'][i]), 'Number'] += 1
+        agg_number_z.loc[(agg_number_z['Time'] == df['t'][i]) & (agg_number_z['z_sect'] == df['z_sect'][i]), 'Number'] += 1
+    agg_number_r.loc[agg_number_r['r_sect'] == 'Intermediate', 'Number'] = agg_number_r.loc[agg_number_r['r_sect'] == 'Intermediate', 'Number'] / 3
+    agg_number_r.loc[agg_number_r['r_sect'] == 'External', 'Number'] = agg_number_r.loc[agg_number_r['r_sect'] == 'External', 'Number'] / 5
+    sns.lineplot(ax=axs[0], data=agg_number_r, x='Time', y='Number', hue='r_sect')
+    axs[0].set_title('$r$ sections')
+    sns.lineplot(ax=axs[1], data=agg_number_z, x='Time', y='Number', hue='z_sect')
+    axs[1].set_title('$z$ sections')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        _ = ax.set_ylabel('Agglomerate density [a.u.]')
+
+    if save:
+        fig.savefig(f'Figures/{exp}.png', dpi=300, bbox_inches='tight')
+    return None

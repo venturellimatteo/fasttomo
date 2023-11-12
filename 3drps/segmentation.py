@@ -28,7 +28,7 @@ if __name__ == '__main__':
     processes = []
 
     with cf.ProcessPoolExecutor() as executor:
-        for offset, exp in enumerate(exp_list[5:7]):
+        for offset, exp in enumerate(exp_list):
             executor.submit(pipeline, exp, segment, filtering, motion, OS, offset)
 
     print('All done!')
