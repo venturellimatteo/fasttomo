@@ -185,7 +185,7 @@ def segment4D(exp, OS='Windows', smallest_3Dvolume=50, filtering3D=True, offset=
     hypervolume_mask[0] = previous_mask
 
     # segmenting the remaining volumes and propagating the labels from previous volumes
-    for time in tqdm(time_index[1:], desc=f'{exp} segmentation', position=offset):
+    for time in tqdm(time_index[1:], desc=f'{exp} segmentation', position=offset, leave=False):
         current_volume = hypervolume[time]*shell_border if time < TR_start_time else hypervolume[time]
         current_mask = segment3D(current_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
         current_mask = propagate_labels(previous_mask, current_mask, forward=True)
@@ -296,7 +296,7 @@ def rename_labels(hypervolume_mask, time_index, progress_bar):
 def filtering4D(hypervolume_mask, exp, smallest_4Dvolume=250, n_steps=10, offset=0):
     bincounts = []
     time_index = range(hypervolume_mask.shape[0])
-    progress_bar = tqdm(total=4*len(time_index), desc=f'{exp} bincounts computation', position=offset)
+    progress_bar = tqdm(total=4*len(time_index), desc=f'{exp} bincounts computation', position=offset, leave=False)
     for t in time_index:
         bincounts.append(np.bincount(hypervolume_mask[t].flatten()))
         progress_bar.update()
@@ -389,7 +389,7 @@ def motion_df(hypervolume_mask, exp, offset=0):
     z_sect_str = ['Top', 'Middle', 'Bottom'] # HERE I HAVE TO DOUBLE CHECK THE ORDER OF THE SECTIONS!!!
     current_labels = dict()
     # computing the actual quantities
-    for time in tqdm(range(n_time_instants), desc=f'Exp {exp} dataframe computation', position=offset):
+    for time in tqdm(range(n_time_instants), desc=f'Exp {exp} dataframe computation', position=offset, leave=False):
         prev_labels = current_labels
         current_labels = dict()
         rps = regionprops(hypervolume_mask[time])

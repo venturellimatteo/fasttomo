@@ -13,7 +13,6 @@ def pipeline(exp, segment, filtering, motion, OS, offset):
     if motion:
         df = mf.motion_df(hypervolume_mask, exp=exp, offset=offset)
         df.to_csv(os.path.join(mf.OS_path(exp, OS), 'motion_properties.csv'), index=False)
-        print(f'Exp {exp} done!')
     return None
 
 
@@ -29,5 +28,7 @@ if __name__ == '__main__':
     processes = []
 
     with cf.ProcessPoolExecutor() as executor:
-        for offset, exp in enumerate(exp_list):
-            executor.submit(pipeline, exp, segment, filtering, motion, OS, 3*offset)
+        for offset, exp in enumerate(exp_list[5:7]):
+            executor.submit(pipeline, exp, segment, filtering, motion, OS, offset)
+
+    print('All done!')
