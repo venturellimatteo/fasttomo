@@ -118,9 +118,13 @@ def create_memmaps(exp, OS='Windows'):
 def update_map(current_mask, previous_mask, previous_mask_label, propagation_map):
     current_mask_labels = current_mask[previous_mask == previous_mask_label]
     if np.any(current_mask_labels):
-        for current_slice_label in np.unique(current_mask_labels):
+        current_mask_labels, counts = np.unique(current_mask_labels, return_counts=True)
+        for current_slice_label, count in zip(current_mask_labels, counts):
             if current_slice_label > 0:
-                propagation_map[current_slice_label] = previous_mask_label
+                if current_slice_label not in propagation_map:
+                    propagation_map[current_slice_label] = np.array([previous_mask_label, count])
+                elif count >= propagation_map[current_slice_label][1]:
+                    propagation_map[current_slice_label] = np.array([previous_mask_label, count])
     return propagation_map
 
 
@@ -143,7 +147,7 @@ def propagate_labels(previous_mask, current_mask, forward=True):
     for previous_mask_label in ordered_labels:
         propagation_map = update_map(current_mask, previous_mask, previous_mask_label, propagation_map)
     for current_slice_label, previous_mask_label in propagation_map.items():
-        current_mask[current_mask == current_slice_label] = previous_mask_label
+        current_mask[current_mask == current_slice_label] = previous_mask_label[0]
 
     if forward:
         new_labels = np.unique(current_mask[current_mask > max_label])

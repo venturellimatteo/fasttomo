@@ -22,7 +22,7 @@ if __name__ == '__main__':
                 'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp5']
     segment = True
     filtering = True
-    motion = True
+    motion = False
     OS = 'MacOS'
 
     processes = []
@@ -30,5 +30,7 @@ if __name__ == '__main__':
     with cf.ProcessPoolExecutor() as executor:
         for offset, exp in enumerate(exp_list):
             executor.submit(pipeline, exp, segment, filtering, motion, OS, offset)
+
+    # pipeline(exp=exp_list[4], segment=segment, filtering=filtering, motion=motion, OS=OS, offset=0)
 
     print('All done!')

@@ -3,47 +3,48 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: Thesis.aux
 The style file: abbrvnat.bst
 Database file #1: Thesis_bibliography.bib
+Warning--empty journal in bladwin2009review
 Warning--empty institution in iea-transport
 Warning--empty journal in world2016ambient
-You've used 17 entries,
+You've used 19 entries,
             2773 wiz_defined-function locations,
-            710 strings with 7798 characters,
-and the built_in function-call counts, 8473 in all, are:
-= -- 734
-> -- 575
-< -- 8
-+ -- 194
-- -- 177
-* -- 750
-:= -- 1347
-add.period$ -- 53
-call.type$ -- 17
-change.case$ -- 110
-chr.to.int$ -- 17
-cite$ -- 36
-duplicate$ -- 338
-empty$ -- 632
-format.name$ -- 203
-if$ -- 1721
+            717 strings with 8026 characters,
+and the built_in function-call counts, 9244 in all, are:
+= -- 805
+> -- 606
+< -- 10
++ -- 205
+- -- 186
+* -- 804
+:= -- 1465
+add.period$ -- 59
+call.type$ -- 19
+change.case$ -- 119
+chr.to.int$ -- 19
+cite$ -- 41
+duplicate$ -- 377
+empty$ -- 704
+format.name$ -- 216
+if$ -- 1882
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 16
-newline$ -- 95
-num.names$ -- 68
-pop$ -- 194
+missing$ -- 18
+newline$ -- 105
+num.names$ -- 76
+pop$ -- 213
 preamble$ -- 1
-purify$ -- 92
+purify$ -- 99
 quote$ -- 0
-skip$ -- 268
+skip$ -- 297
 stack$ -- 0
-substring$ -- 327
-swap$ -- 14
+substring$ -- 362
+swap$ -- 15
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 182
-warning$ -- 2
-while$ -- 72
+type$ -- 204
+warning$ -- 3
+while$ -- 80
 width$ -- 0
-write$ -- 228
-(There were 2 warnings)
+write$ -- 252
+(There were 3 warnings)
