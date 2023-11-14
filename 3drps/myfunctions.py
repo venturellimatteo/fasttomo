@@ -11,13 +11,41 @@ import os
 
 
 
-# function returning the list of the experiments names
+# functions returning the lists of the experiments names and related features
 def exp_list():
-    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3', 'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5',
-            'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp5']
+    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2',
+            'P28A_FT_N_Exp1', 'P28B_ICS_FT_H_Exp5', 'P28B_ISC_FT_H_Exp2', 
+            'P28B_ISC_FT_H_Exp3', 'P28B_ISC_FT_H_Exp4', 'P28B_ISC_FT_H_Exp4_2', 'VCT5_FT_N_Exp1', 
+            'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp1',
+            'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp3', 'VCT5A_FT_H_Exp4', 'VCT5A_FT_H_Exp5']
+
+def exp_start_time():
+    return [112, 99, 90, 90,
+            127, 130, 114, 99, 
+            105, 104, 115, 155, 
+            70, 53, 7, 71, 
+            52, 4, 66, 65]
+
+def exp_flag():
+    return [False, False, False, True,
+            False, True, False, 
+            True, False, False, False, 
+            False, False, True, False, 
+            False, True, False, False]
+
+def exp_rec():
+    return [range(123,147), [], range(96,124), range(94,123),
+            range(127,145), range(114,222), [],
+            [], [], [], [],
+            [], [], [], [],
+            range(55, 67), range(0,222), [], range(68,85)]
 
 def exp_start_TR():
-    return [5, 6, 5, 4, 4, 4, 2, 2]
+    return [5, 5, 6, 5,
+            4, 4, [], 
+            [], [], [], [],
+            [], [], [], [],
+            4, 2, [], 2]
 
 # function returning the area associated to the biggest agglomerate in the sequence
 def find_biggest_area(sequence, threshold):
@@ -105,7 +133,7 @@ def find_threshold(sequence, threshold=0, step=1, target=5400, delta=200, slices
 
 # function used to create the memmaps for the 4D volume and the 4D segmentation map
 # if cropping is True, the volume is cropped in order to reduce the size of the memmap
-def create_memmaps(exp, OS='Windows'):
+def load_memmaps(exp, OS='Windows'):
     # create the 4D volume memmap
     hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), mode='r')
     # create the 4D segmentation mask memmap
@@ -172,7 +200,7 @@ def segment3D(volume, threshold, smallest_volume, filtering):
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
 def segment4D(exp, OS='Windows', smallest_3Dvolume=50, filtering3D=True, offset=0):
-    hypervolume, hypervolume_mask = create_memmaps(exp, OS) # creating the memmaps for the 4D volume and the 4D segmentation map
+    hypervolume, hypervolume_mask = load_memmaps(exp, OS) # creating the memmaps for the 4D volume and the 4D segmentation map
     time_index = range(hypervolume.shape[0]) # defining the time steps for the current experiment
     TR_start_time = exp_start_TR()[exp_list().index(exp)] # defining the time instant of the beginning of the thermal runaway
     previous_volume = hypervolume[0] # dealing with the first volume
