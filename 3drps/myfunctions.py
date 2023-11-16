@@ -13,39 +13,15 @@ import os
 
 # functions returning the lists of the experiments names and related features
 def exp_list():
-    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2',
-            'P28A_FT_N_Exp1', 'P28B_ICS_FT_H_Exp5', 'P28B_ISC_FT_H_Exp2', 
-            'P28B_ISC_FT_H_Exp3', 'P28B_ISC_FT_H_Exp4', 'P28B_ISC_FT_H_Exp4_2', 'VCT5_FT_N_Exp1', 
-            'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp1',
-            'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp3', 'VCT5A_FT_H_Exp4', 'VCT5A_FT_H_Exp5']
+    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2', 'P28B_ISC_FT_H_Exp2', 'VCT5_FT_N_Exp1', 
+            'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp5']
 
-def exp_start_time():
-    return [112, 99, 90, 90,
-            127, 130, 114, 99, 
-            105, 104, 115, 155, 
-            70, 53, 7, 71, 
-            52, 4, 66, 65]
-
-def exp_flag():
-    return [False, False, False, True,
-            False, True, False, 
-            True, False, False, False, 
-            False, False, True, False, 
-            False, True, False, False]
-
-def exp_rec():
-    return [range(123,147), [], range(96,124), range(94,123),
-            range(127,145), range(114,222), [],
-            [], [], [], [],
-            [], [], [], [],
-            range(55, 67), range(0,222), [], range(68,85)]
+def bad_exp_list():
+    return ['P28A_FT_H_Exp5','P28A_FT_N_Exp1','P28A_FT_N_Exp4','P28B_ISC_FT_H_Exp3','P28B_ISC_FT_H_Exp4',
+            'P28B_ISC_FT_H_Exp4_2','P28B_ISC_FT_H_Exp5','VCT5A_FT_H_Exp1','VCT5A_FT_H_Exp4']
 
 def exp_start_TR():
-    return [5, 5, 6, 5,
-            4, 4, [], 
-            [], [], [], [],
-            [], [], [], [],
-            4, 2, [], 2]
+    return [7, 4, 4, 6, 3, 1, 4, 5, 3, 1, 1]
 
 # function returning the area associated to the biggest agglomerate in the sequence
 def find_biggest_area(sequence, threshold):
@@ -98,6 +74,8 @@ def OS_path(exp, OS):
         return 'Z:/rot_datasets/' + exp
     elif OS=='MacOS':
         return '/Users/matteoventurelli/Documents/VS Code/MasterThesisData/' + exp
+    elif OS=='MacOS_SSD':
+        return '/Volumes/T7/Thesis/' + exp
     elif OS=='Linux':
         return '/data/projects/whaitiri/Data/Data_Processing_July2022/rot_datasets/' + exp
     elif OS=='Tyrex':
@@ -133,7 +111,7 @@ def find_threshold(sequence, threshold=0, step=1, target=5400, delta=200, slices
 
 # function used to create the memmaps for the 4D volume and the 4D segmentation map
 # if cropping is True, the volume is cropped in order to reduce the size of the memmap
-def load_memmaps(exp, OS='Windows'):
+def create_memmaps(exp, OS):
     # create the 4D volume memmap
     hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), mode='r')
     # create the 4D segmentation mask memmap
@@ -200,7 +178,9 @@ def segment3D(volume, threshold, smallest_volume, filtering):
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
 def segment4D(exp, OS='Windows', smallest_3Dvolume=50, filtering3D=True, offset=0):
-    hypervolume, hypervolume_mask = load_memmaps(exp, OS) # creating the memmaps for the 4D volume and the 4D segmentation map
+    progress_bar = tqdm(total=3, desc=f'{exp} preparation', position=offset, leave=False)
+    hypervolume, hypervolume_mask = create_memmaps(exp, OS) # creating the memmaps for the 4D volume and the 4D segmentation map
+    progress_bar.update()
     time_index = range(hypervolume.shape[0]) # defining the time steps for the current experiment
     TR_start_time = exp_start_TR()[exp_list().index(exp)] # defining the time instant of the beginning of the thermal runaway
     previous_volume = hypervolume[0] # dealing with the first volume
@@ -209,13 +189,16 @@ def segment4D(exp, OS='Windows', smallest_3Dvolume=50, filtering3D=True, offset=
     # segmenting the first volume
     previous_mask = segment3D(previous_volume*shell_border, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D) 
     # reassigning the labels after the filtering
+    progress_bar.update()
     rps = regionprops(previous_mask)
     labels = [rp.label for rp in rps]
     labels = np.array(labels)[np.argsort([rp.area for rp in rps])][::-1]
     for new_label, old_label in enumerate(labels):
         previous_mask[previous_mask == old_label] = new_label + 1
+    progress_bar.update()
     # writing the first mask in the hypervolume_mask memmap
     hypervolume_mask[0] = previous_mask
+    progress_bar.close()
 
     # segmenting the remaining volumes and propagating the labels from previous volumes
     for time in tqdm(time_index[1:], desc=f'{exp} segmentation', position=offset, leave=False):
@@ -411,7 +394,8 @@ def motion_df(hypervolume_mask, exp, offset=0):
     n_slices = hypervolume_mask.shape[1]
     # the ratios between pixels and physical units are computed
     xy_ratio, z_ratio, V_ratio, t_ratio, radius = find_geometry(hypervolume_mask, exp)
-    center = np.array([0, 249.5, 249.5])
+    xy_center = (hypervolume_mask.shape[2]-1)/2
+    center = np.array([0, xy_center, xy_center])
     rescale = np.array([z_ratio, xy_ratio, xy_ratio])
     # radii and slices are the values used to divide the volume in <steps> regions
     radii = np.linspace(0, radius*xy_ratio, 4)
@@ -438,7 +422,9 @@ def motion_df(hypervolume_mask, exp, offset=0):
     return df
 
 
-def plot_data(exp, OS, save=False):
+def plot_data(exp, OS, offset, save):
+
+    progress_bar = tqdm(total=4, desc=f'{exp} drawing plots', position=offset, leave=False)
 
     df = pd.read_csv(os.path.join(OS_path(exp, OS), 'motion_properties.csv'))
     plt.style.use('seaborn-v0_8-paper')
@@ -462,7 +448,8 @@ def plot_data(exp, OS, save=False):
     for ax in axs:
         ax.set_xlim(time_axis[0], time_axis[-1])
         ax.set_xlabel('Time [$s$]')
-        ax.set_ylabel('Volume [$m^3$]')
+        ax.set_ylabel('Volume [$mm^3$]')
+    progress_bar.update()
 
     # SPEED
     subfigs[1].suptitle('Agglomerates speed vs time', y=1.1, fontsize=14)
@@ -478,7 +465,8 @@ def plot_data(exp, OS, save=False):
     for ax in axs:
         ax.set_xlim(time_axis[0], time_axis[-1])
         ax.set_xlabel('Time [$s$]')
-        ax.set_ylabel('Speed [$m/s$]')
+        ax.set_ylabel('Speed [$mm/s$]')
+    progress_bar.update()
 
     # EXPANSION RATE
     subfigs[2].suptitle('Agglomerates volume expansion rate vs time', y=1.1, fontsize=14)
@@ -494,7 +482,8 @@ def plot_data(exp, OS, save=False):
     for ax in axs:
         ax.set_xlim(time_axis[0], time_axis[-1])
         ax.set_xlabel('Time [$s$]')
-        ax.set_ylabel('Volume expansion rate [$m^3/s$]')
+        ax.set_ylabel('Volume expansion rate [$mm^3/s$]')
+    progress_bar.update()
 
     # DENSITY
     subfigs[3].suptitle('Agglomerates density vs time', y=1.1, fontsize=14)
@@ -521,7 +510,10 @@ def plot_data(exp, OS, save=False):
         ax.set_xlim(time_axis[0], time_axis[-1])
         ax.set_xlabel('Time [$s$]')
         _ = ax.set_ylabel('Agglomerate density [a.u.]')
+    progress_bar.update()
 
     if save:
         fig.savefig(f'Figures/{exp}.png', dpi=300, bbox_inches='tight')
+
+    progress_bar.close()
     return None

@@ -1,0 +1,49 @@
+\begin{algorithm}[H]
+    \label{alg:segmentation}
+    \caption{Segmentation algorithm}
+    %\label{alg:var2}
+    %\label{protocol2}
+    \begin{algorithmic}[1]
+    \STATE \textbf{SET} $hypervolume$, $hypervolume\_mask$
+    \STATE $previous\_volume=hypervolume[0]$
+    \STATE $threshold=\,$\texttt{find\_threshold}($previous\_volume$)
+    \STATE $previous\_mask=\,$\texttt{segment3D}($previous\_volume$, $threshold$)
+    \STATE \texttt{filtering3D}($previous\_mask$)
+    \STATE \texttt{rename\_labels}($previous\_mask$)
+    \STATE $hypervolume\_mask[0]=previous\_mask$s
+    \FOR{$t=1$ to $end$}
+    \STATE $current\_volume=hypervolume[t]$
+    \STATE $current\_mask=\,$\texttt{segment3D}($current\_volume$, $threshold$)
+    \STATE \texttt{filtering3D}($previous\_mask$)
+    \STATE $current\_mask=\,$\texttt{propagate\_labels}($previous\_mask$, $current\_mask$)    
+    \STATE \texttt{rename\_labels}($current\_mask$)
+    \STATE $hypervolume\_mask[t]=current\_mask$
+    \STATE $previous\_mask=current\_mask$
+    \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+    \label{alg:segmentation2}
+    \caption{Segmentation algorithm}
+    %\label{alg:var2}
+    %\label{protocol2}
+    \begin{algorithmic}[1]
+    \STATE get the hypervolume memmap and initialize the hypervolume mask memmap
+    \STATE set previous volume to the first volume in the hypervolume
+    \STATE find the threshold using previous volume
+    \STATE segment the previous volume with the threshold and get previous mask
+    \STATE filter previous mask
+    \STATE rename the labels in previous mask
+    \STATE set the first mask in the hypervolume mask to previous mask
+    \FOR{$t=1$ to $end$}
+    \STATE set current volume to the volume at time $t$ in the hypervolume
+    \STATE segment current volume with the threshold and get current mask
+    \STATE filter current mask
+    \STATE propagate the labels from previous mask to current mask
+    \STATE rename the labels in current mask
+    \STATE set the mask at time $t$ in the hypervolume mask to current mask
+    \STATE set previous mask to current mask
+    \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
