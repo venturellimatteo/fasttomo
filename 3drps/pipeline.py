@@ -6,7 +6,7 @@ import os
 def pipeline(exp, segment, filtering, motion, graphs, OS, offset):
     if segment:
         hypervolume_mask = mf.segment4D(exp=exp, OS=OS, offset=offset)
-    else:
+    elif filtering or motion:
         hypervolume_mask = open_memmap(os.path.join(mf.OS_path(exp, OS), 'hypervolume_mask.npy'), mode='r+')
     if filtering:
         mf.filtering4D(hypervolume_mask=hypervolume_mask, exp=exp, offset=offset)
@@ -21,10 +21,9 @@ def pipeline(exp, segment, filtering, motion, graphs, OS, offset):
 if __name__ == '__main__':
 
     exp_list = mf.exp_list()
-    exp_list = ['P28A_FT_H_Exp4_2', 'P28B_ISC_FT_H_Exp2', 'VCT5_FT_N_Exp1']
-    segment = True
-    filtering = True
-    motion = True
+    segment = False
+    filtering = False
+    motion = False
     graphs = True
     OS = 'MacOS_SSD'
 

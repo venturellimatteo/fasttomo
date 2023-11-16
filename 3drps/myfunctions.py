@@ -513,7 +513,7 @@ def plot_data(exp, OS, offset, save):
     progress_bar.update()
 
     if save:
-        fig.savefig(f'Figures/{exp}.png', dpi=300, bbox_inches='tight')
+        fig.savefig(os.path.join(OS_path(exp, OS), 'motion_properties.png'), dpi=300, bbox_inches='tight')
 
     progress_bar.close()
     return None
