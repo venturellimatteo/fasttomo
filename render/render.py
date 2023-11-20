@@ -1,6 +1,7 @@
 import bpy                                  # type: ignore
 import numpy as np                          # type: ignore
 from tqdm import tqdm
+from tqdm import tqdm
 import os
 
 # function that returns a color tuple given the label and the maximum value of the labels
@@ -48,9 +49,8 @@ def create_folder(path):
 
 if __name__ == "__main__":
     parent_dir = '/Volumes/T7/Thesis'
-    exp_list = ['P28A_FT_H_Exp1','P28A_FT_H_Exp2','P28A_FT_H_Exp3_3','P28B_ISC_FT_H_Exp2','VCT5_FT_N_Exp1',
-                'VCT5_FT_N_Exp3','VCT5_FT_N_Exp4','VCT5_FT_N_Exp5','VCT5A_FT_H_Exp2','VCT5A_FT_H_Exp5']
-    exp_list = ['P28A_FT_H_Exp1']
+    exp_list = ['P28A_FT_H_Exp4_2', 'VCT5_FT_N_Exp4','VCT5_FT_N_Exp5','VCT5A_FT_H_Exp2','VCT5A_FT_H_Exp5']
+    exp_list = ['VCT5_FT_N_Exp3']        
     color_palette = np.load(os.path.join(parent_dir, 'Render/palette.npy'))
     # modify rendering engine
     modify_engine()
@@ -68,9 +68,14 @@ if __name__ == "__main__":
         create_folder(side_dir)
 
         top_dir = os.path.join(render_dir, 'top view')
-        create_folder(top_dir)        
+        create_folder(top_dir)
+        
+        iterable = time_list[45:]
+        progress = 1
+        
+        print(f'Render {exp} started')        
 
-        for t in tqdm(time_list, desc=f'Rendering {exp}', leave=False):
+        for t in iterable:
             if t == '.DS_Store':
                 continue
             time_dir = os.path.join(vdb_dir, t)
@@ -97,6 +102,8 @@ if __name__ == "__main__":
             bpy.context.scene.camera = bpy.context.active_object
             bpy.context.scene.render.filepath = os.path.join(top_dir, t + '.png')
             bpy.ops.render.render(write_still=True)
+            print(f'Render {exp}: {progress}/{2*len(iterable)}')
+            progress += 1
             bpy.ops.object.delete()
 
             # ---------------------- SIDE VIEW ---------------------- #
@@ -106,6 +113,8 @@ if __name__ == "__main__":
             bpy.context.scene.camera = bpy.context.active_object
             bpy.context.scene.render.filepath = os.path.join(side_dir, t + '.png')
             bpy.ops.render.render(write_still=True)
+            print(f'Render {exp}: {progress}/{2*len(iterable)}')
+            progress += 1
             
             # removing objects for each label related to current time step        
             for i in range(len(bpy.data.objects)):
