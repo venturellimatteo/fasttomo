@@ -1,6 +1,7 @@
 import pyopenvdb as vdb                     # type: ignore
 import numpy as np                          # type: ignore
 from numpy.lib.format import open_memmap    # type: ignore
+from tqdm import tqdm
 import os
 
 # function that saves the vdb file related to a given label given the map and the path
@@ -22,6 +23,7 @@ if __name__ == "__main__":
     parent_dir = '/Volumes/T7/Thesis'
     exp_list = ['P28A_FT_H_Exp1','P28A_FT_H_Exp2','P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2', 'P28B_ISC_FT_H_Exp2','VCT5_FT_N_Exp1',
                 'VCT5_FT_N_Exp3','VCT5_FT_N_Exp4','VCT5_FT_N_Exp5','VCT5A_FT_H_Exp2','VCT5A_FT_H_Exp5']
+    exp_list = ['P28A_FT_H_Exp1']
     
     for exp in exp_list:
         # defining and creating the folders where the vdb objects will be saved
@@ -32,13 +34,10 @@ if __name__ == "__main__":
         mask = open_memmap(os.path.join(exp_dir, 'hypervolume_mask.npy'), mode='r')
         # defining the number of time steps contained in the 4D volume
         time_steps = mask.shape[0]
-        # determining the maximum value for the labels in the map
-        max_label = np.max(mask)
-        np.save(os.path.join(exp_dir, 'max_label.npy'), max_label)
 
-        for t in range(time_steps):
+        for t in tqdm(range(time_steps), desc=f'Creating {exp} vdbs', leave=False):
             # defining the vdbs folder path associated to this time step
-            vdb_time_dir = vdb_dir + '/time-' + str(t)
+            vdb_time_dir = os.path.join(vdb_dir, str(t).zfill(3))
             # creating the folder if it doesn't exist already
             create_folder(vdb_time_dir)
             # creating a numpy array containing the labels present in the current volume
@@ -54,3 +53,4 @@ if __name__ == "__main__":
                 obj_path = os.path.join(vdb_time_dir, str(label) + '.vdb')
                 # constructing the vdb grid for the label and saving the vdb object in the folder associated to that time instant
                 save_vdb(temp, obj_path)
+    print('Done!')

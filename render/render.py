@@ -1,5 +1,6 @@
 import bpy                                  # type: ignore
 import numpy as np                          # type: ignore
+from tqdm import tqdm
 import os
 
 # function that returns a color tuple given the label and the maximum value of the labels
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         top_dir = os.path.join(render_dir, 'top view')
         create_folder(top_dir)        
 
-        for t in time_list:
+        for t in tqdm(time_list, desc=f'Rendering {exp}', leave=False):
             if t == '.DS_Store':
                 continue
             time_dir = os.path.join(vdb_dir, t)
@@ -94,7 +95,7 @@ if __name__ == "__main__":
             bpy.ops.object.camera_add(enter_editmode=False, location=(0, 0, 15))
             bpy.context.active_object.data.type = 'ORTHO'
             bpy.context.scene.camera = bpy.context.active_object
-            bpy.context.scene.render.filepath = os.path.join(top_dir, str(t).zfill(3) + '.png')
+            bpy.context.scene.render.filepath = os.path.join(top_dir, t + '.png')
             bpy.ops.render.render(write_still=True)
             bpy.ops.object.delete()
 
@@ -103,7 +104,7 @@ if __name__ == "__main__":
             bpy.ops.object.camera_add(enter_editmode=False, location=(15, 0, 0), rotation=(np.pi/2, 0, np.pi/2))
             bpy.context.active_object.data.type = 'ORTHO'
             bpy.context.scene.camera = bpy.context.active_object
-            bpy.context.scene.render.filepath = os.path.join(side_dir, str(t).zfill(3) + '.png')
+            bpy.context.scene.render.filepath = os.path.join(side_dir, t + '.png')
             bpy.ops.render.render(write_still=True)
             
             # removing objects for each label related to current time step        
