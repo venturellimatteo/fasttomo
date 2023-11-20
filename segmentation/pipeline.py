@@ -33,6 +33,6 @@ if __name__ == '__main__':
         for offset, exp in enumerate(exp_list):
             executor.submit(pipeline, exp, segment, filtering, motion, graphs, OS, offset)
 
-    # pipeline(exp=exp_list[3], segment=segment, filtering=filtering, motion=motion, graphs=graphs, OS=OS, offset=0)
+    # pipeline(exp=exp_list[0], segment=segment, filtering=filtering, motion=motion, graphs=graphs, OS=OS, offset=0)
 
     print('\nAll done!')

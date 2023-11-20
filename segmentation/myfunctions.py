@@ -17,8 +17,7 @@ def exp_list():
             'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp5']
 
 def bad_exp_list():
-    return ['P28A_FT_H_Exp5','P28A_FT_N_Exp1','P28A_FT_N_Exp4','P28B_ISC_FT_H_Exp3','P28B_ISC_FT_H_Exp4',
-            'P28B_ISC_FT_H_Exp4_2','P28B_ISC_FT_H_Exp5','VCT5A_FT_H_Exp1','VCT5A_FT_H_Exp4']
+    return ['P28B_ISC_FT_H_Exp3','P28B_ISC_FT_H_Exp4','P28B_ISC_FT_H_Exp4_2','P28B_ISC_FT_H_Exp5','VCT5A_FT_H_Exp1','VCT5A_FT_H_Exp4']
 
 def exp_start_TR():
     return [7, 4, 4, 6, 3, 1, 4, 5, 3, 1, 1]
@@ -434,15 +433,38 @@ def plot_data(exp, OS, offset, save):
     fig = plt.figure(figsize=(3*length, 4*heigth), dpi=150)
     subfigs = fig.subfigures(4, 1, hspace=0.3)
 
+    df_tot = pd.DataFrame(columns=['t', 'N', 'V', 'dVdt'])
+    df_r = pd.DataFrame(columns=['t', 'N', 'V', 'dVdt', 'r_sect'])
+    df_z = pd.DataFrame(columns=['t', 'N', 'V', 'dVdt', 'z_sect'])
+    r_sect_list = ['Core', 'Intermediate', 'External']
+    z_sect_list = ['Top', 'Middle', 'Bottom']
+    for t in (np.unique(df['t'])):
+        df_tot = pd.concat([df_tot, pd.DataFrame([[t, 0, 0, 0]], columns=['t', 'N', 'V', 'dVdt'])], ignore_index=True)
+        for r, z in zip(r_sect_list, z_sect_list):
+            df_r = pd.concat([df_r, pd.DataFrame([[t, 0, 0, 0, r]], columns=['t', 'N', 'V', 'dVdt', 'r_sect'])], ignore_index=True)
+            df_z = pd.concat([df_z, pd.DataFrame([[t, 0, 0, 0, z]], columns=['t', 'N', 'V', 'dVdt', 'z_sect'])], ignore_index=True)
+    for i in range(len(df)):
+        df_tot.loc[df_tot['t'] == df['t'][i], 'N'] += 1
+        df_tot.loc[df_tot['t'] == df['t'][i], 'V'] += df['V'][i]
+        df_tot.loc[df_tot['t'] == df['t'][i], 'dVdt'] += df['dVdt'][i]
+        df_r.loc[(df_r['t'] == df['t'][i]) & (df_r['r_sect'] == df['r_sect'][i]), 'N'] += 1
+        df_r.loc[(df_r['t'] == df['t'][i]) & (df_r['r_sect'] == df['r_sect'][i]), 'V'] += df['V'][i]
+        df_r.loc[(df_r['t'] == df['t'][i]) & (df_r['r_sect'] == df['r_sect'][i]), 'dVdt'] += df['dVdt'][i]
+        df_z.loc[(df_z['t'] == df['t'][i]) & (df_z['z_sect'] == df['z_sect'][i]), 'N'] += 1
+        df_z.loc[(df_z['t'] == df['t'][i]) & (df_z['z_sect'] == df['z_sect'][i]), 'V'] += df['V'][i]
+        df_z.loc[(df_z['t'] == df['t'][i]) & (df_z['z_sect'] == df['z_sect'][i]), 'dVdt'] += df['dVdt'][i]
+    df_r.loc[df_r['r_sect'] == 'Intermediate', 'N'] = df_r.loc[df_r['r_sect'] == 'Intermediate', 'N'] / 3
+    df_r.loc[df_r['r_sect'] == 'External', 'N'] = df_r.loc[df_r['r_sect'] == 'External', 'N'] / 5
+
     # VOLUME
-    subfigs[0].suptitle('Agglomerates volume vs time', y=1.1, fontsize=14)
+    subfigs[0].suptitle('Agglomerates total volume vs time', y=1.1, fontsize=14)
     axs = subfigs[0].subplots(1, 3, sharey=True)
-    sns.lineplot(ax=axs[0], data=df, x='t', y='V')
+    sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V')
     axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df, x='t', y='V', hue='r_sect')
+    sns.lineplot(ax=axs[1], data=df_r, x='t', y='V', hue='r_sect', hue_order=r_sect_list)
     axs[1].set_title('$r$ sections')
     axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df, x='t', y='V', hue='z_sect')
+    sns.lineplot(ax=axs[2], data=df_z, x='t', y='V', hue='z_sect', hue_order=z_sect_list)
     axs[2].set_title('$z$ sections')
     axs[2].legend(loc='upper right')
     for ax in axs:
@@ -451,32 +473,15 @@ def plot_data(exp, OS, offset, save):
         ax.set_ylabel('Volume [$mm^3$]')
     progress_bar.update()
 
-    # SPEED
-    subfigs[1].suptitle('Agglomerates speed vs time', y=1.1, fontsize=14)
-    axs = subfigs[1].subplots(1, 3, sharey=True)
-    sns.lineplot(ax=axs[0], data=df, x='t', y='v')
-    axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df, x='t', y='v', hue='r_sect')
-    axs[1].set_title('$r$ sections')
-    axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df, x='t', y='v', hue='z_sect')
-    axs[2].set_title('$z$ sections')
-    axs[2].legend(loc='upper right')
-    for ax in axs:
-        ax.set_xlim(time_axis[0], time_axis[-1])
-        ax.set_xlabel('Time [$s$]')
-        ax.set_ylabel('Speed [$mm/s$]')
-    progress_bar.update()
-
     # EXPANSION RATE
-    subfigs[2].suptitle('Agglomerates volume expansion rate vs time', y=1.1, fontsize=14)
-    axs = subfigs[2].subplots(1, 3, sharey=True)
-    sns.lineplot(ax=axs[0], data=df, x='t', y='dVdt')
+    subfigs[1].suptitle('Agglomerates total volume expansion rate vs time', y=1.1, fontsize=14)
+    axs = subfigs[1].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df_tot, x='t', y='dVdt')
     axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df, x='t', y='dVdt', hue='r_sect')
+    sns.lineplot(ax=axs[1], data=df_r, x='t', y='dVdt', hue='r_sect', hue_order=r_sect_list)
     axs[1].set_title('$r$ sections')
     axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df, x='t', y='dVdt', hue='z_sect')
+    sns.lineplot(ax=axs[2], data=df_z, x='t', y='dVdt', hue='z_sect', hue_order=z_sect_list)
     axs[2].set_title('$z$ sections')
     axs[2].legend(loc='upper right')
     for ax in axs:
@@ -485,26 +490,30 @@ def plot_data(exp, OS, offset, save):
         ax.set_ylabel('Volume expansion rate [$mm^3/s$]')
     progress_bar.update()
 
+    # SPEED
+    subfigs[2].suptitle('Agglomerates speed vs time', y=1.1, fontsize=14)
+    axs = subfigs[2].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df, x='t', y='v')
+    axs[0].set_title('Whole battery')
+    sns.lineplot(ax=axs[1], data=df, x='t', y='v', hue='r_sect', hue_order=r_sect_list)
+    axs[1].set_title('$r$ sections')
+    axs[1].legend(loc='upper right')
+    sns.lineplot(ax=axs[2], data=df, x='t', y='v', hue='z_sect', hue_order=z_sect_list)
+    axs[2].set_title('$z$ sections')
+    axs[2].legend(loc='upper right')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        ax.set_ylabel('Speed [$mm/s$]')
+    progress_bar.update()
+
     # DENSITY
     subfigs[3].suptitle('Agglomerates density vs time', y=1.1, fontsize=14)
     densityfig = subfigs[3].subfigures(1, 3, width_ratios=[1, 4, 1])
     axs = densityfig[1].subplots(1, 2)
-    agg_number_r = pd.DataFrame(columns=['Time', 'Number', 'r_sect'])
-    agg_number_z = pd.DataFrame(columns=['Time', 'Number', 'z_sect'])
-    r_sect_list = ['Core', 'Intermediate', 'External']
-    z_sect_list = ['Top', 'Middle', 'Bottom']
-    for t in (np.unique(df['t'])):
-        for r, z in zip(r_sect_list, z_sect_list):
-            agg_number_r = pd.concat([agg_number_r, pd.DataFrame([[t, 0, r]], columns=['Time', 'Number', 'r_sect'])], ignore_index=True)
-            agg_number_z = pd.concat([agg_number_z, pd.DataFrame([[t, 0, z]], columns=['Time', 'Number', 'z_sect'])], ignore_index=True)
-    for i in range(len(df)):
-        agg_number_r.loc[(agg_number_r['Time'] == df['t'][i]) & (agg_number_r['r_sect'] == df['r_sect'][i]), 'Number'] += 1
-        agg_number_z.loc[(agg_number_z['Time'] == df['t'][i]) & (agg_number_z['z_sect'] == df['z_sect'][i]), 'Number'] += 1
-    agg_number_r.loc[agg_number_r['r_sect'] == 'Intermediate', 'Number'] = agg_number_r.loc[agg_number_r['r_sect'] == 'Intermediate', 'Number'] / 3
-    agg_number_r.loc[agg_number_r['r_sect'] == 'External', 'Number'] = agg_number_r.loc[agg_number_r['r_sect'] == 'External', 'Number'] / 5
-    sns.lineplot(ax=axs[0], data=agg_number_r, x='Time', y='Number', hue='r_sect')
+    sns.lineplot(ax=axs[0], data=df_r, x='t', y='N', hue='r_sect', hue_order=r_sect_list)
     axs[0].set_title('$r$ sections')
-    sns.lineplot(ax=axs[1], data=agg_number_z, x='Time', y='Number', hue='z_sect')
+    sns.lineplot(ax=axs[1], data=df_z, x='t', y='N', hue='z_sect', hue_order=z_sect_list)
     axs[1].set_title('$z$ sections')
     for ax in axs:
         ax.set_xlim(time_axis[0], time_axis[-1])
