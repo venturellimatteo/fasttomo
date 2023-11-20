@@ -432,6 +432,8 @@ def plot_data(exp, OS, offset, save):
     length = 5
     fig = plt.figure(figsize=(3*length, 4*heigth), dpi=150)
     subfigs = fig.subfigures(4, 1, hspace=0.3)
+    palette2 = ['#bce4b5', '#56b567', '#05712f']
+    palette3 = ['#fdc692', '#f67824', '#ad3803']
 
     df_tot = pd.DataFrame(columns=['t', 'N', 'V', 'dVdt'])
     df_r = pd.DataFrame(columns=['t', 'N', 'V', 'dVdt', 'r_sect'])
@@ -461,10 +463,10 @@ def plot_data(exp, OS, offset, save):
     axs = subfigs[0].subplots(1, 3, sharey=True)
     sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V')
     axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df_r, x='t', y='V', hue='r_sect', hue_order=r_sect_list)
+    sns.lineplot(ax=axs[1], data=df_r, x='t', y='V', hue='r_sect', hue_order=r_sect_list, palette=palette2)
     axs[1].set_title('$r$ sections')
     axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df_z, x='t', y='V', hue='z_sect', hue_order=z_sect_list)
+    sns.lineplot(ax=axs[2], data=df_z, x='t', y='V', hue='z_sect', hue_order=z_sect_list, palette=palette3)
     axs[2].set_title('$z$ sections')
     axs[2].legend(loc='upper right')
     for ax in axs:
@@ -478,10 +480,10 @@ def plot_data(exp, OS, offset, save):
     axs = subfigs[1].subplots(1, 3, sharey=True)
     sns.lineplot(ax=axs[0], data=df_tot, x='t', y='dVdt')
     axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df_r, x='t', y='dVdt', hue='r_sect', hue_order=r_sect_list)
+    sns.lineplot(ax=axs[1], data=df_r, x='t', y='dVdt', hue='r_sect', hue_order=r_sect_list, palette=palette2)
     axs[1].set_title('$r$ sections')
     axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df_z, x='t', y='dVdt', hue='z_sect', hue_order=z_sect_list)
+    sns.lineplot(ax=axs[2], data=df_z, x='t', y='dVdt', hue='z_sect', hue_order=z_sect_list, palette=palette3)
     axs[2].set_title('$z$ sections')
     axs[2].legend(loc='upper right')
     for ax in axs:
@@ -495,10 +497,10 @@ def plot_data(exp, OS, offset, save):
     axs = subfigs[2].subplots(1, 3, sharey=True)
     sns.lineplot(ax=axs[0], data=df, x='t', y='v')
     axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df, x='t', y='v', hue='r_sect', hue_order=r_sect_list)
+    sns.lineplot(ax=axs[1], data=df, x='t', y='v', hue='r_sect', hue_order=r_sect_list, palette=palette2)
     axs[1].set_title('$r$ sections')
     axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df, x='t', y='v', hue='z_sect', hue_order=z_sect_list)
+    sns.lineplot(ax=axs[2], data=df, x='t', y='v', hue='z_sect', hue_order=z_sect_list, palette=palette3)
     axs[2].set_title('$z$ sections')
     axs[2].legend(loc='upper right')
     for ax in axs:
@@ -511,10 +513,12 @@ def plot_data(exp, OS, offset, save):
     subfigs[3].suptitle('Agglomerates density vs time', y=1.1, fontsize=14)
     densityfig = subfigs[3].subfigures(1, 3, width_ratios=[1, 4, 1])
     axs = densityfig[1].subplots(1, 2)
-    sns.lineplot(ax=axs[0], data=df_r, x='t', y='N', hue='r_sect', hue_order=r_sect_list)
+    sns.lineplot(ax=axs[0], data=df_r, x='t', y='N', hue='r_sect', hue_order=r_sect_list, palette=palette2)
     axs[0].set_title('$r$ sections')
-    sns.lineplot(ax=axs[1], data=df_z, x='t', y='N', hue='z_sect', hue_order=z_sect_list)
+    axs[0].legend(loc='upper left')
+    sns.lineplot(ax=axs[1], data=df_z, x='t', y='N', hue='z_sect', hue_order=z_sect_list, palette=palette3)
     axs[1].set_title('$z$ sections')
+    axs[1].legend(loc='upper left')
     for ax in axs:
         ax.set_xlim(time_axis[0], time_axis[-1])
         ax.set_xlabel('Time [$s$]')
