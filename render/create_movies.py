@@ -8,16 +8,19 @@ fps = 5
 
 bad = False
 
-exp_list = ['P28A_FT_H_Exp1','P28A_FT_H_Exp2','P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2', 'P28B_ISC_FT_H_Exp2','VCT5_FT_N_Exp1',
+exp_list = ['P28A_FT_H_Exp1','P28A_FT_H_Exp2','P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2','P28B_ISC_FT_H_Exp2','VCT5_FT_N_Exp1',
             'VCT5_FT_N_Exp3','VCT5_FT_N_Exp4','VCT5_FT_N_Exp5','VCT5A_FT_H_Exp2','VCT5A_FT_H_Exp5']
 
-bad_exp_list = ['P28B_ISC_FT_H_Exp3','P28B_ISC_FT_H_Exp4','P28B_ISC_FT_H_Exp4_2','P28B_ISC_FT_H_Exp5','VCT5A_FT_H_Exp1','VCT5A_FT_H_Exp4']
+exp_list = ['P28A_FT_H_Exp4_2','VCT5_FT_N_Exp4','VCT5_FT_N_Exp5','VCT5A_FT_H_Exp2']
 
-# Path to the directory containing your frames
+exp_list = ['VCT5A_FT_H_Exp5']
+
+bad_exp_list = ['P28B_ISC_FT_H_Exp3','P28B_ISC_FT_H_Exp4','P28B_ISC_FT_H_Exp4_2','P28B_ISC_FT_H_Exp5','VCT5A_FT_H_Exp1','VCT5A_FT_H_Exp4']
 
 
 if bad:
     for exp in bad_exp_list:
+        # Path to the directory containing your frames
         frames_dir = f'/Volumes/T7/Thesis/{exp}/img'
         # Get the list of frame files
         frame_files = sorted([f for f in os.listdir(frames_dir) if f.endswith('.png')])

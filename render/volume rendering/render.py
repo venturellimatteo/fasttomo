@@ -1,7 +1,6 @@
 import bpy                                  # type: ignore
 import numpy as np                          # type: ignore
 from tqdm import tqdm
-from tqdm import tqdm
 import os
 
 # function that returns a color tuple given the label and the maximum value of the labels
@@ -49,8 +48,7 @@ def create_folder(path):
 
 if __name__ == "__main__":
     parent_dir = '/Volumes/T7/Thesis'
-    exp_list = ['P28A_FT_H_Exp4_2', 'VCT5_FT_N_Exp4','VCT5_FT_N_Exp5','VCT5A_FT_H_Exp2','VCT5A_FT_H_Exp5']
-    exp_list = ['VCT5_FT_N_Exp3']        
+    exp_list = ['VCT5A_FT_H_Exp2','VCT5A_FT_H_Exp5']     
     color_palette = np.load(os.path.join(parent_dir, 'Render/palette.npy'))
     # modify rendering engine
     modify_engine()
@@ -70,7 +68,7 @@ if __name__ == "__main__":
         top_dir = os.path.join(render_dir, 'top view')
         create_folder(top_dir)
         
-        iterable = time_list[45:]
+        iterable = time_list
         progress = 1
         
         print(f'Render {exp} started')        

@@ -5,7 +5,7 @@ if __name__ == "__main__":
     parent_dir = '/Volumes/T7/Thesis'
     exp_list = ['P28A_FT_H_Exp3_3','P28B_ISC_FT_H_Exp2','VCT5_FT_N_Exp1',
                 'VCT5_FT_N_Exp3','VCT5_FT_N_Exp4','VCT5_FT_N_Exp5','VCT5A_FT_H_Exp2','VCT5A_FT_H_Exp5']
-    exp_list = ['P28A_FT_H_Exp2']
+    exp_list = ['P28A_FT_H_Exp4_2']
     for exp in tqdm(exp_list, desc='Renaming folders'):
         vdb_dir = os.path.join(parent_dir, exp, 'vdbs')
         for time in os.listdir(vdb_dir):

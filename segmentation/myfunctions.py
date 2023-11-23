@@ -1,10 +1,7 @@
 import numpy as np    
-from numpy.lib.format import open_memmap
-import seaborn as sns
-import matplotlib.pyplot as plt           
-from skimage.segmentation import clear_border                             
-from skimage.measure import label, regionprops  
-from skimage.morphology import erosion    
+from numpy.lib.format import open_memmap                           
+from skimage.measure import label, regionprops, marching_cubes
+from skimage.morphology import erosion, dilation, ball    
 from tqdm import tqdm                               
 import pandas as pd
 import os
@@ -19,53 +16,72 @@ def exp_list():
 def bad_exp_list():
     return ['P28B_ISC_FT_H_Exp3','P28B_ISC_FT_H_Exp4','P28B_ISC_FT_H_Exp4_2','P28B_ISC_FT_H_Exp5','VCT5A_FT_H_Exp1','VCT5A_FT_H_Exp4']
 
-def exp_start_TR():
-    return [7, 4, 4, 6, 3, 1, 4, 5, 3, 1, 1]
+# function returning the diameter of the battery given the experiment name
+def find_diameter(exp):
+    if 'P28A' in exp:
+        return 18.6 # [mm]
+    elif 'P28B' in exp:
+        return 18.6 # [mm]
+    elif 'VCT5A' in exp:
+        return 18.35 # [mm]
+    elif 'VCT5' in exp:
+        return 18.2 # [mm]
+    else:
+        raise ValueError('Experiment not recognized')
+
+def update_pb(progress_bar, postfix):
+    progress_bar.update()
+    progress_bar.set_postfix_str(postfix)
+    return None
 
 # function returning the area associated to the biggest agglomerate in the sequence
 def find_biggest_area(sequence, threshold):
-    sequence_mask = np.zeros_like(sequence, dtype=np.ushort)
-    max_area = np.zeros(sequence.shape[0])
-    for i in range(sequence.shape[0]):
-        sequence_mask[i,:,:] = label(sequence[i,:,:] > threshold)
-        areas = [rp.area for rp in regionprops(sequence_mask[i,:,:])]
-        max_area[i] = np.max(areas)
-    return np.mean(max_area)
+    sequence_mask = segment3D(sequence, threshold)
+    areas = [rp.area for rp in regionprops(sequence_mask)]
+    return np.max(areas)/sequence_mask.shape[0]
 
-# this is used to mask the inside of the external shell
-# a method to find the correct slice is needed (sometimes agglomerates inside share the same label as the shell)
-def create_shell_border(hypervolume, threshold, z=50):
-    mask = label(hypervolume[z]>threshold)
-    rps = regionprops(mask)
-    labels = [rp.label for rp in rps]
-    shell_inside = clear_border(np.ones_like(mask) - (mask==labels[np.argmax([rp.area for rp in rps])]))
-    eroded_shell_inside = erosion(shell_inside, footprint=np.ones((5,5)))
-    return 1 - (shell_inside - eroded_shell_inside)
-
-# function removing the agglomerates with volume smaller than smallest_volume. volume can be intended as both 3D and 4D
-def remove_small_agglomerates(sequence_mask, smallest_volume):
-    bincount = np.bincount(sequence_mask.flatten())
-    sequence_mask[np.isin(sequence_mask, np.where(bincount < smallest_volume))] = 0
-    return sequence_mask
+def remove_small_agglomerates(hypervolume_mask, smallest_volume):
+    bincount = np.bincount(hypervolume_mask.flatten())
+    hypervolume_mask[np.isin(hypervolume_mask, np.where(bincount < smallest_volume))] = 0
+    return None
 
 # function used to remove the agglomerates that are not present in neighboring slices
-def remove_isolated_agglomerates(sequence_mask):
-    for i in range(sequence_mask.shape[0]):
-        current_slice = sequence_mask[i,:,:]
-        if not i == 0:
-            previous_slice = sequence_mask[i-1,:,:]
-        else:
-            previous_slice = np.zeros_like(current_slice)   # previous_slice for first slice is set ad-hoc in order to avoid going out of bounds
-        if not i == sequence_mask.shape[0]-1:
-            next_slice = sequence_mask[i+1,:,:]
-        else:
-            next_slice = np.zeros_like(current_slice)       # next_slice for last slice is set ad-hoc in order to avoid going out of bounds
+def remove_isolated_agglomerates(hypervolume_mask):
+    for time in range(hypervolume_mask.shape[0]):
+        current_slice = hypervolume_mask[time]
+        previous_slice = np.zeros_like(current_slice) if time==0 else hypervolume_mask[time-1] # previous_slice for first slice is set ad-hoc in order to avoid going out of bounds
+        next_slice = np.zeros_like(current_slice) if time == hypervolume_mask.shape[0]-1 else hypervolume_mask[time+1]  # next_slice for last slice is set ad-hoc in order to avoid going out of bounds
         current_labels = [rp.label for rp in regionprops(current_slice)]
         for current_label in current_labels:
             if current_label not in previous_slice and current_label not in next_slice:
                 current_slice[current_slice == current_label] = 0
-        sequence_mask[i,:,:] = current_slice
-    return sequence_mask
+        hypervolume_mask[time] = current_slice
+    return None
+
+# function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
+def rename_labels(hypervolume_mask, time_index):
+    unique_labels = set()
+    for t in time_index:
+        for rp in regionprops(hypervolume_mask[t]):
+            unique_labels.add(rp.label)
+    unique_labels = np.array(list(unique_labels))
+    total_labels = len(unique_labels)
+    old_labels = unique_labels[unique_labels >= total_labels]
+    new_labels = np.setdiff1d(np.arange(total_labels), unique_labels)
+    lookup_table = np.arange(np.max(unique_labels)+1)
+    lookup_table[old_labels] = new_labels
+    hypervolume_mask = np.take(lookup_table, hypervolume_mask)
+    return None
+
+# function returning the 3D segmentation map given the 3D volume and the threshold
+def segment3D(volume, threshold, filtering3D=True, smallest_3Dvolume=50):
+    mask1 = np.greater(volume, threshold)
+    mask2 = dilation(erosion(mask1, ball(1)), ball(4))
+    mask = label(np.logical_and(mask1, mask2))
+    if filtering3D:
+        remove_small_agglomerates(mask, smallest_3Dvolume)
+        remove_isolated_agglomerates(mask)
+    return mask
 
 # function returning the path of the experiment given the experiment name and the OS
 def OS_path(exp, OS):
@@ -82,12 +98,21 @@ def OS_path(exp, OS):
     else:
         raise ValueError('OS not recognized')
 
+# function used to create the memmaps for the 4D volume and the 4D segmentation map
+# if cropping is True, the volume is cropped in order to reduce the size of the memmap
+def create_memmaps(exp, OS):
+    # create the 4D volume memmap
+    hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), mode='r')
+    # create the 4D segmentation mask memmap
+    hypervolume_mask = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume_mask.npy'), dtype=np.ushort, mode='w+', shape=hypervolume.shape)
+    return hypervolume, hypervolume_mask
+
 
 
 # function returning the threshold value that allows to segment the sequence in a way that the area of the biggest agglomerate is equal to target
-def find_threshold(sequence, threshold=0, step=1, target=5400, delta=200, slices=5):
+def find_threshold(sequence, threshold=0, step=1, target=6800, delta=100, slices=10):
     if sequence.shape[0] > slices:              # if the sequence is too long, it is reduced to n=slices slices
-        sequence = np.array([sequence[i,:,:] for i in np.linspace(0, sequence.shape[0]-1, slices, dtype=int)])
+        sequence = np.array([sequence[i] for i in np.linspace(0, sequence.shape[0]-1, slices, dtype=int)])
     flag = False                                # flag used to stop the while loop
     add = True                                  # flag used to decide whether to add or subtract the step
     while not flag:
@@ -105,17 +130,6 @@ def find_threshold(sequence, threshold=0, step=1, target=5400, delta=200, slices
         else:                                   # if the area is close to target, the threshold is found
             flag = True
     return threshold
-
-
-
-# function used to create the memmaps for the 4D volume and the 4D segmentation map
-# if cropping is True, the volume is cropped in order to reduce the size of the memmap
-def create_memmaps(exp, OS):
-    # create the 4D volume memmap
-    hypervolume = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume.npy'), mode='r')
-    # create the 4D segmentation mask memmap
-    hypervolume_mask = open_memmap(os.path.join(OS_path(exp, OS), 'hypervolume_mask.npy'), dtype=np.ushort, mode='w+', shape=hypervolume.shape)
-    return hypervolume, hypervolume_mask
 
 
 
@@ -156,19 +170,10 @@ def propagate_labels(previous_mask, current_mask, forward=True):
 
     if forward:
         new_labels = np.unique(current_mask[current_mask > max_label])
-        for i, new_label in enumerate(new_labels):
-            current_mask[current_mask == new_label] = max_label + i + 1
+        lookup_table = np.arange(np.max(new_labels)+1)
+        lookup_table[new_labels] = np.arange(len(new_labels)) + max_label + 1
+        current_mask = np.take(lookup_table, current_mask)
     return current_mask
-
-
-
-# function returning the 3D segmentation map given the 3D volume and the threshold
-def segment3D(volume, threshold, smallest_volume, filtering):
-    mask = label(volume > threshold)
-    if filtering:
-        mask = remove_small_agglomerates(mask, smallest_volume)
-        mask = remove_isolated_agglomerates(mask)
-    return mask
 
 
 
@@ -176,33 +181,44 @@ def segment3D(volume, threshold, smallest_volume, filtering):
 # if filtering3D is True, the agglomerates with volume smaller than smallest_3Dvolume are removed
 # if filtering4D is True, the agglomerates with volume smaller than smallest_4Dvolume are removed
 # if backward is True, backward propagation is performed
-def segment4D(exp, OS='Windows', smallest_3Dvolume=50, filtering3D=True, offset=0):
-    progress_bar = tqdm(total=3, desc=f'{exp} preparation', position=offset, leave=False)
-    hypervolume, hypervolume_mask = create_memmaps(exp, OS) # creating the memmaps for the 4D volume and the 4D segmentation map
-    progress_bar.update()
+def segment4D(exp, OS='Windows', offset=0, filtering3D=True, smallest_3Dvolume=50):
+    # setting up the progress_bar
+    progress_bar = tqdm(total=4, desc=f'{exp} preparation', position=offset, leave=False)
+
+    # creating the memmaps for the 4D volume and the 4D segmentation map
+    progress_bar.set_postfix_str('Creating memmaps')
+    hypervolume, hypervolume_mask = create_memmaps(exp, OS) 
     time_index = range(hypervolume.shape[0]) # defining the time steps for the current experiment
-    TR_start_time = exp_start_TR()[exp_list().index(exp)] # defining the time instant of the beginning of the thermal runaway
     previous_volume = hypervolume[0] # dealing with the first volume
-    threshold = find_threshold(previous_volume) # evaluating the threshold on the first volume
-    shell_border = create_shell_border(previous_volume, threshold) # creating the shell border mask (it is used to remove the agglomerates inside the shell
+
+    # evaluating the threshold on the first volume
+    update_pb(progress_bar, 'Finding threshold')
+    threshold = find_threshold(previous_volume) 
+
     # segmenting the first volume
-    previous_mask = segment3D(previous_volume*shell_border, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D) 
+    update_pb(progress_bar, 'Segmenting first volume')
+    previous_mask = segment3D(previous_volume, threshold, filtering3D, smallest_3Dvolume)
+
     # reassigning the labels after the filtering
-    progress_bar.update()
+    update_pb(progress_bar, 'Reassigning labels')
     rps = regionprops(previous_mask)
-    labels = [rp.label for rp in rps]
-    labels = np.array(labels)[np.argsort([rp.area for rp in rps])][::-1]
-    for new_label, old_label in enumerate(labels):
-        previous_mask[previous_mask == old_label] = new_label + 1
-    progress_bar.update()
+    old_labels = [rp.label for rp in rps]
+    old_labels = np.array(old_labels)[np.argsort([rp.area for rp in rps])][::-1]
+    lookup_table = np.arange(np.max(old_labels)+1)
+    lookup_table[old_labels] = np.arange(len(old_labels))+1
+    previous_mask = np.take(lookup_table, previous_mask)
+
     # writing the first mask in the hypervolume_mask memmap
     hypervolume_mask[0] = previous_mask
     progress_bar.close()
 
     # segmenting the remaining volumes and propagating the labels from previous volumes
-    for time in tqdm(time_index[1:], desc=f'{exp} segmentation', position=offset, leave=False):
-        current_volume = hypervolume[time]*shell_border if time < TR_start_time else hypervolume[time]
-        current_mask = segment3D(current_volume, threshold, smallest_volume=smallest_3Dvolume, filtering=filtering3D)
+    progress_bar = tqdm(time_index[1:], desc=f'{exp} segmentation', position=offset, leave=False)
+    for time in progress_bar:
+        progress_bar.set_postfix_str('Segmenting volume')
+        current_volume = hypervolume[time]
+        current_mask = segment3D(current_volume, threshold, filtering3D, smallest_3Dvolume)
+        progress_bar.set_postfix_str('Propagating labels')
         current_mask = propagate_labels(previous_mask, current_mask, forward=True)
         hypervolume_mask[time] = current_mask
         previous_mask = current_mask
@@ -211,149 +227,19 @@ def segment4D(exp, OS='Windows', smallest_3Dvolume=50, filtering3D=True, offset=
 
 
 
-# function used to update the remove_list used to remove the agglomerates that are not present in each of the following n_steps bincounts
-def update_remove_list(bincounts, bincount, remove_list, n_steps, i):
-    # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
-    prev_bincount = bincounts[i-1] if i != 0 else np.zeros_like(bincount)
-    # looping through the labels in the current bincount
-    for label, count in enumerate(bincount):
-        # if the label is contained in the previous bincount, it is not considered (we check only for the first time a label appears)
-        if label < len(prev_bincount):
-            if prev_bincount[label] != 0 or count == 0:
-                continue
-        # if the label is not contained in each of the following n_steps bincounts, it is added to the set of labels to remove
-        for j in range(i+1, i+1+n_steps):
-            next_bincount = bincounts[j]
-            if next_bincount[label] == 0:
-                remove_list.append(np.array([label, i, j]))
-                break
-    return remove_list
-
-
-
-# function used to remove the agglomerates that are not present in each of the following n_steps bincounts
-def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index, n_steps, progress_bar):
-    # remove list is a list containing the labels that will be removed from start_time to end_time volumes in the format [label, start_time, end_time]
-    remove_list = []
-    max_label = np.max(hypervolume_mask)
-    # looping through the bincounts related to each time instant and updating the remove_list
-    for i, bincount in enumerate(bincounts[:-n_steps]):
-        remove_list = update_remove_list(bincounts, bincount, remove_list, n_steps, i)
-    # converting the remove_list to more useful format for looping
-    # remove_array is a boolean array of shape (len(time_index), max_label) where each row contains True for the labels that will be removed in that time instant
-    remove_array = np.zeros((len(time_index), int(max_label)), dtype=bool)
-    for element in remove_list:
-        remove_array[element[1]:element[2]+1, element[0]] = True
-    # removing the labels
-    for time in time_index:
-        for label in np.where(remove_array[time])[0]:
-            hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-        progress_bar.update()
-    return None
-
-
-
-# function used to remove small agglomerates in terms of 4D volume
-def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, smallest_4Dvolume, progress_bar):
-    # computation of the total bincount in the 4D mask
-    max_label = np.max(hypervolume_mask)
-    total_bincount = np.zeros(max_label+1)
-    for bincount in bincounts:
-        total_bincount[:len(bincount)] += bincount
-    # removing the agglomerates with volume smaller than smallest_4Dvolume
-    for time in time_index:
-        for label in np.where(total_bincount < smallest_4Dvolume)[0]:
-            if label < len(bincounts[time]):
-                if bincounts[time][label] > 0:
-                    hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-        progress_bar.update()
-    return None
-
-
-
-# function used to remove the agglomerates that appear before the thermal runaway
-def remove_pre_TR_agglomerates(hypervolume_mask, time_index, exp):
-    TR_start_time = exp_start_TR()[exp_list().index(exp)]
-    labels_to_remove = set()
-    for time in range(TR_start_time):
-        rps = regionprops(hypervolume_mask[time])
-        for rp in rps:
-            if rp.area != max([rp.area for rp in rps]):
-                labels_to_remove.add(rp.label)
-    for time in time_index:
-        for label in labels_to_remove:
-            hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-    return None
-
-
-
-# function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
-def rename_labels(hypervolume_mask, time_index, progress_bar):
-    unique_labels = set()
-    for t in time_index:
-        for rp in regionprops(hypervolume_mask[t]):
-            unique_labels.add(rp.label)
-    unique_labels = np.array(list(unique_labels))
-    total_labels = len(unique_labels)
-    old_labels = unique_labels[unique_labels >= total_labels]
-    new_labels = np.setdiff1d(np.arange(total_labels), unique_labels)
-    timewise_labels = [[rp.label for rp in regionprops(hypervolume_mask[t])] for t in time_index]
-    for time in time_index:
-        for new_label, old_label in zip(new_labels, old_labels):
-            if old_label in timewise_labels[time]:
-                hypervolume_mask[time][hypervolume_mask[time] == old_label] = new_label
-        progress_bar.update()
-    return None
-
-
-
 # function used to compute the 4-dimensional filtering of the segmentation map
-def filtering4D(hypervolume_mask, exp, smallest_4Dvolume=250, n_steps=10, offset=0):
-    bincounts = []
+def filtering4D(hypervolume_mask, exp, smallest_4Dvolume=250, offset=0):
     time_index = range(hypervolume_mask.shape[0])
-    progress_bar = tqdm(total=4*len(time_index), desc=f'{exp} bincounts computation', position=offset, leave=False)
-    for t in time_index:
-        bincounts.append(np.bincount(hypervolume_mask[t].flatten()))
-        progress_bar.update()
-    progress_bar.set_description(f'Exp {exp} inconsistent labels removal')
-    remove_inconsistent_4D_agglomerates(hypervolume_mask, bincounts, time_index, n_steps, progress_bar)
-    progress_bar.set_description(f'Exp {exp} small agglomerates removal')
-    remove_small_4D_agglomerates(hypervolume_mask, bincounts, time_index, smallest_4Dvolume, progress_bar)
-    remove_pre_TR_agglomerates(hypervolume_mask, time_index, exp)
-    progress_bar.set_description(f'Exp {exp} labels renaming')
+    progress_bar = tqdm(total=3, desc=f'{exp} filtering', position=offset, leave=False)
+    progress_bar.set_postfix_str('Isolated labels removal')
+    remove_isolated_agglomerates(hypervolume_mask, time_index, progress_bar)
+    update_pb(progress_bar, 'Small agglomerates removal')
+    remove_small_agglomerates(hypervolume_mask, smallest_4Dvolume)
+    # remove_pre_TR_agglomerates(hypervolume_mask, time_index, exp)
+    update_pb(progress_bar, 'Labels renaming')
     rename_labels(hypervolume_mask, time_index, progress_bar)
     progress_bar.close()
     return None
-
-
-
-# function used to compute the ratio between pixels and physical units in millimeters
-# and the ratio between time steps and physical units in seconds
-def find_geometry(hypervolume_mask, exp):
-    if 'P28A' in exp:
-        m_diameter = 18.6 # [mm]
-    elif 'P28B' in exp:
-        m_diameter = 18.6 # [mm]
-    elif 'VCT5A' in exp:
-        m_diameter = 18.35 # [mm]
-    elif 'VCT5' in exp:
-        m_diameter = 18.2 # [mm]
-    else:
-        raise ValueError('Experiment not recognized')
-    # here I find the pixel width of the external shell
-    rps = regionprops(hypervolume_mask[0,135])
-    shell_index = np.argmax([rp.area for rp in rps])
-    pixel_diameter = np.sqrt(rps[shell_index].area_bbox)
-    m_z = 12 # total field of view in z direction [mm]
-    pixel_z = 280 # total field of view in z direction in pixels
-    fps = 20 # frames per second
-    # computing the actual quantities
-    xy_ratio = m_diameter/pixel_diameter
-    z_ratio = m_z/pixel_z
-    V_ratio = xy_ratio * xy_ratio * z_ratio
-    t_ratio = 1/fps
-    radius = pixel_diameter/2
-    return xy_ratio, z_ratio, V_ratio, t_ratio, radius
 
 
 
@@ -374,35 +260,34 @@ def update_df(df, label, V, centroid, slices, radii, z_sect_str, r_sect_str, t_r
     if label in prev_labels:
         x0, y0, z0 = (df.iloc[prev_labels[label]][['x', 'y', 'z']]).values
         vx, vy, vz = (x-x0)/t_ratio, (y-y0)/t_ratio, (z-z0)/t_ratio
+        vxy = np.linalg.norm([vx, vy])
         v = np.linalg.norm([vx, vy, vz])
         dVdt = (V - (df.iloc[prev_labels[label]]['V']))/t_ratio
     else:
-        vx, vy, vz, v, dVdt = 0, 0, 0, 0, V/t_ratio
+        vx, vy, vxy, vz, v, dVdt = 0, 0, 0, 0, V/t_ratio
     # adding the row to the dataframe
-    df = pd.concat([df, pd.DataFrame([[t, label, x, y, z, r, vx, vy, vz, v, V, dVdt, r_sect, z_sect]],
-                                     columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])])
+    df = pd.concat([df, pd.DataFrame([[t, label, x, y, z, r, vx, vy, vxy, vz, v, V, dVdt, r_sect, z_sect]],
+                                     columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vxy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])])
     return df
 
 
 
 # function returning the dataframe containing the motion properties of the agglomerates
 def motion_df(hypervolume_mask, exp, offset=0):
-    df = pd.DataFrame(columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])
-    # max_label = np.max(hypervolume_mask)
+    df = pd.DataFrame(columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vxy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])
     n_time_instants = hypervolume_mask.shape[0]
     n_slices = hypervolume_mask.shape[1]
-    # the ratios between pixels and physical units are computed
-    xy_ratio, z_ratio, V_ratio, t_ratio, radius = find_geometry(hypervolume_mask, exp)
+    xyz_ratio, V_ratio, t_ratio = 0.04, 0.000064, 0.05
     xy_center = (hypervolume_mask.shape[2]-1)/2
     center = np.array([0, xy_center, xy_center])
-    rescale = np.array([z_ratio, xy_ratio, xy_ratio])
+    radius = find_diameter(exp)/(2*xyz_ratio)
     # radii and slices are the values used to divide the volume in <steps> regions
-    radii = np.linspace(0, radius*xy_ratio, 4)
+    radii = np.linspace(0, radius*xyz_ratio, 4)
     radii[3] = np.inf    # the last value is set to inf in order to avoid going out of bounds
-    slices = np.linspace(0, n_slices*z_ratio, 4)
+    slices = np.linspace(0, n_slices*xyz_ratio, 4)
     slices[3] = np.inf   # the last value is set to inf in order to avoid going out of bounds
     r_sect_str = ['Core', 'Intermediate', 'External']
-    z_sect_str = ['Top', 'Middle', 'Bottom'] # HERE I HAVE TO DOUBLE CHECK THE ORDER OF THE SECTIONS!!!
+    z_sect_str = ['Bottom', 'Middle', 'Top'] 
     current_labels = dict()
     # computing the actual quantities
     for time in tqdm(range(n_time_instants), desc=f'Exp {exp} dataframe computation', position=offset, leave=False):
@@ -411,7 +296,7 @@ def motion_df(hypervolume_mask, exp, offset=0):
         rps = regionprops(hypervolume_mask[time])
         labels = [rp.label for rp in rps]
         volumes = [(rp.area * V_ratio) for rp in rps] 
-        centroids = [((rp.centroid - center) * rescale) for rp in rps]
+        centroids = [((rp.centroid - center) * xyz_ratio) for rp in rps]
         # converting the time index into seconds
         t = time * t_ratio
         for index, label in enumerate(labels):
@@ -421,112 +306,116 @@ def motion_df(hypervolume_mask, exp, offset=0):
     return df
 
 
-def plot_data(exp, OS, offset, save):
+# def exp_start_TR():
+#     return [7, 4, 4, 6, 3, 1, 4, 5, 3, 1, 1]
 
-    progress_bar = tqdm(total=4, desc=f'{exp} drawing plots', position=offset, leave=False)
+# this is used to mask the inside of the external shell
+# a method to find the correct slice is needed (sometimes agglomerates inside share the same label as the shell)
+# def create_shell_border(hypervolume, threshold, z=50):
+#     mask = label(hypervolume[z]>threshold)
+#     rps = regionprops(mask)
+#     labels = [rp.label for rp in rps]
+#     shell_inside = clear_border(np.ones_like(mask) - (mask==labels[np.argmax([rp.area for rp in rps])]))
+#     eroded_shell_inside = erosion(shell_inside, footprint=np.ones((5,5)))
+#     return 1 - (shell_inside - eroded_shell_inside)
 
-    df = pd.read_csv(os.path.join(OS_path(exp, OS), 'motion_properties.csv'))
-    plt.style.use('seaborn-v0_8-paper')
-    time_axis = np.arange(len(np.unique(df['t'])))/20
-    heigth = 3.5
-    length = 5
-    fig = plt.figure(figsize=(3*length, 4*heigth), dpi=150)
-    subfigs = fig.subfigures(4, 1, hspace=0.3)
-    palette2 = ['#bce4b5', '#56b567', '#05712f']
-    palette3 = ['#fdc692', '#f67824', '#ad3803']
 
-    df_tot = pd.DataFrame(columns=['t', 'N', 'V', 'dVdt'])
-    df_r = pd.DataFrame(columns=['t', 'N', 'V', 'dVdt', 'r_sect'])
-    df_z = pd.DataFrame(columns=['t', 'N', 'V', 'dVdt', 'z_sect'])
-    r_sect_list = ['Core', 'Intermediate', 'External']
-    z_sect_list = ['Top', 'Middle', 'Bottom']
-    for t in (np.unique(df['t'])):
-        df_tot = pd.concat([df_tot, pd.DataFrame([[t, 0, 0, 0]], columns=['t', 'N', 'V', 'dVdt'])], ignore_index=True)
-        for r, z in zip(r_sect_list, z_sect_list):
-            df_r = pd.concat([df_r, pd.DataFrame([[t, 0, 0, 0, r]], columns=['t', 'N', 'V', 'dVdt', 'r_sect'])], ignore_index=True)
-            df_z = pd.concat([df_z, pd.DataFrame([[t, 0, 0, 0, z]], columns=['t', 'N', 'V', 'dVdt', 'z_sect'])], ignore_index=True)
-    for i in range(len(df)):
-        df_tot.loc[df_tot['t'] == df['t'][i], 'N'] += 1
-        df_tot.loc[df_tot['t'] == df['t'][i], 'V'] += df['V'][i]
-        df_tot.loc[df_tot['t'] == df['t'][i], 'dVdt'] += df['dVdt'][i]
-        df_r.loc[(df_r['t'] == df['t'][i]) & (df_r['r_sect'] == df['r_sect'][i]), 'N'] += 1
-        df_r.loc[(df_r['t'] == df['t'][i]) & (df_r['r_sect'] == df['r_sect'][i]), 'V'] += df['V'][i]
-        df_r.loc[(df_r['t'] == df['t'][i]) & (df_r['r_sect'] == df['r_sect'][i]), 'dVdt'] += df['dVdt'][i]
-        df_z.loc[(df_z['t'] == df['t'][i]) & (df_z['z_sect'] == df['z_sect'][i]), 'N'] += 1
-        df_z.loc[(df_z['t'] == df['t'][i]) & (df_z['z_sect'] == df['z_sect'][i]), 'V'] += df['V'][i]
-        df_z.loc[(df_z['t'] == df['t'][i]) & (df_z['z_sect'] == df['z_sect'][i]), 'dVdt'] += df['dVdt'][i]
-    df_r.loc[df_r['r_sect'] == 'Intermediate', 'N'] = df_r.loc[df_r['r_sect'] == 'Intermediate', 'N'] / 3
-    df_r.loc[df_r['r_sect'] == 'External', 'N'] = df_r.loc[df_r['r_sect'] == 'External', 'N'] / 5
+# # function used to update the remove_list used to remove the agglomerates that are not present in each of the following n_steps bincounts
+# def update_remove_list(bincounts, bincount, remove_list, n_steps, i):
+#     # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
+#     prev_bincount = bincounts[i-1] if i != 0 else np.zeros_like(bincount)
+#     # looping through the labels in the current bincount
+#     for label, count in enumerate(bincount):
+#         # if the label is contained in the previous bincount, it is not considered (we check only for the first time a label appears)
+#         if label < len(prev_bincount):
+#             if prev_bincount[label] != 0 or count == 0:
+#                 continue
+#         # if the label is not contained in each of the following n_steps bincounts, it is added to the set of labels to remove
+#         for j in range(i+1, i+1+n_steps):
+#             next_bincount = bincounts[j]
+#             if next_bincount[label] == 0:
+#                 remove_list.append(np.array([label, i, j]))
+#                 break
+#     return remove_list
 
-    # VOLUME
-    subfigs[0].suptitle('Agglomerates total volume vs time', y=1.1, fontsize=14)
-    axs = subfigs[0].subplots(1, 3, sharey=True)
-    sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V')
-    axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df_r, x='t', y='V', hue='r_sect', hue_order=r_sect_list, palette=palette2)
-    axs[1].set_title('$r$ sections')
-    axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df_z, x='t', y='V', hue='z_sect', hue_order=z_sect_list, palette=palette3)
-    axs[2].set_title('$z$ sections')
-    axs[2].legend(loc='upper right')
-    for ax in axs:
-        ax.set_xlim(time_axis[0], time_axis[-1])
-        ax.set_xlabel('Time [$s$]')
-        ax.set_ylabel('Volume [$mm^3$]')
-    progress_bar.update()
 
-    # EXPANSION RATE
-    subfigs[1].suptitle('Agglomerates total volume expansion rate vs time', y=1.1, fontsize=14)
-    axs = subfigs[1].subplots(1, 3, sharey=True)
-    sns.lineplot(ax=axs[0], data=df_tot, x='t', y='dVdt')
-    axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df_r, x='t', y='dVdt', hue='r_sect', hue_order=r_sect_list, palette=palette2)
-    axs[1].set_title('$r$ sections')
-    axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df_z, x='t', y='dVdt', hue='z_sect', hue_order=z_sect_list, palette=palette3)
-    axs[2].set_title('$z$ sections')
-    axs[2].legend(loc='upper right')
-    for ax in axs:
-        ax.set_xlim(time_axis[0], time_axis[-1])
-        ax.set_xlabel('Time [$s$]')
-        ax.set_ylabel('Volume expansion rate [$mm^3/s$]')
-    progress_bar.update()
 
-    # SPEED
-    subfigs[2].suptitle('Agglomerates speed vs time', y=1.1, fontsize=14)
-    axs = subfigs[2].subplots(1, 3, sharey=True)
-    sns.lineplot(ax=axs[0], data=df, x='t', y='v')
-    axs[0].set_title('Whole battery')
-    sns.lineplot(ax=axs[1], data=df, x='t', y='v', hue='r_sect', hue_order=r_sect_list, palette=palette2)
-    axs[1].set_title('$r$ sections')
-    axs[1].legend(loc='upper right')
-    sns.lineplot(ax=axs[2], data=df, x='t', y='v', hue='z_sect', hue_order=z_sect_list, palette=palette3)
-    axs[2].set_title('$z$ sections')
-    axs[2].legend(loc='upper right')
-    for ax in axs:
-        ax.set_xlim(time_axis[0], time_axis[-1])
-        ax.set_xlabel('Time [$s$]')
-        ax.set_ylabel('Speed [$mm/s$]')
-    progress_bar.update()
+# # function used to remove the agglomerates that are not present in each of the following n_steps bincounts
+# def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index, n_steps, progress_bar):
+#     # remove list is a list containing the labels that will be removed from start_time to end_time volumes in the format [label, start_time, end_time]
+#     remove_list = []
+#     max_label = np.max(hypervolume_mask)
+#     # looping through the bincounts related to each time instant and updating the remove_list
+#     for i, bincount in enumerate(bincounts[:-n_steps]):
+#         remove_list = update_remove_list(bincounts, bincount, remove_list, n_steps, i)
+#     # converting the remove_list to more useful format for looping
+#     # remove_array is a boolean array of shape (len(time_index), max_label) where each row contains True for the labels that will be removed in that time instant
+#     remove_array = np.zeros((len(time_index), int(max_label)), dtype=bool)
+#     for element in remove_list:
+#         remove_array[element[1]:element[2]+1, element[0]] = True
+#     # removing the labels
+#     for time in time_index:
+#         for label in np.where(remove_array[time])[0]:
+#             hypervolume_mask[time][hypervolume_mask[time] == label] = 0
+#         progress_bar.update()
+#     return None
 
-    # DENSITY
-    subfigs[3].suptitle('Agglomerates density vs time', y=1.1, fontsize=14)
-    densityfig = subfigs[3].subfigures(1, 3, width_ratios=[1, 4, 1])
-    axs = densityfig[1].subplots(1, 2)
-    sns.lineplot(ax=axs[0], data=df_r, x='t', y='N', hue='r_sect', hue_order=r_sect_list, palette=palette2)
-    axs[0].set_title('$r$ sections')
-    axs[0].legend(loc='upper left')
-    sns.lineplot(ax=axs[1], data=df_z, x='t', y='N', hue='z_sect', hue_order=z_sect_list, palette=palette3)
-    axs[1].set_title('$z$ sections')
-    axs[1].legend(loc='upper left')
-    for ax in axs:
-        ax.set_xlim(time_axis[0], time_axis[-1])
-        ax.set_xlabel('Time [$s$]')
-        _ = ax.set_ylabel('Agglomerate density [a.u.]')
-    progress_bar.update()
 
-    if save:
-        fig.savefig(os.path.join(OS_path(exp, OS), 'motion_properties.png'), dpi=300, bbox_inches='tight')
 
-    progress_bar.close()
-    return None
+# # function used to remove small agglomerates in terms of 4D volume
+# def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, smallest_4Dvolume, progress_bar):
+#     # computation of the total bincount in the 4D mask
+#     max_label = np.max(hypervolume_mask)
+#     total_bincount = np.zeros(max_label+1)
+#     for bincount in bincounts:
+#         total_bincount[:len(bincount)] += bincount
+#     # removing the agglomerates with volume smaller than smallest_4Dvolume
+#     for time in time_index:
+#         for label in np.where(total_bincount < smallest_4Dvolume)[0]:
+#             if label < len(bincounts[time]):
+#                 if bincounts[time][label] > 0:
+#                     hypervolume_mask[time][hypervolume_mask[time] == label] = 0
+#         progress_bar.update()
+#     return None
+
+# # function used to remove the agglomerates that appear before the thermal runaway
+# def remove_pre_TR_agglomerates(hypervolume_mask, time_index, exp):
+#     TR_start_time = exp_start_TR()[exp_list().index(exp)]
+#     labels_to_remove = set()
+#     for time in range(TR_start_time):
+#         rps = regionprops(hypervolume_mask[time])
+#         for rp in rps:
+#             if rp.area != max([rp.area for rp in rps]):
+#                 labels_to_remove.add(rp.label)
+#     for time in time_index:
+#         for label in labels_to_remove:
+#             hypervolume_mask[time][hypervolume_mask[time] == label] = 0
+#     return None
+
+# # function removing the agglomerates with volume smaller than smallest_volume. volume can be intended as both 3D and 4D
+# def remove_small_agglomerates(hypervolume_mask, smallest_volume, bincounts, time_index, progress_bar):
+#     max_label = np.max(hypervolume_mask)
+#     total_bincount = np.zeros(max_label+1)
+#     for bincount in bincounts:
+#         total_bincount[:len(bincount)] += bincount
+#     bincount = np.bincount(hypervolume_mask.flatten())
+#     for time in time_index:
+#         hypervolume_mask[time][np.isin(hypervolume_mask[time], np.where(bincount < smallest_volume))] = 0
+#         progress_bar.update()
+#     return hypervolume_mask
+
+
+
+# # function used to remove the agglomerates that are not present in neighboring slices
+# def remove_isolated_agglomerates(hypervolume_mask, time_index, progress_bar):
+#     for time in time_index:
+#         current_slice = hypervolume_mask[time]
+#         previous_slice = np.zeros_like(current_slice) if time==0 else hypervolume_mask[time-1] # previous_slice for first slice is set ad-hoc in order to avoid going out of bounds
+#         next_slice = np.zeros_like(current_slice) if time == hypervolume_mask.shape[0]-1 else hypervolume_mask[time+1]  # next_slice for last slice is set ad-hoc in order to avoid going out of bounds
+#         current_labels = [rp.label for rp in regionprops(current_slice)]
+#         for current_label in current_labels:
+#             if current_label not in previous_slice and current_label not in next_slice:
+#                 current_slice[current_slice == current_label] = 0
+#         hypervolume_mask[time] = current_slice
+#         progress_bar.update()
+#     return hypervolume_mask
