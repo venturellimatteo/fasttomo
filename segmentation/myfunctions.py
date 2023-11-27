@@ -16,6 +16,12 @@ def exp_list():
 def bad_exp_list():
     return ['P28B_ISC_FT_H_Exp3','P28B_ISC_FT_H_Exp4','P28B_ISC_FT_H_Exp4_2','P28B_ISC_FT_H_Exp5','VCT5A_FT_H_Exp1','VCT5A_FT_H_Exp4']
 
+def exp_start_TR_list():
+    return [2, 2, 2, 6, 11, 4, 5, 4, 4, 0, 4]
+
+def labels_to_remove_list():
+    return [[525], [], [370, 390], [], [], [], [], [], [], [], []]
+
 # function returning the diameter of the battery given the experiment name
 def find_diameter(exp):
     if 'P28A' in exp:
@@ -70,7 +76,7 @@ def rename_labels(hypervolume_mask, time_index):
     new_labels = np.setdiff1d(np.arange(total_labels), unique_labels)
     lookup_table = np.arange(np.max(unique_labels)+1)
     lookup_table[old_labels] = new_labels
-    hypervolume_mask = np.take(lookup_table, hypervolume_mask)
+    hypervolume_mask[:] = np.take(lookup_table, hypervolume_mask)
     return None
 
 # function returning the 3D segmentation map given the 3D volume and the threshold
@@ -193,7 +199,10 @@ def segment4D(exp, OS='Windows', offset=0, filtering3D=True, smallest_3Dvolume=5
 
     # evaluating the threshold on the first volume
     update_pb(progress_bar, 'Finding threshold')
-    threshold = find_threshold(previous_volume) 
+    if exp == 'VCT5A_FT_H_Exp2':
+        threshold = find_threshold(previous_volume, target=6500)
+    else:
+        threshold = find_threshold(previous_volume) 
 
     # segmenting the first volume
     update_pb(progress_bar, 'Segmenting first volume')
@@ -232,12 +241,29 @@ def filtering4D(hypervolume_mask, exp, smallest_4Dvolume=250, offset=0):
     time_index = range(hypervolume_mask.shape[0])
     progress_bar = tqdm(total=3, desc=f'{exp} filtering', position=offset, leave=False)
     progress_bar.set_postfix_str('Isolated labels removal')
-    remove_isolated_agglomerates(hypervolume_mask, time_index, progress_bar)
+    remove_isolated_agglomerates(hypervolume_mask)
     update_pb(progress_bar, 'Small agglomerates removal')
     remove_small_agglomerates(hypervolume_mask, smallest_4Dvolume)
     # remove_pre_TR_agglomerates(hypervolume_mask, time_index, exp)
     update_pb(progress_bar, 'Labels renaming')
-    rename_labels(hypervolume_mask, time_index, progress_bar)
+    rename_labels(hypervolume_mask, time_index)
+    progress_bar.close()
+    return None
+
+
+
+# function used to manually remove the agglomerates that appear before the thermal runaway and the agglomerates due to artifacts
+def manual_filtering(hypervolume_mask, exp, offset=0):
+    progress_bar = tqdm(total=2, desc=f'{exp} manual filtering', position=offset, leave=False)
+    progress_bar.set_postfix_str('Finding max label')
+    max_label = np.max(hypervolume_mask)
+    start_TR = exp_start_TR_list()[exp_list().index(exp)]
+    labels_to_remove = np.union1d(np.setdiff1d(np.unique(hypervolume_mask[:start_TR]), np.array([0, 1])),
+                                  np.array(labels_to_remove_list()[exp_list().index(exp)])).astype(np.ushort)
+    lookup_table = np.arange(max_label+1)
+    lookup_table[labels_to_remove] = 0
+    update_pb(progress_bar, 'Removing labels')
+    hypervolume_mask[:] = np.take(lookup_table, hypervolume_mask)
     progress_bar.close()
     return None
 
@@ -264,7 +290,7 @@ def update_df(df, label, V, centroid, slices, radii, z_sect_str, r_sect_str, t_r
         v = np.linalg.norm([vx, vy, vz])
         dVdt = (V - (df.iloc[prev_labels[label]]['V']))/t_ratio
     else:
-        vx, vy, vxy, vz, v, dVdt = 0, 0, 0, 0, V/t_ratio
+        vx, vy, vxy, vz, v, dVdt = 0, 0, 0, 0, 0, V/t_ratio
     # adding the row to the dataframe
     df = pd.concat([df, pd.DataFrame([[t, label, x, y, z, r, vx, vy, vxy, vz, v, V, dVdt, r_sect, z_sect]],
                                      columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vxy', 'vz', 'v', 'V', 'dVdt', 'r_sect', 'z_sect'])])
@@ -290,7 +316,7 @@ def motion_df(hypervolume_mask, exp, offset=0):
     z_sect_str = ['Bottom', 'Middle', 'Top'] 
     current_labels = dict()
     # computing the actual quantities
-    for time in tqdm(range(n_time_instants), desc=f'Exp {exp} dataframe computation', position=offset, leave=False):
+    for time in tqdm(range(n_time_instants), desc=f'{exp} dataframe computation', position=offset, leave=False):
         prev_labels = current_labels
         current_labels = dict()
         rps = regionprops(hypervolume_mask[time])

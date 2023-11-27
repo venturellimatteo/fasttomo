@@ -4,29 +4,28 @@ from tqdm import tqdm
 import os
 
 # function that returns a color tuple given the label and the maximum value of the labels
-def color(label, color_palette):
-    l = len(color_palette)
-    R, G, B = color_palette[label%l]
-    return (R, G, B, 1)
+def modify_properties(so, label, color_palette):
+    mod = so.modifiers.new(type='SMOOTH')
+    mod.factor = 2
+    mod.iterations = 10
+    if label==1:
+        so.data.materials.append(bpy.data.materials['ShellMaterial'])
+    else:
+        so.data.materials.append(bpy.data.materials[f'Material{label%len(color_palette)}'])
+    return None
     
 # function that modifies the properties of the object associated to a specific label
-def modify_properties(so, label, color_palette):
-    mat = bpy.data.materials.new(name='Material_'+str(label))
-    so.data.materials.append(mat)
-    mat.use_nodes = True
-    if label==1:
-        # if the object is the external shell the color is set to black
-        mat.node_tree.nodes["Principled Volume"].inputs[0].default_value = (0,0,0,1)
-        # if the object is the external shell the density is set to a low value
-        mat.node_tree.nodes["Principled Volume"].inputs[2].default_value = 0.003
-    else:    
-        # modifying the color
-        mat.node_tree.nodes["Principled Volume"].inputs[0].default_value = color(label, color_palette)
-        # modifiying the density
-        mat.node_tree.nodes["Principled Volume"].inputs[2].default_value = 0.9
-    # modifying the anisotropy
-    mat.node_tree.nodes["Principled Volume"].inputs[4].default_value = -0.5
-    return None
+def create_materials(color_palette):
+    mat = bpy.data.materials
+    for i in range(len(color_palette)):
+        R, G, B = color_palette[i]
+        mat.new(name=f'Material{i}')
+        mat[f'Material{i}'].use_nodes = True
+        mat[f'Material{i}'].node_tree.nodes['Principled BSDF'].inputs[0].default_value = (R, G, B, 1)
+    mat.new(name='ShellMaterial')
+    mat['ShellMaterial'].use_nodes = True
+    mat['ShellMaterial'].node_tree.nodes['Principled BSDF'].inputs[0].default_value = (0, 0, 0, 1)
+    mat['ShellMaterial'].node_tree.nodes['Principled BSDF'].inputs[21].default_value = 0.1
 
 # function that modifies the properties of the rendering engine
 def modify_engine():
@@ -52,6 +51,7 @@ if __name__ == "__main__":
     color_palette = np.load(os.path.join(parent_dir, 'Render/palette.npy'))
     # modify rendering engine
     modify_engine()
+    create_materials(color_palette)
     
     for exp in exp_list:
         # defining and creating the folders where the vdb objects will be saved
@@ -82,21 +82,21 @@ if __name__ == "__main__":
             for obj_name in obj_names_list:
                 label = int(obj_name.split('.')[0])
                 obj_path = os.path.join(time_dir, obj_name)
-                bpy.ops.object.volume_import(filepath=obj_path, files=[], location=(-2.5,-2.5,1.3), rotation=(0, np.pi/2, 0))
-                # selecting the new object
+                bpy.ops.import_mesh.stl(filepath=obj_path)                # selecting the new object
                 so = bpy.context.active_object
                 # modifying the properties of the new object
                 modify_properties(so, label, color_palette)
 
             # creating the light and modifying its intensity
-            bpy.ops.object.light_add(type='POINT', radius=1, align='WORLD', location=(10, 0, 10), scale=(1, 1, 1))
+            bpy.ops.object.light_add(type='POINT', radius=1, align='WORLD', location=(2, 0, 2), scale=(1, 1, 1))
             bpy.context.active_object.data.energy = 1000
 
             # ---------------------- TOP VIEW ---------------------- #
 
             bpy.context.scene.render.resolution_y = 2160
-            bpy.ops.object.camera_add(enter_editmode=False, location=(0, 0, 15))
+            bpy.ops.object.camera_add(enter_editmode=False, location=(0, 0, 1))
             bpy.context.active_object.data.type = 'ORTHO'
+            bpy.context.object.data.ortho_scale = 2
             bpy.context.scene.camera = bpy.context.active_object
             bpy.context.scene.render.filepath = os.path.join(top_dir, t + '.png')
             bpy.ops.render.render(write_still=True)
@@ -106,8 +106,9 @@ if __name__ == "__main__":
 
             # ---------------------- SIDE VIEW ---------------------- #
             bpy.context.scene.render.resolution_y = 1440
-            bpy.ops.object.camera_add(enter_editmode=False, location=(15, 0, 0), rotation=(np.pi/2, 0, np.pi/2))
+            bpy.ops.object.camera_add(enter_editmode=False, location=(0, -1, 0), rotation=(np.pi/2, 0, 0))
             bpy.context.active_object.data.type = 'ORTHO'
+            bpy.context.object.data.ortho_scale = 2
             bpy.context.scene.camera = bpy.context.active_object
             bpy.context.scene.render.filepath = os.path.join(side_dir, t + '.png')
             bpy.ops.render.render(write_still=True)
@@ -118,6 +119,3 @@ if __name__ == "__main__":
             for i in range(len(bpy.data.objects)):
                 bpy.data.objects[i].select_set(True)
             bpy.ops.object.delete()
-        
-            for m in bpy.data.materials:
-                bpy.data.materials.remove(m)
