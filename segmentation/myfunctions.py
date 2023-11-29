@@ -17,7 +17,7 @@ def bad_exp_list():
     return ['P28B_ISC_FT_H_Exp3','P28B_ISC_FT_H_Exp4','P28B_ISC_FT_H_Exp4_2','P28B_ISC_FT_H_Exp5','VCT5A_FT_H_Exp1','VCT5A_FT_H_Exp4']
 
 def exp_start_TR_list():
-    return [2, 2, 2, 6, 11, 4, 5, 4, 4, 0, 4]
+    return [2, 2, 2, 6, 11, 4, 5, 4, 4, 1, 4]
 
 def labels_to_remove_list():
     return [[525], [], [370, 390], [], [], [], [], [], [], [], []]
@@ -47,8 +47,14 @@ def find_biggest_area(sequence, threshold):
     return np.max(areas)/sequence_mask.shape[0]
 
 def remove_small_agglomerates(hypervolume_mask, smallest_volume):
-    bincount = np.bincount(hypervolume_mask.flatten())
-    hypervolume_mask[np.isin(hypervolume_mask, np.where(bincount < smallest_volume))] = 0
+    max_label = np.max(hypervolume_mask)
+    bincount = np.zeros(max_label+1)
+    for time in range(hypervolume_mask.shape[0]):
+        b = np.bincount(hypervolume_mask[time].flatten())
+        bincount[:len(b)] += b
+    lookup_table = np.where(bincount < smallest_volume, 0, np.arange(len(bincount)))
+    for time in range(hypervolume_mask.shape[0]):
+        hypervolume_mask[time] = np.take(lookup_table, hypervolume_mask[time])
     return None
 
 # function used to remove the agglomerates that are not present in neighboring slices
@@ -76,7 +82,8 @@ def rename_labels(hypervolume_mask, time_index):
     new_labels = np.setdiff1d(np.arange(total_labels), unique_labels)
     lookup_table = np.arange(np.max(unique_labels)+1)
     lookup_table[old_labels] = new_labels
-    hypervolume_mask[:] = np.take(lookup_table, hypervolume_mask)
+    for time in time_index:
+        hypervolume_mask[time] = np.take(lookup_table, hypervolume_mask[time])
     return None
 
 # function returning the 3D segmentation map given the 3D volume and the threshold
@@ -263,7 +270,9 @@ def manual_filtering(hypervolume_mask, exp, offset=0):
     lookup_table = np.arange(max_label+1)
     lookup_table[labels_to_remove] = 0
     update_pb(progress_bar, 'Removing labels')
-    hypervolume_mask[:] = np.take(lookup_table, hypervolume_mask)
+    for time in range(hypervolume_mask.shape[0]):
+        hypervolume_mask[time] = np.take(lookup_table, hypervolume_mask[time])
+    #hypervolume_mask[:] = np.take(lookup_table, hypervolume_mask)
     progress_bar.close()
     return None
 

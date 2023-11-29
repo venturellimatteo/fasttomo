@@ -24,22 +24,20 @@ def pipeline(exp, segment, filtering, motion, graphs, OS, offset):
 if __name__ == '__main__':
 
     exp_list = mf.exp_list()
-    segment = True
-    filtering = True
-    manual_filtering = True
-    motion = True
+    segment = False
+    filtering = False
+    manual_filtering = False
+    motion = False
     graphs = True
     OS = 'MacOS_SSD'
-
-    processes = []
 
     # with cf.ProcessPoolExecutor() as executor:
     #     for offset, exp in enumerate(exp_list):
     #         executor.submit(pipeline, exp, segment, filtering, motion, graphs, OS, offset)
 
-    # pipeline(exp=exp_list[1], segment=segment, filtering=filtering, motion=motion, graphs=graphs, OS=OS, offset=0)
+    # pipeline(exp=exp_list[9], segment=segment, filtering=filtering, motion=motion, graphs=graphs, OS=OS, offset=0)
 
-    for exp in exp_list[1:]:
+    for exp in exp_list:
         pipeline(exp=exp, segment=segment, filtering=filtering, motion=motion, graphs=graphs, OS=OS, offset=0)
 
     print('\nAll done!')
