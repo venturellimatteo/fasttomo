@@ -1,5 +1,4 @@
 import myfunctions as mf
-import myplots as mp
 import concurrent.futures as cf
 from numpy.lib.format import open_memmap
 import os
@@ -17,7 +16,7 @@ def pipeline(exp, segment, filtering, motion, graphs, OS, offset):
         df = mf.motion_df(hypervolume_mask, exp=exp, offset=offset)
         df.to_csv(os.path.join(mf.OS_path(exp, OS), 'motion_properties.csv'), index=False)
     if graphs:
-        mp.plot_data(exp, OS, offset, save=True)
+        mf.plot_data(exp, OS, offset, save=True)
     return None
 
 

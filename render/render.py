@@ -56,7 +56,7 @@ if __name__ == "__main__":
     palette = color_palette()
     modify_engine()
     create_materials(palette)
-    experiments = exp_list()
+    experiments = ['VCT5_FT_N_Exp1', 'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp5']
     
     for exp in experiments:
         

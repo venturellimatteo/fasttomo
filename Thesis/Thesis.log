@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.10.27)  14 NOV 2023 16:00
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.10.27)  1 DEC 2023 11:48
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**"/Users/matteoventurelli/Documents/VS Code/MasterThesis/Thesis/Thesis"
-(/Users/matteoventurelli/Documents/VS Code/MasterThesis/Thesis/Thesis.tex
+**"/Users/matteoventurelli/Documents/VS Code/MasterThesis/thesis/Thesis"
+(/Users/matteoventurelli/Documents/VS Code/MasterThesis/thesis/Thesis.tex
 LaTeX2e <2022-11-01> patch level 1
 L3 programming layer <2023-02-22> (./Configuration_Files/PoliMi3i_thesis.cls
 Document Class: Configuration_Files/PoliMi3i_thesis 2021/6/30 PoliMi3i thesis submission class
@@ -1147,11 +1147,11 @@ Package pdftex.def Info: Images/Chapter1/wet.png  used on input line 233.
 <Images/Chapter1/geometries.png, id=371, 822.07124pt x 429.605pt>
 File: Images/Chapter1/geometries.png Graphic file (type png)
 <use Images/Chapter1/geometries.png>
-Package pdftex.def Info: Images/Chapter1/geometries.png  used on input line 250.
+Package pdftex.def Info: Images/Chapter1/geometries.png  used on input line 252.
 (pdftex.def)             Requested size: 364.19667pt x 190.3247pt.
-) [14 <./Images/Chapter1/geometries.png>]
+ [14] [15 <./Images/Chapter1/geometries.png (PNG copy)>]) [16]
 Chapter 2.
-(./Chapters/Imaging.tex) [15
+(./Chapters/Imaging.tex) [17
 
 
 ]
@@ -1168,17 +1168,17 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 209.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [16
+ [18
 
 ]
 Chapter 3.
 (./Chapters/Segmentation.tex
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on input line 3.
-) [17
+) [19
 
-] [18]
+] [20]
 Chapter 4.
-(./Thesis.bbl [19
+(./Thesis.bbl [21
 
 
 ]
@@ -1195,23 +1195,23 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 1.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [20
+ [22
 
 ]
-Underfull \hbox (badness 1205) in paragraph at lines 34--38
+Underfull \hbox (badness 1205) in paragraph at lines 48--52
 []\T1/cmr/m/n/12 IEA.  Green-house gas emis-sions from en-ergy data ex-plorer.  Tech-ni-cal re-
  []
 
 
-Underfull \hbox (badness 1460) in paragraph at lines 34--38
+Underfull \hbox (badness 1460) in paragraph at lines 48--52
 \T1/cmr/m/n/12 port, 2023.  URL [][]$\T1/cmtt/m/n/12 https : / / www . iea . org / data-[]and-[]statistics / data-[]tools /
  []
 
-[21
-
-]) [22]
-Appendix A.
 [23
+
+]) [24]
+Appendix A.
+[25
 
 
 
@@ -1229,11 +1229,11 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 241.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [24
+ [26
 
 ]
 Appendix B.
-[25
+[27
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1249,13 +1249,13 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 246.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [26
+ [28
 
 ] (./Thesis.lof)
 \tf@lof=\write6
 \openout6 = `Thesis.lof'.
 
- [27
+ [29
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1271,13 +1271,13 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 249.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [28
+ [30
 
 ] (./Thesis.lot)
 \tf@lot=\write7
 \openout7 = `Thesis.lot'.
 
- [29
+ [31
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1293,9 +1293,9 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 253.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [30
+ [32
 
-] [31
+] [33
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1311,9 +1311,9 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 264.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [32
+ [34
 
-] [33
+] [35
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1329,25 +1329,25 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 267.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [34
+ [36
 
 ] (./Thesis.aux)
 Package rerunfilecheck Info: File `Thesis.out' has not changed.
-(rerunfilecheck)             Checksum: 73E4B8CC3262F2EAA5BD2FA28E61B454;3928.
+(rerunfilecheck)             Checksum: 9DD20B7F7722C9FBE8E615BDCF40FCF1;3890.
  ) 
 Here is how much of TeX's memory you used:
- 30557 strings out of 476025
- 578013 string characters out of 5790016
+ 30582 strings out of 476025
+ 578517 string characters out of 5790016
  1866388 words of memory out of 5000000
- 50241 multiletter control sequences out of 15000+600000
+ 50258 multiletter control sequences out of 15000+600000
  536620 words of font info for 93 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,15n,89p,1255b,754s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1728.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sftt1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfxc1200.pfb>
-Output written on Thesis.pdf (42 pages, 3412746 bytes).
+</usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1728.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sftt1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfxc1200.pfb>
+Output written on Thesis.pdf (44 pages, 3383673 bytes).
 PDF statistics:
- 640 PDF objects out of 1000 (max. 8388607)
- 513 compressed objects within 6 object streams
- 157 named destinations out of 1000 (max. 500000)
+ 674 PDF objects out of 1000 (max. 8388607)
+ 543 compressed objects within 6 object streams
+ 165 named destinations out of 1000 (max. 500000)
  330 words of extra memory for PDF output out of 10000 (max. 10000000)
 

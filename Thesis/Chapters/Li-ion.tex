@@ -243,7 +243,9 @@ As for any other component of the battery, the ability of the current collectors
 
 \subsection{Cell Geometries and Designs}
 \label{sec:cell-geometries-designs}
-All of today’s lithium-ion cells exhibit metal-based housing and packaging material. One reason is that it prevents the entry of moisture into the cell, which would initiate a hydrolysis of the conducting salt LiPF6 into hydrogen fluoride (HF). Another is the prevention of loss of solvent by means of diffusion from the cell. Only metal is able to fulfill these tasks. A housing made of pure plastics is not suitable because no plastic (not even polypropylene) is completely moisture leaktight. The solid metallic housings (hardcase) are typically made of aluminum or stainless steel.
+Battery cells come in various shapes and sizes, featuring diverse component assemblies and chemistries based on the manufacturer. The effectiveness of cell design is pivotal for ensuring safety and suitability in different applications. The selection of materials and dimensions significantly influences a battery's ability to prevent or minimize catastrophic events. To ensure optimal and secure functioning, meticulous consideration is given to the design of all aforementioned components and their collaborative functions to fit within the specified cell dimensions. Additionally, the choice of casting material and its thickness should be carefully designed to facilitate the handling of critical events by enhancing heat dissipation and pressure management.
+
+All of today's lithium-ion cells exhibit metal-based housing and packaging material. One reason is that it prevents the entry of moisture into the cell, which would initiate a hydrolysis of the conducting salt LiPF$_6$ into hydrogen fluoride (HF). Another is the prevention of loss of solvent by means of diffusion from the cell. Only metal is able to fulfill these tasks. A housing made of pure plastics is not suitable because no plastic (not even polypropylene) is completely moisture leaktight. The solid metallic housings (hardcase) are typically made of aluminum or stainless steel.
 
 \begin{figure}[ht]
     \centering
@@ -252,6 +254,51 @@ All of today’s lithium-ion cells exhibit metal-based housing and packaging mat
     \label{fig:geometries}
 \end{figure}
 
-\section{Safety and Degradation}
-\label{sec:safety-degradation}
+The most common cell geometries are cylindrical, prismatic, and pouch cells. The main difference between the cell formats lies in the design of the cell casing and the arrangement of the cathode, anode, and separators. 
 
+The \textbf{cylindrical cells} (Figure \ref{fig:geometries}a) are the oldest and most common cell type. The introduction on the market of a cylindrical round cell in a stainless steel housing for consumer applications by Sony ensued in 1991. The batteries measure 18 mm in diameter by 65 mm in length, giving them the name 18650 \cite{korthauer2018lithium}.
+
+18650 battery is widely regarded as the most produced lithium-ion cell size. This cell type is used in many laptop computer batteries, cordless power tools, many electric cars, electric scooters, most e-bikes, older portable powerbanks, electronic cigarettes,portable fans and LED flashlights \cite{batterytypes}.
+
+Cylindrical cells consist of a tubular cylindrical can and are crafted using a "jelly roll" technique. This involves creating a singular elongated "sandwich" by rolling together the positive electrode, separator, negative electrode, and separator into a single spool. An inherent advantage of cylindrical cells, in contrast to those featuring stacked electrodes, lies in their faster production speed. However, a notable drawback of cylindrical cells may manifest as a substantial radial temperature gradient within the cells under high discharge currents \cite{baazouzi2023design}.
+
+Cells possessing a cylindrical morphology incorporate safety mechanisms that will interrupt current flow and/or enable venting of gas to avoid overpressure of the can. Cylindrical cells have better thermal management efficiency because of small size, but low packaging efficiency because of their round cross-section \cite{das2018joining}.
+
+Aluminium or steel cans are typically used for the housing of solid container-encased prismatic lithium-ion cells, more commonly called \textbf{prismatic cells} (Figure \ref{fig:geometries}b). The metal can ensure structural stability, mechanical robustness, and humidity protection. In addition, it allows for the use of safety features such as pressure relief vents, which are not possible in pouch cells. In some cases, prismatic cells may allow packaging to be more efficient than cylindrical cells because of their form factor\cite{das2018joining}.
+
+The \textbf{pouch cells} (Figure \ref{fig:geometries}c) employ a streamlined fold-stacking approach for individual sheets of both the positive and negative electrodes, enclosed in a lightweight foil casing. This configuration yields a cell characterized by high packing efficiency, flexibility, and low weight. The resulting compact and lightweight design contributes to an elevated volumetric energy density, cooling advantages, and adaptability for diverse applications due to its flexible nature. Nevertheless, the drawback of pouch cells lies in their limited physical strength, necessitating mechanical support in the form of a module or pack. Commonly addressed challenges include cell swelling during gas formation, which can alter the internal structure and pose risks to adjacent cells, thereby increasing the likelihood of failure and catastrophic events \cite{santhanagopalan2013modeling}.
+
+\section{Battery Failure}
+\label{sec:failure}
+\begin{table}[H]
+    \centering
+        \begin{footnotesize}
+            \begin{tabular}{|p{25mm} p{28mm} p{90mm}|}
+                \hline
+                \rowcolor{bluepoli!40}
+                \textbf{Hazard Level} & \textbf{Description} & \textbf{Classification Criteria \& Effect}\T\B \\
+                \hline \hline
+                0 & No effect & No effect. No loss of functionality.\T\B\\
+                \hline
+                1 & Passive protection activated & No defect; no leakage; no venting, fire or flame; no rupture; no explosion; no exotermic reaction or thermal runaway. Cell reversibly damaged. Repair of protection device needed.\T\B\\
+                \hline
+                2 & Defect/Damage & No leakage; no venting, fire or flame; no rupture; no explosion; no exotermic reaction or thermal runaway. Cell irreversibly damaged. Repair needed.\T\B\\
+                \hline
+                3 & Leakage & No venting, fire or flame; no rupture; no explosion.\\
+                & ($\Delta$ mass $<$ 50\%) & Weight loss $<$ 50\% of electrolyte weight (electrolyte = solvent + salt).\T\B\\
+                \hline
+                4 & Venting & No fire or flame; no rupture; no explosion.\\
+                & ($\Delta$ mass $\geq$ 50\%) & Weight loss $\geq$ 50\% of electrolyte weight (electrolyte = solvent + salt).\T\B\\
+                \hline
+                5 & Fire or Flame & No rupture; no explosion (i.e. no flying parts).\T\B\\
+                \hline
+                6 & Rupture & No explosion, but flying parts of the active mass.\T\B\\
+                \hline
+                7 & Explosion & Explosion (i.e. disintegration of the cell).\T\B\\
+                \hline
+                \end{tabular}
+                \\[10pt]
+                \caption[EUCAR hazard levels]{EUCAR hazard levels. Source: EUCAR (2019) \cite{eucar2019}.}
+                \label{table:eucar}
+        \end{footnotesize}
+\end{table}

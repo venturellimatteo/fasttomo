@@ -4,6 +4,9 @@ from skimage.measure import label, regionprops, marching_cubes
 from skimage.morphology import erosion, dilation, ball    
 from tqdm import tqdm                               
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D   
 import os
 
 
@@ -341,116 +344,163 @@ def motion_df(hypervolume_mask, exp, offset=0):
     return df
 
 
-# def exp_start_TR():
-#     return [7, 4, 4, 6, 3, 1, 4, 5, 3, 1, 1]
 
-# this is used to mask the inside of the external shell
-# a method to find the correct slice is needed (sometimes agglomerates inside share the same label as the shell)
-# def create_shell_border(hypervolume, threshold, z=50):
-#     mask = label(hypervolume[z]>threshold)
-#     rps = regionprops(mask)
-#     labels = [rp.label for rp in rps]
-#     shell_inside = clear_border(np.ones_like(mask) - (mask==labels[np.argmax([rp.area for rp in rps])]))
-#     eroded_shell_inside = erosion(shell_inside, footprint=np.ones((5,5)))
-#     return 1 - (shell_inside - eroded_shell_inside)
+# function returning the dataframe containing the motion properties of the agglomerates and the related dataframes
+def load_dfs(exp, OS):
+    df = pd.read_csv(os.path.join(OS_path(exp, OS), 'motion_properties.csv'))
 
+    # creating 'total' dataframe
+    grouped_df = df.groupby('t').size().reset_index(name='N')
+    df_tot = pd.merge(df[['t']], grouped_df, on='t', how='left').drop_duplicates()
+    df_tot['V'] = df.groupby('t')['V'].sum().values
+    df_tot['V/N'] = df_tot['V'] / df_tot['N'] # np.maximum(df_tot['N'].values, 1)
+    df_tot['dVdt'] = df.groupby('t')['dVdt'].sum().values
+    df_tot.fillna(0, inplace=True)
+    df_tot.reset_index(drop=True, inplace=True)
 
-# # function used to update the remove_list used to remove the agglomerates that are not present in each of the following n_steps bincounts
-# def update_remove_list(bincounts, bincount, remove_list, n_steps, i):
-#     # define previous bincount as the bincount of the previous time instant if i != 0, otherwise define it as an array of zeros
-#     prev_bincount = bincounts[i-1] if i != 0 else np.zeros_like(bincount)
-#     # looping through the labels in the current bincount
-#     for label, count in enumerate(bincount):
-#         # if the label is contained in the previous bincount, it is not considered (we check only for the first time a label appears)
-#         if label < len(prev_bincount):
-#             if prev_bincount[label] != 0 or count == 0:
-#                 continue
-#         # if the label is not contained in each of the following n_steps bincounts, it is added to the set of labels to remove
-#         for j in range(i+1, i+1+n_steps):
-#             next_bincount = bincounts[j]
-#             if next_bincount[label] == 0:
-#                 remove_list.append(np.array([label, i, j]))
-#                 break
-#     return remove_list
+    # creating 'r' dataframe
+    r_sect_list = ['Core', 'Intermediate', 'External']
+    df_r = pd.DataFrame(columns=['t', 'r_sect', 'V/N'])
+    df_r['t'] = np.repeat(df['t'].unique(), len(r_sect_list))
+    df_r['r_sect'] = np.tile(r_sect_list, len(df['t'].unique()))
+    grouped_N = df.groupby(['t', 'r_sect']).size().reset_index(name='N')
+    grouped_V = df.groupby(['t', 'r_sect'])['V'].sum().reset_index(name='V')
+    grouped_dVdt = df.groupby(['t', 'r_sect'])['dVdt'].sum().reset_index(name='dVdt')
+    df_r = pd.merge(df_r, grouped_N, on=['t', 'r_sect'], how='left')
+    df_r = pd.merge(df_r, grouped_V, on=['t', 'r_sect'], how='left')
+    df_r = pd.merge(df_r, grouped_dVdt, on=['t', 'r_sect'], how='left')
+    df_r.fillna(0, inplace=True)
+    df_r['V/N'] = df_r['V'] / np.maximum(df_r['N'].values, 1)
+    df_r.reset_index(drop=True, inplace=True)
 
+    # creating 'z' dataframe
+    z_sect_list = ['Bottom', 'Middle', 'Top']
+    df_z = pd.DataFrame(columns=['t', 'z_sect', 'V/N'])
+    df_z['t'] = np.repeat(df['t'].unique(), len(z_sect_list))
+    df_z['z_sect'] = np.tile(z_sect_list, len(df['t'].unique()))
+    grouped_N = df.groupby(['t', 'z_sect']).size().reset_index(name='N')
+    grouped_V = df.groupby(['t', 'z_sect'])['V'].sum().reset_index(name='V')
+    grouped_dVdt = df.groupby(['t', 'z_sect'])['dVdt'].sum().reset_index(name='dVdt')
+    df_z = pd.merge(df_z, grouped_N, on=['t', 'z_sect'], how='left')
+    df_z = pd.merge(df_z, grouped_V, on=['t', 'z_sect'], how='left')
+    df_z = pd.merge(df_z, grouped_dVdt, on=['t', 'z_sect'], how='left')
+    df_z.fillna(0, inplace=True)
+    df_z['V/N'] = df_z['V'] / np.maximum(df_z['N'].values, 1)
+    df_z.reset_index(drop=True, inplace=True)
 
-
-# # function used to remove the agglomerates that are not present in each of the following n_steps bincounts
-# def remove_inconsistent_4D_agglomerates (hypervolume_mask, bincounts, time_index, n_steps, progress_bar):
-#     # remove list is a list containing the labels that will be removed from start_time to end_time volumes in the format [label, start_time, end_time]
-#     remove_list = []
-#     max_label = np.max(hypervolume_mask)
-#     # looping through the bincounts related to each time instant and updating the remove_list
-#     for i, bincount in enumerate(bincounts[:-n_steps]):
-#         remove_list = update_remove_list(bincounts, bincount, remove_list, n_steps, i)
-#     # converting the remove_list to more useful format for looping
-#     # remove_array is a boolean array of shape (len(time_index), max_label) where each row contains True for the labels that will be removed in that time instant
-#     remove_array = np.zeros((len(time_index), int(max_label)), dtype=bool)
-#     for element in remove_list:
-#         remove_array[element[1]:element[2]+1, element[0]] = True
-#     # removing the labels
-#     for time in time_index:
-#         for label in np.where(remove_array[time])[0]:
-#             hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-#         progress_bar.update()
-#     return None
+    return df, df_tot, df_r, df_z, r_sect_list, z_sect_list
 
 
 
-# # function used to remove small agglomerates in terms of 4D volume
-# def remove_small_4D_agglomerates (hypervolume_mask, bincounts, time_index, smallest_4Dvolume, progress_bar):
-#     # computation of the total bincount in the 4D mask
-#     max_label = np.max(hypervolume_mask)
-#     total_bincount = np.zeros(max_label+1)
-#     for bincount in bincounts:
-#         total_bincount[:len(bincount)] += bincount
-#     # removing the agglomerates with volume smaller than smallest_4Dvolume
-#     for time in time_index:
-#         for label in np.where(total_bincount < smallest_4Dvolume)[0]:
-#             if label < len(bincounts[time]):
-#                 if bincounts[time][label] > 0:
-#                     hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-#         progress_bar.update()
-#     return None
+# function used to plot the data contained in the dataframes
+def plot_data(exp, OS, offset=0, save=True):
 
-# # function used to remove the agglomerates that appear before the thermal runaway
-# def remove_pre_TR_agglomerates(hypervolume_mask, time_index, exp):
-#     TR_start_time = exp_start_TR()[exp_list().index(exp)]
-#     labels_to_remove = set()
-#     for time in range(TR_start_time):
-#         rps = regionprops(hypervolume_mask[time])
-#         for rp in rps:
-#             if rp.area != max([rp.area for rp in rps]):
-#                 labels_to_remove.add(rp.label)
-#     for time in time_index:
-#         for label in labels_to_remove:
-#             hypervolume_mask[time][hypervolume_mask[time] == label] = 0
-#     return None
+    progress_bar = tqdm(total=5, desc=f'{exp} drawing plots', position=offset, leave=False)
+    length, heigth = 5, 3.5
+    fig = plt.figure(figsize=(3*length, 5*heigth), dpi=150)
+    subfigs = fig.subfigures(5, 1, hspace=0.3)
+    plt.style.use('seaborn-v0_8-paper')
+    sns.set_palette(sns.color_palette(['#3cb44b', '#bfef45']))
+    palette2 = ['#e6194B', '#f58231', '#ffe119'] # ['#bce4b5', '#56b567', '#05712f'] #
+    palette3 = ['#000075', '#4363d8', '#42d4f4'] # ['#fdc692', '#f67824', '#ad3803'] # 
 
-# # function removing the agglomerates with volume smaller than smallest_volume. volume can be intended as both 3D and 4D
-# def remove_small_agglomerates(hypervolume_mask, smallest_volume, bincounts, time_index, progress_bar):
-#     max_label = np.max(hypervolume_mask)
-#     total_bincount = np.zeros(max_label+1)
-#     for bincount in bincounts:
-#         total_bincount[:len(bincount)] += bincount
-#     bincount = np.bincount(hypervolume_mask.flatten())
-#     for time in time_index:
-#         hypervolume_mask[time][np.isin(hypervolume_mask[time], np.where(bincount < smallest_volume))] = 0
-#         progress_bar.update()
-#     return hypervolume_mask
+    df, df_tot, df_r, df_z, r_sect_list, z_sect_list = load_dfs(exp, OS)
+    time_axis = np.arange(len(np.unique(df['t'])))/20
 
+    # Agglomerates total volume vs time
+    subfigs[0].suptitle('Agglomerates total volume vs time', y=1.1, fontsize=14)
+    axs = subfigs[0].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V')
+    sns.lineplot(ax=plt.twinx(ax=axs[0]), data=df_tot, x='t', y='N', color='#bfef45')
+    axs[0].set_title('Whole battery')
+    axs[0].legend(handles=[Line2D([], [], marker='_', color='#3cb44b', label='Volume [$mm^3$]'), Line2D([], [], marker='_', color='#bfef45', label='Number of agglomerates')], loc='upper left')
+    sns.lineplot(ax=axs[1], data=df_r, x='t', y='V', hue='r_sect', hue_order=r_sect_list, palette=palette2)
+    axs[1].set_title('$r$ sections')
+    axs[1].legend(loc='upper right')
+    sns.lineplot(ax=axs[2], data=df_z, x='t', y='V', hue='z_sect', hue_order=z_sect_list, palette=palette3)
+    axs[2].set_title('$z$ sections')
+    axs[2].legend(loc='upper right')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        ax.set_ylabel('Volume [$mm^3$]')
+    progress_bar.update()
 
+    # Agglomerates mean volume vs time
+    subfigs[1].suptitle('Agglomerates average volume vs time', y=1.1, fontsize=14)
+    axs = subfigs[1].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V/N')
+    axs[0].set_title('Whole battery')
+    sns.lineplot(ax=axs[1], data=df_r, x='t', y='V/N', hue='r_sect', hue_order=r_sect_list, palette=palette2)
+    axs[1].set_title('$r$ sections')
+    axs[1].legend(loc='upper right')
+    sns.lineplot(ax=axs[2], data=df_z, x='t', y='V/N', hue='z_sect', hue_order=z_sect_list, palette=palette3)
+    axs[2].set_title('$z$ sections')
+    axs[2].legend(loc='upper right')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        ax.set_ylabel('Volume [$mm^3$]')
+    progress_bar.update()
 
-# # function used to remove the agglomerates that are not present in neighboring slices
-# def remove_isolated_agglomerates(hypervolume_mask, time_index, progress_bar):
-#     for time in time_index:
-#         current_slice = hypervolume_mask[time]
-#         previous_slice = np.zeros_like(current_slice) if time==0 else hypervolume_mask[time-1] # previous_slice for first slice is set ad-hoc in order to avoid going out of bounds
-#         next_slice = np.zeros_like(current_slice) if time == hypervolume_mask.shape[0]-1 else hypervolume_mask[time+1]  # next_slice for last slice is set ad-hoc in order to avoid going out of bounds
-#         current_labels = [rp.label for rp in regionprops(current_slice)]
-#         for current_label in current_labels:
-#             if current_label not in previous_slice and current_label not in next_slice:
-#                 current_slice[current_slice == current_label] = 0
-#         hypervolume_mask[time] = current_slice
-#         progress_bar.update()
-#     return hypervolume_mask
+    # Agglomerates total volume expansion rate vs time
+    subfigs[2].suptitle('Agglomerates total volume expansion rate vs time', y=1.1, fontsize=14)
+    axs = subfigs[2].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df_tot, x='t', y='dVdt')
+    axs[0].set_title('Whole battery')
+    sns.lineplot(ax=axs[1], data=df_r, x='t', y='dVdt', hue='r_sect', hue_order=r_sect_list, palette=palette2)
+    axs[1].set_title('$r$ sections')
+    axs[1].legend(loc='upper right')
+    sns.lineplot(ax=axs[2], data=df_z, x='t', y='dVdt', hue='z_sect', hue_order=z_sect_list, palette=palette3)
+    axs[2].set_title('$z$ sections')
+    axs[2].legend(loc='upper right')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        ax.set_ylabel('Volume expansion rate [$mm^3/s$]')
+    progress_bar.update()
+
+    # Agglomerates speed vs time
+    subfigs[3].suptitle('Agglomerates speed vs time', y=1.1, fontsize=14)
+    axs = subfigs[3].subplots(1, 3, sharey=True)
+    sns.lineplot(ax=axs[0], data=df, x='t', y='v')
+    axs[0].set_title('Modulus')
+    sns.lineplot(ax=axs[1], data=df, x='t', y='vxy', color='#f58231')
+    axs[1].set_title('$xy$ component')
+    sns.lineplot(ax=axs[2], data=df, x='t', y='vz', color='#4363d8')
+    axs[2].set_title('$z$ component')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        ax.set_ylabel('Speed [$mm/s$]')
+    progress_bar.update()
+
+    # Agglomerates density vs time
+    battery_volume = np.pi * (0.5 * find_diameter(exp))**2 * 0.012
+
+    subfigs[4].suptitle('Agglomerates density vs time', y=1.1, fontsize=14)
+    axs = subfigs[4].subplots(1, 3, sharey=True)
+    df_tot['N'] = df_tot['N'] / (battery_volume)
+    sns.lineplot(ax=axs[0], data=df_tot, x='t', y='N')
+    axs[0].set_title('Whole battery')
+    df_r.loc[df_r['r_sect'] == 'Core', 'N'] = df_r.loc[df_r['r_sect'] == 'Core', 'N'] / (battery_volume/9)
+    df_r.loc[df_r['r_sect'] == 'Intermediate', 'N'] = df_r.loc[df_r['r_sect'] == 'Intermediate', 'N'] / (battery_volume*3/9)
+    df_r.loc[df_r['r_sect'] == 'External', 'N'] = df_r.loc[df_r['r_sect'] == 'External', 'N'] / (battery_volume*5/9)
+    sns.lineplot(ax=axs[1], data=df_r, x='t', y='N', hue='r_sect', hue_order=r_sect_list, palette=palette2)
+    axs[1].set_title('$r$ sections')
+    axs[1].legend(loc='upper left')
+    df_z['N'] = df_z['N'] / (battery_volume*3/9)
+    sns.lineplot(ax=axs[2], data=df_z, x='t', y='N', hue='z_sect', hue_order=z_sect_list, palette=palette3)
+    axs[2].set_title('$z$ sections')
+    axs[2].legend(loc='upper left')
+    for ax in axs:
+        ax.set_xlim(time_axis[0], time_axis[-1])
+        ax.set_xlabel('Time [$s$]')
+        _ = ax.set_ylabel('Agglomerate density [cm$^{-3}$]')
+    progress_bar.update()
+
+    if save:
+        fig.savefig(os.path.join(OS_path(exp, OS), 'motion_properties.png'), dpi=300, bbox_inches='tight')
+
+    progress_bar.close()
+    return None
