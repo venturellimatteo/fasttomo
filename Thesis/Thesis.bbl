@@ -1,48 +1,25 @@
-\begin{thebibliography}{24}
+\begin{thebibliography}{34}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
-\bibitem[Arora and Zhang(2004)]{arora2004battery}
-P.~Arora and Z.~Zhang.
-\newblock Battery separators.
-\newblock \emph{Chemical reviews}, 104\penalty0 (10):\penalty0 4419--4462, 2004.
+\bibitem[Solomon et~al.(2009)Solomon, Plattner, Knutti, and Friedlingstein]{solomon2009irreversible}
+Susan Solomon, Gian-Kasper Plattner, Reto Knutti, and Pierre Friedlingstein.
+\newblock Irreversible climate change due to carbon dioxide emissions.
+\newblock \emph{Proceedings of the national academy of sciences}, 106\penalty0 (6):\penalty0 1704--1709, 2009.
 
-\bibitem[Aurbach et~al.(1995)Aurbach, Ein-Eli, Markovsky, Zaban, Luski, Carmeli, and Yamin]{aurbach1995study}
-D.~Aurbach, Y.~Ein-Eli, B.~Markovsky, A.~Zaban, S.~Luski, Y.~Carmeli, and H.~Yamin.
-\newblock The study of electrolyte solutions based on ethylene and diethyl carbonates for rechargeable li batteries: Ii. graphite electrodes.
-\newblock \emph{Journal of The Electrochemical Society}, 142\penalty0 (9):\penalty0 2882, 1995.
+\bibitem[Tans and Keeling(2023)]{noaa-co2}
+Pieter Tans and Ralph Keeling.
+\newblock Trends in atmoshperic carbon dioxide.
+\newblock Technical report, NOAA/GML, 2023.
+\newblock URL \url{https://www.gml.noaa.gov/ccgg/trends/}.
 
-\bibitem[Baazouzi et~al.(2023)Baazouzi, Feistel, Wanner, Landwehr, Fill, and Birke]{baazouzi2023design}
-S.~Baazouzi, N.~Feistel, J.~Wanner, I.~Landwehr, A.~Fill, and K.~P. Birke.
-\newblock Design, properties, and manufacturing of cylindrical li-ion battery cells---a generic overview.
-\newblock \emph{Batteries}, 9\penalty0 (6):\penalty0 309, 2023.
-
-\bibitem[Bladwin(2009)]{bladwin2009review}
-R.~S. Bladwin.
-\newblock A review of state-of-the-art separator materials for advanced lithium-based batteries for future aerospace missions.
-\newblock 2009.
-
-\bibitem[Das et~al.(2018)Das, Li, Williams, and Greenwood]{das2018joining}
-A.~Das, D.~Li, D.~Williams, and D.~Greenwood.
-\newblock Joining technologies for automotive battery systems manufacturing.
-\newblock \emph{World Electric Vehicle Journal}, 9\penalty0 (2):\penalty0 22, 2018.
-
-\bibitem[Doughty and Roth(2012)]{doughty2012general}
-D.~H. Doughty and E.~P. Roth.
-\newblock A general discussion of li ion battery safety.
-\newblock \emph{The Electrochemical Society Interface}, 21\penalty0 (2):\penalty0 37, 2012.
-
-\bibitem[EUCAR(2019)]{eucar2019}
-EUCAR.
-\newblock Battery requirements for future automotive applications, July 2019.
-
-\bibitem[Goodenough and Park(2013)]{goodenough2013li}
-J.~B. Goodenough and K.-S. Park.
-\newblock The li-ion rechargeable battery: a perspective.
-\newblock \emph{Journal of the American Chemical Society}, 135\penalty0 (4):\penalty0 1167--1176, 2013.
+\bibitem[Organization et~al.(2016)]{world2016ambient}
+World~Health Organization et~al.
+\newblock Ambient air pollution: A global assessment of exposure and burden of disease.
+\newblock 2016.
 
 \bibitem[IEA(2023)]{iea-transport}
 IEA.
@@ -50,80 +27,153 @@ IEA.
 \newblock Technical report, 2023.
 \newblock URL \url{https://www.iea.org/data-and-statistics/data-tools/greenhouse-gas-emissions-from-energy-data-explorer}.
 
+\bibitem[Zubi et~al.(2018)Zubi, Dufo-L{\'o}pez, Carvalho, and Pasaoglu]{zubi2018lithium}
+Ghassan Zubi, Rodolfo Dufo-L{\'o}pez, Monica Carvalho, and Guzay Pasaoglu.
+\newblock The lithium-ion battery: State of the art and future perspectives.
+\newblock \emph{Renewable and Sustainable Energy Reviews}, 89:\penalty0 292--308, 2018.
+
+\bibitem[Stampatori et~al.(2020)Stampatori, Raimondi, and Noussan]{stampatori2020li}
+Daniele Stampatori, Pier~Paolo Raimondi, and Michel Noussan.
+\newblock Li-ion batteries: A review of a key technology for transport decarbonization.
+\newblock \emph{Energies}, 13\penalty0 (10):\penalty0 2638, 2020.
+
 \bibitem[Korthauer(2018)]{korthauer2018lithium}
-R.~Korthauer.
+Reiner Korthauer.
 \newblock \emph{Lithium-ion batteries: basics and applications}.
 \newblock Springer, 2018.
 
 \bibitem[Ma et~al.(2018)Ma, Jiang, Tao, Song, Wu, Wang, Deng, and Shang]{ma2018temperature}
-S.~Ma, M.~Jiang, P.~Tao, C.~Song, J.~Wu, J.~Wang, T.~Deng, and W.~Shang.
+Shuai Ma, Modi Jiang, Peng Tao, Chengyi Song, Jianbo Wu, Jun Wang, Tao Deng, and Wen Shang.
 \newblock Temperature effect and thermal impact in lithium-ion batteries: A review.
 \newblock \emph{Progress in Natural Science: Materials International}, 28\penalty0 (6):\penalty0 653--666, 2018.
 
 \bibitem[Ning et~al.(2003)Ning, Haran, and Popov]{ning2003capacity}
-G.~Ning, B.~Haran, and B.~N. Popov.
+Gang Ning, Bala Haran, and Branko~N Popov.
 \newblock Capacity fade study of lithium-ion batteries cycled at high discharge rates.
 \newblock \emph{Journal of power sources}, 117\penalty0 (1-2):\penalty0 160--169, 2003.
 
-\bibitem[Organization et~al.(2016)]{world2016ambient}
-W.~H. Organization et~al.
-\newblock Ambient air pollution: A global assessment of exposure and burden of disease.
-\newblock 2016.
-
 \bibitem[Palac{\'\i}n and de~Guibert(2016)]{palacin2016batteries}
-M.~R. Palac{\'\i}n and A.~de~Guibert.
+M~Rosa Palac{\'\i}n and Anne de~Guibert.
 \newblock Why do batteries fail?
 \newblock \emph{Science}, 351\penalty0 (6273):\penalty0 1253292, 2016.
 
-\bibitem[Santhanagopalan et~al.(2013)Santhanagopalan, Yang, and Pesaran]{santhanagopalan2013modeling}
-S.~Santhanagopalan, C.~Yang, and A.~Pesaran.
-\newblock Modeling lithium ion battery safety: Venting of pouch cells; nrel (national renewable energy laboratory).
-\newblock Technical report, National Renewable Energy Lab.(NREL), Golden, CO (United States), 2013.
+\bibitem[Doughty and Roth(2012)]{doughty2012general}
+Daniel~H Doughty and E~Peter Roth.
+\newblock A general discussion of li ion battery safety.
+\newblock \emph{The Electrochemical Society Interface}, 21\penalty0 (2):\penalty0 37, 2012.
 
-\bibitem[Solomon et~al.(2009)Solomon, Plattner, Knutti, and Friedlingstein]{solomon2009irreversible}
-S.~Solomon, G.-K. Plattner, R.~Knutti, and P.~Friedlingstein.
-\newblock Irreversible climate change due to carbon dioxide emissions.
-\newblock \emph{Proceedings of the national academy of sciences}, 106\penalty0 (6):\penalty0 1704--1709, 2009.
+\bibitem[Goodenough and Park(2013)]{goodenough2013li}
+John~B Goodenough and Kyu-Sung Park.
+\newblock The li-ion rechargeable battery: a perspective.
+\newblock \emph{Journal of the American Chemical Society}, 135\penalty0 (4):\penalty0 1167--1176, 2013.
+
+\bibitem[Manthiram(2020)]{manthiram2020reflection}
+Arumugam Manthiram.
+\newblock A reflection on lithium-ion battery cathode chemistry.
+\newblock \emph{Nature communications}, 11\penalty0 (1):\penalty0 1550, 2020.
+
+\bibitem[Mekonnen et~al.(2016)Mekonnen, Sundararajan, and Sarwat]{mekonnen2016review}
+Yemeserach Mekonnen, Aditya Sundararajan, and Arif~I Sarwat.
+\newblock A review of cathode and anode materials for lithium-ion batteries.
+\newblock \emph{SoutheastCon 2016}, pages 1--6, 2016.
+
+\bibitem[Nzereogu et~al.(2022)Nzereogu, Omah, Ezema, Iwuoha, and Nwanya]{nzereogu2022anode}
+PU~Nzereogu, AD~Omah, FI~Ezema, EI~Iwuoha, and AC~Nwanya.
+\newblock Anode materials for lithium-ion batteries: A review.
+\newblock \emph{Applied Surface Science Advances}, 9:\penalty0 100233, 2022.
+
+\bibitem[Xu(2004)]{xu2004nonaqueous}
+Kang Xu.
+\newblock Nonaqueous liquid electrolytes for lithium-based rechargeable batteries.
+\newblock \emph{Chemical reviews}, 104\penalty0 (10):\penalty0 4303--4418, 2004.
+
+\bibitem[Aurbach et~al.(1995)Aurbach, Ein-Eli, Markovsky, Zaban, Luski, Carmeli, and Yamin]{aurbach1995study}
+Doron Aurbach, Yair Ein-Eli, Boris Markovsky, Arie Zaban, S~Luski, Y~Carmeli, and H~Yamin.
+\newblock The study of electrolyte solutions based on ethylene and diethyl carbonates for rechargeable li batteries: Ii. graphite electrodes.
+\newblock \emph{Journal of The Electrochemical Society}, 142\penalty0 (9):\penalty0 2882, 1995.
 
 \bibitem[Song et~al.(1999)Song, Wang, and Wan]{song1999review}
-J.~Song, Y.~Wang, and C.~C. Wan.
+JY~Song, YY~Wang, and C~Cv Wan.
 \newblock Review of gel-type polymer electrolytes for lithium-ion batteries.
 \newblock \emph{Journal of power sources}, 77\penalty0 (2):\penalty0 183--197, 1999.
 
 \bibitem[Spotte-Smith et~al.(2022)Spotte-Smith, Kam, Barter, Xie, Hou, Dwaraknath, Blau, and Persson]{spotte2022toward}
-E.~W.~C. Spotte-Smith, R.~L. Kam, D.~Barter, X.~Xie, T.~Hou, S.~Dwaraknath, S.~M. Blau, and K.~A. Persson.
+Evan Walter~Clark Spotte-Smith, Ronald~L Kam, Daniel Barter, Xiaowei Xie, Tingzheng Hou, Shyam Dwaraknath, Samuel~M Blau, and Kristin~A Persson.
 \newblock Toward a mechanistic model of solid--electrolyte interphase formation and evolution in lithium-ion batteries.
 \newblock \emph{ACS Energy Letters}, 7\penalty0 (4):\penalty0 1446--1453, 2022.
 
-\bibitem[Stampatori et~al.(2020)Stampatori, Raimondi, and Noussan]{stampatori2020li}
-D.~Stampatori, P.~P. Raimondi, and M.~Noussan.
-\newblock Li-ion batteries: A review of a key technology for transport decarbonization.
-\newblock \emph{Energies}, 13\penalty0 (10):\penalty0 2638, 2020.
+\bibitem[Arora and Zhang(2004)]{arora2004battery}
+Pankaj Arora and Zhengming Zhang.
+\newblock Battery separators.
+\newblock \emph{Chemical reviews}, 104\penalty0 (10):\penalty0 4419--4462, 2004.
 
-\bibitem[Tans and Keeling(2023)]{noaa-co2}
-P.~Tans and R.~Keeling.
-\newblock Trends in atmoshperic carbon dioxide.
-\newblock Technical report, NOAA/GML, 2023.
-\newblock URL \url{https://www.gml.noaa.gov/ccgg/trends/}.
+\bibitem[Bladwin(2009)]{bladwin2009review}
+Richard~S Bladwin.
+\newblock A review of state-of-the-art separator materials for advanced lithium-based batteries for future aerospace missions.
+\newblock 2009.
+
+\bibitem[Zhu et~al.(2021)Zhu, Gastol, Marshall, Sommerville, Goodship, and Kendrick]{zhu2021review}
+Pengcheng Zhu, Dominika Gastol, Jean Marshall, Roberto Sommerville, Vannessa Goodship, and Emma Kendrick.
+\newblock A review of current collectors for lithium-ion batteries.
+\newblock \emph{Journal of Power Sources}, 485:\penalty0 229321, 2021.
 
 \bibitem[Wikipedia()]{batterytypes}
 Wikipedia.
 \newblock List of battery types.
 \newblock URL \url{https://en.wikipedia.org/wiki/List_of_battery_sizes}.
 
-\bibitem[Xu(2004)]{xu2004nonaqueous}
-K.~Xu.
-\newblock Nonaqueous liquid electrolytes for lithium-based rechargeable batteries.
-\newblock \emph{Chemical reviews}, 104\penalty0 (10):\penalty0 4303--4418, 2004.
+\bibitem[Baazouzi et~al.(2023)Baazouzi, Feistel, Wanner, Landwehr, Fill, and Birke]{baazouzi2023design}
+Sabri Baazouzi, Niklas Feistel, Johannes Wanner, Inga Landwehr, Alexander Fill, and Kai~Peter Birke.
+\newblock Design, properties, and manufacturing of cylindrical li-ion battery cells---a generic overview.
+\newblock \emph{Batteries}, 9\penalty0 (6):\penalty0 309, 2023.
 
-\bibitem[Zhu et~al.(2021)Zhu, Gastol, Marshall, Sommerville, Goodship, and Kendrick]{zhu2021review}
-P.~Zhu, D.~Gastol, J.~Marshall, R.~Sommerville, V.~Goodship, and E.~Kendrick.
-\newblock A review of current collectors for lithium-ion batteries.
-\newblock \emph{Journal of Power Sources}, 485:\penalty0 229321, 2021.
+\bibitem[Das et~al.(2018)Das, Li, Williams, and Greenwood]{das2018joining}
+Abhishek Das, Dezhi Li, David Williams, and David Greenwood.
+\newblock Joining technologies for automotive battery systems manufacturing.
+\newblock \emph{World Electric Vehicle Journal}, 9\penalty0 (2):\penalty0 22, 2018.
 
-\bibitem[Zubi et~al.(2018)Zubi, Dufo-L{\'o}pez, Carvalho, and Pasaoglu]{zubi2018lithium}
-G.~Zubi, R.~Dufo-L{\'o}pez, M.~Carvalho, and G.~Pasaoglu.
-\newblock The lithium-ion battery: State of the art and future perspectives.
-\newblock \emph{Renewable and Sustainable Energy Reviews}, 89:\penalty0 292--308, 2018.
+\bibitem[Santhanagopalan et~al.(2013)Santhanagopalan, Yang, and Pesaran]{santhanagopalan2013modeling}
+Shriram Santhanagopalan, Chuanbo Yang, and Ahmad Pesaran.
+\newblock Modeling lithium ion battery safety: Venting of pouch cells; nrel (national renewable energy laboratory).
+\newblock Technical report, National Renewable Energy Lab.(NREL), Golden, CO (United States), 2013.
+
+\bibitem[Kang et~al.(2020)Kang, Deng, Chen, Liu, Liang, Li, Hu, and Zhao]{kang2020binder}
+Yuqiong Kang, Changjian Deng, Yuqing Chen, Xinyi Liu, Zheng Liang, Tao Li, Quan Hu, and Yun Zhao.
+\newblock Binder-free electrodes and their application for li-ion batteries.
+\newblock \emph{Nanoscale Research Letters}, 15:\penalty0 1--19, 2020.
+
+\bibitem[Wang et~al.(2019)Wang, Mao, Stoliarov, and Sun]{wang2019review}
+Qingsong Wang, Binbin Mao, Stanislav~I Stoliarov, and Jinhua Sun.
+\newblock A review of lithium ion battery failure mechanisms and fire prevention strategies.
+\newblock \emph{Progress in Energy and Combustion Science}, 73:\penalty0 95--131, 2019.
+
+\bibitem[Love et~al.(2018)Love, Buesser, Johannes, and Swider-Lyons]{love2018innovating}
+Corey~T Love, Christopher Buesser, Michelle~D Johannes, and Karen~E Swider-Lyons.
+\newblock Innovating safe lithium-ion batteries through basic to applied research.
+\newblock \emph{Journal of Electrochemical Energy Conversion and Storage}, 15\penalty0 (1):\penalty0 011006, 2018.
+
+\bibitem[Schipper et~al.(2016)Schipper, Erickson, Erk, Shin, Chesneau, and Aurbach]{schipper2016recent}
+Florian Schipper, Evan~M Erickson, Christoph Erk, Ji-Yong Shin, Frederick~Francois Chesneau, and Doron Aurbach.
+\newblock Recent advances and remaining challenges for lithium ion battery cathodes.
+\newblock \emph{Journal of The Electrochemical Society}, 164\penalty0 (1):\penalty0 A6220, 2016.
+
+\bibitem[Feng et~al.(2018)Feng, Ouyang, Liu, Lu, Xia, and He]{feng2018thermal}
+Xuning Feng, Minggao Ouyang, Xiang Liu, Languang Lu, Yong Xia, and Xiangming He.
+\newblock Thermal runaway mechanism of lithium ion battery for electric vehicles: A review.
+\newblock \emph{Energy storage materials}, 10:\penalty0 246--267, 2018.
+
+\bibitem[Chen et~al.(2021)Chen, Kang, Zhao, Wang, Liu, Li, Liang, He, Li, Tavajohi, et~al.]{chen2021review}
+Yuqing Chen, Yuqiong Kang, Yun Zhao, Li~Wang, Jilei Liu, Yanxi Li, Zheng Liang, Xiangming He, Xing Li, Naser Tavajohi, et~al.
+\newblock A review of lithium-ion battery safety concerns: The issues, strategies, and testing standards.
+\newblock \emph{Journal of Energy Chemistry}, 59:\penalty0 83--99, 2021.
+
+\bibitem[Balakrishnan et~al.(2006)Balakrishnan, Ramesh, and Kumar]{balakrishnan2006safety}
+PG~Balakrishnan, R~Ramesh, and T~Prem Kumar.
+\newblock Safety mechanisms in lithium-ion batteries.
+\newblock \emph{Journal of power sources}, 155\penalty0 (2):\penalty0 401--414, 2006.
+
+\bibitem[EUCAR(2019)]{eucar2019}
+EUCAR.
+\newblock Battery requirements for future automotive applications, July 2019.
 
 \end{thebibliography}

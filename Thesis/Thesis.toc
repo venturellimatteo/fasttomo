@@ -16,20 +16,28 @@
 \contentsline {subsection}{\numberline {1.1.5}Current Collectors}{13}{subsection.1.1.5}%
 \contentsline {subsection}{\numberline {1.1.6}Cell Geometries and Designs}{14}{subsection.1.1.6}%
 \contentsline {section}{\numberline {1.2}Battery Failure}{16}{section.1.2}%
-\contentsline {chapter}{\numberline {2}Synchrotron X-Ray Imaging}{17}{chapter.2}%
-\contentsline {section}{\numberline {2.1}X-ray Sources}{17}{section.2.1}%
-\contentsline {subsection}{\numberline {2.1.1}European Synchrotron Radiation Facility (ESRF)}{17}{subsection.2.1.1}%
-\contentsline {subsubsection}{Beamline ID19}{17}{subsubsection*.26}%
-\contentsline {section}{\numberline {2.2}Light-Matter Interaction}{17}{section.2.2}%
-\contentsline {section}{\numberline {2.3}X-ray Computed Tomography}{17}{section.2.3}%
-\contentsline {chapter}{\numberline {3}CT-scans segmentation}{19}{chapter.3}%
-\contentsline {chapter}{\numberline {4}Conclusions and future developments}{21}{chapter.4}%
+\contentsline {subsection}{\numberline {1.2.1}Safety Standards}{17}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Thermal Runaway}{18}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Internal Short Circuit}{18}{subsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.2.4}Electric Failure and Abuse Testing}{18}{subsection.1.2.4}%
+\contentsline {subsection}{\numberline {1.2.5}Mechanical Failure and Abuse Testing}{18}{subsection.1.2.5}%
+\contentsline {subsection}{\numberline {1.2.6}Thermal Failure and Abuse Testing}{18}{subsection.1.2.6}%
+\contentsline {subsection}{\numberline {1.2.7}Safety Features in Commercial Batteries}{18}{subsection.1.2.7}%
+\contentsline {subsection}{\numberline {1.2.8}CT for Degradation Studies}{18}{subsection.1.2.8}%
+\contentsline {chapter}{\numberline {2}Synchrotron X-Ray Imaging}{19}{chapter.2}%
+\contentsline {section}{\numberline {2.1}X-ray Sources}{19}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}European Synchrotron Radiation Facility (ESRF)}{19}{subsection.2.1.1}%
+\contentsline {subsubsection}{Beamline ID19}{19}{subsubsection*.27}%
+\contentsline {section}{\numberline {2.2}Light-Matter Interaction}{19}{section.2.2}%
+\contentsline {section}{\numberline {2.3}X-ray Computed Tomography}{19}{section.2.3}%
+\contentsline {chapter}{\numberline {3}CT-scans segmentation}{21}{chapter.3}%
+\contentsline {chapter}{\numberline {4}Conclusions and future developments}{23}{chapter.4}%
 \vspace {2em}
-\contentsline {chapter}{Bibliography\markboth {\MakeUppercase []{Bibliography}}{\MakeUppercase []{Bibliography}}}{23}{chapter*.30}%
+\contentsline {chapter}{Bibliography\markboth {\MakeUppercase []{Bibliography}}{\MakeUppercase []{Bibliography}}}{25}{chapter*.31}%
 \vspace {2em}
-\contentsline {chapter}{\numberline {A}Appendix A}{25}{appendix.A}%
-\contentsline {chapter}{\numberline {B}Appendix B}{27}{appendix.B}%
-\contentsline {chapter}{List of Figures}{29}{appendix*.34}%
-\contentsline {chapter}{List of Tables}{31}{appendix*.36}%
-\contentsline {chapter}{List of Symbols}{33}{appendix*.38}%
-\contentsline {chapter}{Acknowledgements}{35}{appendix*.41}%
+\contentsline {chapter}{\numberline {A}Appendix A}{29}{appendix.A}%
+\contentsline {chapter}{\numberline {B}Appendix B}{31}{appendix.B}%
+\contentsline {chapter}{List of Figures}{33}{appendix*.35}%
+\contentsline {chapter}{List of Tables}{35}{appendix*.37}%
+\contentsline {chapter}{List of Symbols}{37}{appendix*.39}%
+\contentsline {chapter}{Acknowledgements}{39}{appendix*.42}%

@@ -29,7 +29,7 @@ In the following sections the functioning of lithium-ion batteries is described,
 
 \section{Overview}
 \label{sec:overview}
-A lithium-ion battery consists of two electrodes, an electrolyte, a separator, two current collectors and a metal casing. The positive and negative electrode materials are powders that are applied as coatings on current collector foils, resulting in composite electrodes. The ion-conducting electrolyte (containing a dissociated lithium conducting salt) is situated between two electrodes. The separator, an electrolyte-permeable membrane to electrically isolate the two electrodes, is also in that position.
+A lithium-ion battery consists of two electrodes, an electrolyte, a separator, two current collectors and a metal casing. The positive and negative electrode materials are powders that are applied as coatings on current collector foils, resulting in composite electrodes. The ion-conducting electrolyte (containing a dissociated lithium conducting salt) is situated between two electrodes. The separator, an electrolyte-permeable membrane to electrically isolate the two electrodes, is also in that position \cite{goodenough2013li}.
 
 \begin{figure}
     \centering
@@ -44,7 +44,7 @@ The electrolyte conducts the ionic component of the chemical reaction between th
 \label{sec:positive-electrode}
 % See the book for articles to cite in these parts!
 % This part has to be changed since it is copied from (Li-ion definitive book)
-Lithium transition metal compounds are employed as positive electrode materials. These composites can develop mixed crystals over an ample composition range and can deintercalate lithium ions from the structure during the charging process. The traditional positive electrode material is lithiated cobalt oxide, LiCoO$_2$. It has a layered structure with alternating cobalt, oxygen, and lithium ion layers. During charging, lithium leaves the crystal (deintercalation); during discharging, it returns (intercalation). However, only 50\% of the lithium may be utilized. If more than half of the lithium leaves the crystal, the structure may collapse and liberate oxygen. This can cause thermal runaway, as oxygen is able to burn the electrolyte. 
+Lithium transition metal compounds are employed as positive electrode materials. These composites can develop mixed crystals over an ample composition range and can deintercalate lithium ions from the structure during the charging process. The traditional positive electrode material is lithiated cobalt oxide, LiCoO$_2$. It has a layered structure with alternating cobalt, oxygen, and lithium ion layers. During charging, lithium leaves the crystal (deintercalation); during discharging, it returns (intercalation). However, only 50\% of the lithium may be utilized. If more than half of the lithium leaves the crystal, the structure may collapse and liberate oxygen. This can cause thermal runaway, as oxygen is able to burn the electrolyte \cite{korthauer2018lithium,manthiram2020reflection}. 
 
 For complete discharging, the reaction at the positive electrode is:
 \begin{equation}
@@ -55,7 +55,7 @@ Thus for one mole (7 g) of active lithium, two moles (189 g) of Li$_{0.5}$CoO$_2
 
 The use of cobalt oxide as positive electrode material is not safe. If it is kept “fully” charged as Li$_{0.5}$CoO$_2$, it reacts slowly with the electrolyte, thus losing performance. If it is slightly overcharged, there is a clear loss in capacity and service life. In case of severe overcharging, the cobalt oxide crystal collapses which can cause thermal runaway and fire. Overcharging easily happens, as there is no obvious voltage difference between normal charging and overcharging. Cobalt oxide is expensive, as cobalt ore is scarce. This problem is getting worse as the demand grows. Economics of scale do not apply here. Last but not least, cobalt is toxic.
 
-The main commercial alternatives for cobalt oxide are listed in Table \ref{table:cathode-alternatives}. Each of the alternative materials solves some of the problems but they all are compromises. LMO is safer and very cheap but has a limited service life. NCM is safer and cheaper, but has a sloping discharge voltage. NCA is cheaper and lighter (more specific capacity, mAh/g) but it is hardly safer. LFP is very safe and slightly cheaper, but it gives 0.5 V lower voltage than cobalt oxide. At the moment, NCM and LFP seem to be the most promising candidates for large-scale batteries.
+The main commercial alternatives for cobalt oxide are listed in Table \ref{table:cathode-alternatives}. Each of the alternative materials solves some of the problems but they all are compromises. LMO is safer and very cheap but has a limited service life. NCM is safer and cheaper, but has a sloping discharge voltage. NCA is cheaper and lighter (more specific capacity, mAh/g) but it is hardly safer. LFP is very safe and slightly cheaper, but it gives 0.5 V lower voltage than cobalt oxide. At the moment, NCM and LFP seem to be the most promising candidates for large-scale batteries \cite{manthiram2020reflection,mekonnen2016review}.
 
 \begin{table}[H]
     \centering 
@@ -87,15 +87,15 @@ By far the most common negative electrode material is graphitic carbon. It has c
     \label{eq:negative-electrode}
     \text{LiC}_6 \rightarrow \text{Li}^+ + e^- + 6\text{C}
 \end{equation}
-Thus for one mole (7 g) of active lithium, there are six moles (72 g) of carbon that act as host for the lithium during charging.
+Thus for one mole (7 g) of active lithium, there are six moles (72 g) of carbon that act as host for the lithium during charging \cite{korthauer2018lithium}.
 
 Graphite as negative electrode is not safe either. For graphite, the lithium intercalation potential is only about 80 mV more positive than the lithium metal plating potential. Even a small design failure or charging error causes deposition of metallic lithium on the electrode surface. Small amounts of metallic lithium increase the reactivity of the graphite surface, thus consuming electrolyte in secondary reactions. Large amounts of deposited lithium metal can grow as metallic peaks, “dendrites”, that short-circuit the negative and positive electrodes. This might cause excess heating and ignite the electrolyte resulting in a fire.
 
 The potential of lithiated graphite is far beyond the stability window of the common electrolytes. During the first charging of the battery, graphite reacts with the electrolyte, building a protective layer on the graphite surface. This solid electrolyte interface (SEI) layer should prevent further secondary reactions. However, some secondary reactions take place throughout the lifetime of the battery, reducing its cyclic and calendar life.
 Some commercial alternatives for graphite exist. Soft and hard carbons are used due to their slightly more positive intercalation potentials. This means less risk of lithium metal deposition and a possibility of faster charging.
-However, the energy density is considerably lower when these materials are used. Lithium titanate is a very safe negative electrode material with an amazingly long service life, but the 1.4 V lower cell voltage limits the use of lithium titanate to very few applications. The newest commercial alternative, silicon, gives a formidable energy density, but low stability limits its service life.
+However, the energy density is considerably lower when these materials are used. Lithium titanate is a very safe negative electrode material with an amazingly long service life, but the 1.4 V lower cell voltage limits the use of lithium titanate to very few applications. The newest commercial alternative, silicon, gives a formidable energy density, but low stability limits its service life \cite{mekonnen2016review,nzereogu2022anode}.
 
-Graphite is cheap and lightweight, especially when compared to cobalt oxide. Therefore, it can be expected that graphite retains its position as standard negative electrode material in the near future.
+Graphite is cheap and lightweight, especially when compared to cobalt oxide. Therefore, it can be expected that graphite retains its position as standard negative electrode material in the near future \cite{korthauer2018lithium}.
 
 \subsection{Electrolyte}
 \label{sec:electrolyte}
@@ -176,7 +176,7 @@ Lithium-bis(trifluoro- methylsulfonyl)imide (LiTFSI) and lithium-bis(fluorosulfo
 Additives mainly are employed to optimize the so-called solid electrolyte interface (SEI), the boundary surface between the negative electrode and the electrolyte. The SEI significantly influences service life and performance of the lithium-ion cell.
 Lithium ions do not exist in the form of “naked” cations in organic polar solvents, but rather as complex cation solvent adducts. This so-called solvate complex is many times larger than the naked lithium ion.
 Solvated lithium ions penetrate into the outer structures of the graphite anode during charging of the lithium-ion cell. The solvents (and in part also the anion of the lithium salt) degrade owing to the extremely reductive conditions and form hardly soluble precipitates. They accumulate on the electrode and in the outer structures of the graphite and form the layer that is called SEI.
-This layer is permeable for lithium ions. At the same time it is electrically isolating and prevents the direct contact of electrode and solvent, a characteristic that prevents further degradation of the solvent. All carbonates employed in lithium-ion batteries nowadays form an SEI. The quality and composition of the layer, however, strongly depend on the chosen solvent combination.
+This layer is permeable for lithium ions. At the same time it is electrically isolating and prevents the direct contact of electrode and solvent, a characteristic that prevents further degradation of the solvent. All carbonates employed in lithium-ion batteries nowadays form an SEI. The quality and composition of the layer, however, strongly depend on the chosen solvent combination \cite{korthauer2018lithium}.
 
 \begin{figure}[ht]
     \centering
@@ -190,7 +190,7 @@ The best-known example of this class of additives is vinylene carbonate. It is u
 
 \subsection{Separator}
 \label{sec:separator}
-Battery separators are flat materials situated between the positive and negative electrodes of a battery cell. Their function is to prevent physical contact and, there- fore, short circuits. At the same time, they must enable ions to be transported as freely as possible within the electrolyte between the electrodes. This is essential for charge equalization and the electrochemical cell to work. To achieve this, separators are usually porous flat designs filled with an electrolyte.
+Battery separators are flat materials situated between the positive and negative electrodes of a battery cell. Their function is to prevent physical contact and, therefore, short circuits. At the same time, they must enable ions to be transported as freely as possible within the electrolyte between the electrodes. This is essential for charge equalization and the electrochemical cell to work. To achieve this, separators are usually porous flat designs filled with an electrolyte \cite{korthauer2018lithium}.
 
 \begin{table}[H]
     \centering
@@ -218,7 +218,7 @@ Battery separators are flat materials situated between the positive and negative
 In lithium-ion cells, battery separators are mostly based on polyolefins into which submicronsized holes are introduced by means of a physical process. These battery separators can be divided into two classes based on their production process: microporous polyolefin membranes and wet membranes.
 Resulting from their chemical and physical compositions, these two separator classes exhibit in part extremely different characteristics.
 
-Microporous polyolefin membranes exhibit a thickness up to 12 to 40 $\mu$m, a maximum pore size of < 0.5 $\mu$m, and a high tensile strength. The low thickness positively influences the energy density of the battery. The pore distribution protects them against dendrite formation quite well. The disadvantages of these membranes are their low porosity (around 40\%), low melting point (around 160 $^\circ$C for PE), and very high shrinkage (20\% at 120 $^\circ$C/10 min) at higher temperatures. This is increasingly true for larger cells because they dissipate heat poorly. If the separator loses its structure, there will be contact between the electrodes and thus a reaction of the electrode materials. This can cause the battery to explode.
+Microporous polyolefin membranes exhibit a thickness up to 12 to 40 $\mu$m, a maximum pore size of < 0.5 $\mu$m, and a high tensile strength. The low thickness positively influences the energy density of the battery. The pore distribution protects them against dendrite formation quite well. The disadvantages of these membranes are their low porosity (around 40\%), low melting point (around 160 $^\circ$C for PE), and very high shrinkage (20\% at 120 $^\circ$C/10 min) at higher temperatures. This is increasingly true for larger cells because they dissipate heat poorly. If the separator loses its structure, there will be contact between the electrodes and thus a reaction of the electrode materials. This can cause the battery to explode \cite{korthauer2018lithium}.
 
 Wet membranes have a thickness of up to 25 $\mu$m, uniform pore distribution with short distances (< 1 $\mu$m), and high tensile strength. The low thickness positively influences the energy density of the battery. The short pore distances effectively prevent dendrites from forming. As with the microporous polyolefin membranes, the tensile strength is beneficial for producing cylindrical cells. The disadvantages of these membranes are their low melting point (around 135 $^\circ$C) and very high shrinkage (7 to 30\% at 120 $^\circ$C/10 min) \cite{arora2004battery,bladwin2009review}.
 
@@ -245,7 +245,7 @@ As for any other component of the battery, the ability of the current collectors
 \label{sec:cell-geometries-designs}
 Battery cells come in various shapes and sizes, featuring diverse component assemblies and chemistries based on the manufacturer. The effectiveness of cell design is pivotal for ensuring safety and suitability in different applications. The selection of materials and dimensions significantly influences a battery's ability to prevent or minimize catastrophic events. To ensure optimal and secure functioning, meticulous consideration is given to the design of all aforementioned components and their collaborative functions to fit within the specified cell dimensions. Additionally, the choice of casting material and its thickness should be carefully designed to facilitate the handling of critical events by enhancing heat dissipation and pressure management.
 
-All of today's lithium-ion cells exhibit metal-based housing and packaging material. One reason is that it prevents the entry of moisture into the cell, which would initiate a hydrolysis of the conducting salt LiPF$_6$ into hydrogen fluoride (HF). Another is the prevention of loss of solvent by means of diffusion from the cell. Only metal is able to fulfill these tasks. A housing made of pure plastics is not suitable because no plastic (not even polypropylene) is completely moisture leaktight. The solid metallic housings (hardcase) are typically made of aluminum or stainless steel.
+All of today's lithium-ion cells exhibit metal-based housing and packaging material. One reason is that it prevents the entry of moisture into the cell, which would initiate a hydrolysis of the conducting salt LiPF$_6$ into hydrogen fluoride (HF). Another is the prevention of loss of solvent by means of diffusion from the cell. Only metal is able to fulfill these tasks. A housing made of pure plastics is not suitable because no plastic (not even polypropylene) is completely moisture leaktight. The solid metallic housings (hardcase) are typically made of aluminum or stainless steel \cite{korthauer2018lithium}.
 
 \begin{figure}[ht]
     \centering
@@ -264,16 +264,55 @@ Cylindrical cells consist of a tubular cylindrical can and are crafted using a "
 
 Cells possessing a cylindrical morphology incorporate safety mechanisms that will interrupt current flow and/or enable venting of gas to avoid overpressure of the can. Cylindrical cells have better thermal management efficiency because of small size, but low packaging efficiency because of their round cross-section \cite{das2018joining}.
 
-Aluminium or steel cans are typically used for the housing of solid container-encased prismatic lithium-ion cells, more commonly called \textbf{prismatic cells} (Figure \ref{fig:geometries}b). The metal can ensure structural stability, mechanical robustness, and humidity protection. In addition, it allows for the use of safety features such as pressure relief vents, which are not possible in pouch cells. In some cases, prismatic cells may allow packaging to be more efficient than cylindrical cells because of their form factor\cite{das2018joining}.
+Aluminium or steel cans are typically used for the housing of solid container-encased prismatic lithium-ion cells, more commonly called \textbf{prismatic cells} (Figure \ref{fig:geometries}b). The metal can ensure structural stability, mechanical robustness, and humidity protection. In addition, it allows for the use of safety features such as pressure relief vents, which are not possible in pouch cells. In some cases, prismatic cells may allow packaging to be more efficient than cylindrical cells because of their form factor \cite{das2018joining}.
 
-The \textbf{pouch cells} (Figure \ref{fig:geometries}c) employ a streamlined fold-stacking approach for individual sheets of both the positive and negative electrodes, enclosed in a lightweight foil casing. This configuration yields a cell characterized by high packing efficiency, flexibility, and low weight. The resulting compact and lightweight design contributes to an elevated volumetric energy density, cooling advantages, and adaptability for diverse applications due to its flexible nature. Nevertheless, the drawback of pouch cells lies in their limited physical strength, necessitating mechanical support in the form of a module or pack. Commonly addressed challenges include cell swelling during gas formation, which can alter the internal structure and pose risks to adjacent cells, thereby increasing the likelihood of failure and catastrophic events \cite{santhanagopalan2013modeling}.
+The \textbf{pouch cells} (Figure \ref{fig:geometries}c) employ a streamlined fold-stacking approach for individual sheets of both the positive and negative electrodes, enclosed in a lightweight foil casing. This configuration yields a cell characterized by high packing efficiency, flexibility, and low weight. The resulting compact and lightweight design contributes to an elevated volumetric energy density, cooling advantages, and adaptability for diverse applications due to its flexible nature. Nevertheless, the drawback of pouch cells lies in their limited physical strength, necessitating mechanical support in the form of a module or pack \cite{santhanagopalan2013modeling}. % Commonly addressed challenges include cell swelling during gas formation, which can alter the internal structure and pose risks to adjacent cells, thereby increasing the likelihood of failure and catastrophic events .
 
 \section{Battery Failure}
 \label{sec:failure}
+
+The increasing interest in lithium-ion batteries stems from their potential to offer efficient energy storage and contribute to environmental sustainability. Not only are LIBs widely employed in portable electronics like computers and cell phones, but they have also become integral to the power systems of electric or hybrid vehicles. The increasing popularity of LIBs in these applications can be attributed to their outstanding performance and high energy density \cite{kang2020binder}. Moreover, LIBs dominate the battery market for portable electronics, owing to inherent advantages such as high specific capacity and voltage, absence of memory effect, excellent cycling performance, minimal self-discharge, and a wide temperature range of operation \cite{zubi2018lithium}.
+
+\begin{table}[ht]
+    \centering
+        \begin{footnotesize}
+            \begin{tabular}{|p{7mm} p{22mm} p{113mm}|}
+                \hline
+                \rowcolor{bluepoli!40}
+                \textbf{No.} & \textbf{Date} & \textbf{Accidents Replay}\T\B \\
+                \hline \hline
+                1 & Mar 2010 & Two iPod Nano music players overheated and caught fire, Japan\T\B\\
+                2 & Apr 2010 & Acer recalled 2700 laptop batteries, as Dell, Apple, Toshiba, Lenovo and Sony did in 2006\T\B\\
+                3 & Apr 2011 & EV taxi caught fire, Hangzhou, China\T\B\\
+                4 & Oct-Nov 2013 & 6 Tesla Model S EV cars caught fire\T\B\\
+                5 & Jan-Dec 2013 & Three fire accidents of Boeing 747, happened in Boston America, Takamatsu, Tokyo Japan, respectively\T\B\\
+                6 & Apr 2015 & EV bus caught fire during charge, Shenzhen, China\T\B\\
+                7 & May 2016 & The storage room of the LIB caught explosion, Jiangsu, China\T\B\\
+                8 & Aug 2016 & Samsung Note 7 smart phone explosion\T\B\\
+                9 & May 2017 & Panasonic announced to recall over 270 thousand LIBs\T\B\\
+                10 & Oct 2017 & EV car caught fire, Austria\T\B\\
+                11 & Jan 2018 & Tesla Model S EV car self-ignited, China\T\B\\
+                12 & Jul 2018 & 4 MW/12 MWh energy storage system (ESS) caught fire and explosion, Korea\T\B\\
+                13 & Jul 2018 & Electric scooter caught fire and explosion during charging, China\T\B\\
+                \hline
+                \end{tabular}
+                \\[10pt]
+                \caption[Lithium-ion battery accidents]{Lithium-ion battery fire and explosion accidents in the past few years. Source: Wang (2019) \cite{wang2019review}.}
+                \label{table:accidents}
+        \end{footnotesize}
+\end{table}
+
+Despite these merits, the broader expansion of the LIB market, especially in electric vehicles, faces significant challenges due to safety concerns \cite{love2018innovating,schipper2016recent,feng2018thermal}. Recent years have witnessed numerous recalls of LIBs, prompted by incidents of explosions and fires (Table \ref{table:accidents}), leading to substantial economic repercussions in related market sectors and tarnishing the reputation of LIBs \cite{chen2021review,balakrishnan2006safety}. As a result, there is a growing emphasis on addressing LIB safety issues, with the development of numerous safety strategies aimed at mitigating the risks associated with these batteries.
+
+\subsection{Safety Standards}
+\label{sec:safety-standards}
+
+Safety standards and corresponding assessments have been established to analyze battery performance and key factors, aligning with the necessary safety requisites. The stringent and rigorous battery safety tests are designed to guarantee the absence of safety issues in routine working conditions, minimizing the likelihood of future problems. The stable operation of lithium-ion batteries under standard conditions serves as a crucial preventive measure, notably reducing potential battery damage in the event of an accident. Thanks to these measures, contemporary LIBs exhibit a significantly enhanced safety profile compared to their predecessors. Nonetheless, ongoing advancements are imperative to further refine and elevate battery safety standards \cite{chen2021review}.
+
 \begin{table}[H]
     \centering
         \begin{footnotesize}
-            \begin{tabular}{|p{25mm} p{28mm} p{90mm}|}
+            \begin{tabular}{|p{13mm} p{28mm} p{102mm}|}
                 \hline
                 \rowcolor{bluepoli!40}
                 \textbf{Hazard Level} & \textbf{Description} & \textbf{Classification Criteria \& Effect}\T\B \\
@@ -302,3 +341,24 @@ The \textbf{pouch cells} (Figure \ref{fig:geometries}c) employ a streamlined fol
                 \label{table:eucar}
         \end{footnotesize}
 \end{table}
+
+\subsection{Thermal Runaway}
+\label{sec:thermal-runaway}
+
+\subsection{Internal Short Circuit}
+\label{sec:internal-short-circuit}
+
+\subsection{Electric Failure and Abuse Testing}
+\label{sec:electric-failure-abuse-testing}
+
+\subsection{Mechanical Failure and Abuse Testing}
+\label{sec:mechanical-failure-abuse-testing}
+
+\subsection{Thermal Failure and Abuse Testing}
+\label{sec:thermal-failure-abuse-testing}
+
+\subsection{Safety Features in Commercial Batteries}
+\label{sec:safety-features}
+
+\subsection{CT for Degradation Studies}
+\label{sec:ct-degradation-studies}
