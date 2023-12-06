@@ -41,7 +41,7 @@ def find_diameter(exp):
 def update_pb(progress_bar, postfix):
     progress_bar.update()
     progress_bar.set_postfix_str(postfix)
-    return None
+    return 
 
 # function returning the area associated to the biggest agglomerate in the sequence
 def find_biggest_area(sequence, threshold):
@@ -58,7 +58,7 @@ def remove_small_agglomerates(hypervolume_mask, smallest_volume):
     lookup_table = np.where(bincount < smallest_volume, 0, np.arange(len(bincount)))
     for time in range(hypervolume_mask.shape[0]):
         hypervolume_mask[time] = np.take(lookup_table, hypervolume_mask[time])
-    return None
+    return 
 
 # function used to remove the agglomerates that are not present in neighboring slices
 def remove_isolated_agglomerates(hypervolume_mask):
@@ -71,7 +71,7 @@ def remove_isolated_agglomerates(hypervolume_mask):
             if current_label not in previous_slice and current_label not in next_slice:
                 current_slice[current_slice == current_label] = 0
         hypervolume_mask[time] = current_slice
-    return None
+    return 
 
 # function used to rename the labels in the 4D segmentation map so that they are in the range [0, n_labels-1]
 def rename_labels(hypervolume_mask, time_index):
@@ -87,13 +87,12 @@ def rename_labels(hypervolume_mask, time_index):
     lookup_table[old_labels] = new_labels
     for time in time_index:
         hypervolume_mask[time] = np.take(lookup_table, hypervolume_mask[time])
-    return None
+    return 
 
 # function returning the 3D segmentation map given the 3D volume and the threshold
 def segment3D(volume, threshold, filtering3D=True, smallest_3Dvolume=50):
-    mask1 = np.greater(volume, threshold)
-    mask2 = dilation(erosion(mask1, ball(1)), ball(4))
-    mask = label(np.logical_and(mask1, mask2))
+    mask = np.greater(volume, threshold)
+    mask = label(np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(4))))
     if filtering3D:
         remove_small_agglomerates(mask, smallest_3Dvolume)
         remove_isolated_agglomerates(mask)
@@ -134,13 +133,11 @@ def find_threshold(sequence, threshold=0, step=1, target=6800, delta=100, slices
     while not flag:
         current_area = find_biggest_area(sequence, threshold)
         if current_area > target + delta:       # if the area is larger than target, the threshold is increased in order to reduce the area
-            if not add:
-                step = step/2                   # step is halved every time the direction of the step is changed
+            step = step/2 if not add else step  # step is halved every time the direction of the step is changed
             threshold += step
             add = True
         elif current_area < target - delta:     # if the area is smaller than target, the threshold is decreased in order to increase the area
-            if add:
-                step = step/2               
+            step = step/2 if add else step              
             threshold -= step
             add = False
         else:                                   # if the area is close to target, the threshold is found
@@ -174,21 +171,28 @@ def propagate_labels(previous_mask, current_mask, forward=True):
         current_mask[current_mask > 0] += max_label + 1
 
     rps = regionprops(previous_mask)
-    labels = [rp.label for rp in rps]
-    areas = [rp.area for rp in rps]
-    ordered_labels = np.array(labels)[np.argsort(areas)]
+    ordered_labels = np.array([rp.label for rp in rps])[np.argsort([rp.area for rp in rps])]
     propagation_map = dict()
 
     for previous_mask_label in ordered_labels:
         propagation_map = update_map(current_mask, previous_mask, previous_mask_label, propagation_map)
-    for current_slice_label, previous_mask_label in propagation_map.items():
-        current_mask[current_mask == current_slice_label] = previous_mask_label[0]
 
+    # START OF NEW CODE
+    lookup_table = np.arange(np.max(current_mask)+1)
+    for current_slice_label, previous_mask_label in propagation_map.items():
+        lookup_table[current_slice_label] = previous_mask_label[0]
     if forward:
         new_labels = np.unique(current_mask[current_mask > max_label])
-        lookup_table = np.arange(np.max(new_labels)+1)
         lookup_table[new_labels] = np.arange(len(new_labels)) + max_label + 1
-        current_mask = np.take(lookup_table, current_mask)
+    current_mask = np.take(lookup_table, current_mask)
+    # END OF NEW CODE
+    # for current_slice_label, previous_mask_label in propagation_map.items():
+    #     current_mask[current_mask == current_slice_label] = previous_mask_label[0]
+    # if forward:
+    #     new_labels = np.unique(current_mask[current_mask > max_label])
+    #     lookup_table = np.arange(np.max(new_labels)+1)
+    #     lookup_table[new_labels] = np.arange(len(new_labels)) + max_label + 1
+    #     current_mask = np.take(lookup_table, current_mask)
     return current_mask
 
 
@@ -209,10 +213,7 @@ def segment4D(exp, OS='Windows', offset=0, filtering3D=True, smallest_3Dvolume=5
 
     # evaluating the threshold on the first volume
     update_pb(progress_bar, 'Finding threshold')
-    if exp == 'VCT5A_FT_H_Exp2':
-        threshold = find_threshold(previous_volume, target=6500)
-    else:
-        threshold = find_threshold(previous_volume) 
+    threshold = find_threshold(previous_volume, target=(6500 if exp=='VCT5A_FT_H_Exp2' else 6800))
 
     # segmenting the first volume
     update_pb(progress_bar, 'Segmenting first volume')
@@ -221,11 +222,10 @@ def segment4D(exp, OS='Windows', offset=0, filtering3D=True, smallest_3Dvolume=5
     # reassigning the labels after the filtering
     update_pb(progress_bar, 'Reassigning labels')
     rps = regionprops(previous_mask)
-    old_labels = [rp.label for rp in rps]
-    old_labels = np.array(old_labels)[np.argsort([rp.area for rp in rps])][::-1]
+    old_labels = np.array([rp.label for rp in rps])[np.argsort([rp.area for rp in rps])][::-1]
     lookup_table = np.arange(np.max(old_labels)+1)
     lookup_table[old_labels] = np.arange(len(old_labels))+1
-    previous_mask = np.take(lookup_table, previous_mask)
+    previous_mask[:] = np.take(lookup_table, previous_mask)
 
     # writing the first mask in the hypervolume_mask memmap
     hypervolume_mask[0] = previous_mask

@@ -1,4 +1,4 @@
-\begin{thebibliography}{34}
+\begin{thebibliography}{41}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -175,5 +175,40 @@ PG~Balakrishnan, R~Ramesh, and T~Prem Kumar.
 \bibitem[EUCAR(2019)]{eucar2019}
 EUCAR.
 \newblock Battery requirements for future automotive applications, July 2019.
+
+\bibitem[Wang et~al.(2012)Wang, Ping, Zhao, Chu, Sun, and Chen]{wang2012thermal}
+Qingsong Wang, Ping Ping, Xuejuan Zhao, Guanquan Chu, Jinhua Sun, and Chunhua Chen.
+\newblock Thermal runaway caused fire and explosion of lithium ion battery.
+\newblock \emph{Journal of power sources}, 208:\penalty0 210--224, 2012.
+
+\bibitem[Guo et~al.(2010)Guo, Long, Cheng, Zhou, Xu, and Cao]{guo2010three}
+Guifang Guo, Bo~Long, Bo~Cheng, Shiqiong Zhou, Peng Xu, and Binggang Cao.
+\newblock Three-dimensional thermal finite element modeling of lithium-ion battery in thermal abuse application.
+\newblock \emph{Journal of power sources}, 195\penalty0 (8):\penalty0 2393--2398, 2010.
+
+\bibitem[Kim et~al.(2007)Kim, Pesaran, and Spotnitz]{kim2007three}
+Gi-Heon Kim, Ahmad Pesaran, and Robert Spotnitz.
+\newblock A three-dimensional thermal abuse model for lithium-ion cells.
+\newblock \emph{Journal of power sources}, 170\penalty0 (2):\penalty0 476--489, 2007.
+
+\bibitem[Lamb and Orendorff(2014)]{lamb2014evaluation}
+Joshua Lamb and Christopher~J Orendorff.
+\newblock Evaluation of mechanical abuse techniques in lithium ion batteries.
+\newblock \emph{Journal of Power Sources}, 247:\penalty0 189--196, 2014.
+
+\bibitem[Maleki et~al.(1999)Maleki, Deng, Anani, and Howard]{maleki1999thermal}
+Hossein Maleki, Guoping Deng, Anaba Anani, and Jason Howard.
+\newblock Thermal stability studies of li-ion cells and components.
+\newblock \emph{Journal of The electrochemical society}, 146\penalty0 (9):\penalty0 3224, 1999.
+
+\bibitem[Finegan et~al.(2016)Finegan, Scheel, Robinson, Tjaden, Di~Michiel, Hinds, Brett, and Shearing]{finegan2016investigating}
+Donal~P Finegan, Mario Scheel, James~B Robinson, Bernhard Tjaden, Marco Di~Michiel, Gareth Hinds, Dan~JL Brett, and Paul~R Shearing.
+\newblock Investigating lithium-ion battery materials during overcharge-induced thermal runaway: an operando and multi-scale x-ray ct study.
+\newblock \emph{Physical Chemistry Chemical Physics}, 18\penalty0 (45):\penalty0 30912--30919, 2016.
+
+\bibitem[Semenov(2013)]{semenov2013some}
+Nikola~Nikolaevich Semenov.
+\newblock \emph{Some Problems of Chemical Kinetics and Reactivity: Volume 1}, volume~1.
+\newblock Elsevier, 2013.
 
 \end{thebibliography}
