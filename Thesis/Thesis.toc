@@ -19,13 +19,13 @@
 \contentsline {section}{\numberline {2.1}Safety Standards}{18}{section.2.1}%
 \contentsline {subsection}{\numberline {2.1.1}Safety Tests}{19}{subsection.2.1.1}%
 \contentsline {subsection}{\numberline {2.1.2}Hazard level}{20}{subsection.2.1.2}%
-\contentsline {section}{\numberline {2.2}Thermal Runaway}{20}{section.2.2}%
+\contentsline {section}{\numberline {2.2}Thermal Runaway}{21}{section.2.2}%
 \contentsline {section}{\numberline {2.3}Internal Short Circuit}{23}{section.2.3}%
-\contentsline {section}{\numberline {2.4}Electric Failure and Abuse Testing}{23}{section.2.4}%
-\contentsline {section}{\numberline {2.5}Mechanical Failure and Abuse Testing}{23}{section.2.5}%
-\contentsline {section}{\numberline {2.6}Thermal Failure and Abuse Testing}{23}{section.2.6}%
-\contentsline {section}{\numberline {2.7}Safety Features in Commercial Batteries}{23}{section.2.7}%
-\contentsline {section}{\numberline {2.8}CT for Degradation Studies}{23}{section.2.8}%
+\contentsline {section}{\numberline {2.4}Electric Failure and Abuse Testing}{24}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Mechanical Failure and Abuse Testing}{24}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Thermal Failure and Abuse Testing}{24}{section.2.6}%
+\contentsline {section}{\numberline {2.7}Safety Features in Commercial Batteries}{24}{section.2.7}%
+\contentsline {section}{\numberline {2.8}CT for Degradation Studies}{24}{section.2.8}%
 \contentsline {chapter}{\numberline {3}Synchrotron X-Ray Imaging}{25}{chapter.3}%
 \contentsline {section}{\numberline {3.1}X-ray Sources}{25}{section.3.1}%
 \contentsline {subsection}{\numberline {3.1.1}European Synchrotron Radiation Facility (ESRF)}{25}{subsection.3.1.1}%

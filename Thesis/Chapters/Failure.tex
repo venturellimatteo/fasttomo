@@ -1,4 +1,4 @@
-The increasing interest in lithium-ion batteries stems from their potential to offer efficient energy storage and contribute to environmental sustainability. Not only are LIBs widely employed in portable electronics like computers and cell phones, but they have also become integral to the power systems of electric or hybrid vehicles. The increasing popularity of LIBs in these applications can be attributed to their outstanding performance and high energy density \cite{kang2020binder}. Moreover, LIBs dominate the battery market for portable electronics, owing to inherent advantages such as high specific capacity and voltage, absence of memory effect, excellent cycling performance, minimal self-discharge, and a wide temperature range of operation \cite{zubi2018lithium}.
+The increasing interest in lithium-ion batteries stems from their potential to offer efficient energy storage and contribute to environmental sustainability. Not only are LIBs widely employed in portable electronics like computers and cell phones, but they have also become integral to the power systems of electric and hybrid vehicles. The increasing popularity of LIBs in these applications can be attributed to their outstanding performance and high energy density \cite{kang2020binder}. Moreover, LIBs dominate the battery market for portable electronics, owing to inherent advantages such as high specific capacity and voltage, absence of memory effect, excellent cycling performance, minimal self-discharge, and a wide temperature range of operation \cite{zubi2018lithium}.
 
 \vspace{5mm}
 
@@ -41,7 +41,7 @@ Safety standards and corresponding assessments have been established to analyze 
 
 Hence, various international safety organizations regulate battery safety, and governments of different countries have formulated safety standards in accordance with national requirements and conditions and have gradually improved the safety standards of lithium-ion batteries. Academics and industrial groups have also carried out extensive research on battery safety.
 
-Most countries and international organizations have developed LIB-safety oriented standards, which include:
+Most countries and international organizations have developed LIB safety oriented standards, which include:
 \begin{enumerate}
     \item Chinese standard GB/T 31485 \cite{};
     \item Society of Automotive Engineers (SAE) standard 2464 \cite{};
@@ -49,8 +49,7 @@ Most countries and international organizations have developed LIB-safety oriente
     \item United Nations (UN) standard UN38.3 \cite{};
     \item Japanese Industrial Standard (JIS) C8714 \cite{};
     \item Underwriters Laboratories (UL) standard UL2580 Edition 2.0 \cite{};
-    \item International Standardization Organization (ISO) standard
-    ISO 16750-2 \cite{};
+    \item International Standardization Organization (ISO) standard ISO 16750-2 \cite{}.
 \end{enumerate}
 
 Since the various safety test standars apply different methodologies, a summary of some test requirements and comparisons of five test items are presented in Table \ref{table:standards}.
@@ -58,16 +57,20 @@ Since the various safety test standars apply different methodologies, a summary 
 \begin{table}[ht]
     \centering
         \begin{scriptsize}
-            \begin{tabular}{|p{26mm} p{26mm} p{26mm} p{26mm} p{26mm}|}
+            \begin{tabular}{|P{20mm} P{29mm} P{29mm} P{29mm} P{29mm}|}
                 \hline
                 \rowcolor{bluepoli!40}
                  & \textbf{GB/T31485} & \textbf{IEC62133} & \textbf{UL2580} & \textbf{SAE J2464}\T\B \\
                 \hline \hline
-                \textbf{Heating} &  &  &  & \T\B\\
-                \textbf{Short-circuit} &  &  &  & \T\B\\
-                \textbf{Overcharge} &  &  &  & \T\B\\
-                \textbf{Over-discharge} &  &  &  & \T\B\\
-                \textbf{Nail penetration} &  &  &  & \T\B\\
+                \textbf{Heating} & Heating at 5 $^\circ$C/min from 25 $^\circ$C to 130 $^\circ$C, hold for 30 mins \vspace{3mm}& 130 $^\circ$C, 10 mins & 150 $\pm$ 2 $^\circ$C, 60 mins & Max. stable temperature\T\B\\
+
+                \textbf{Short-circuit} & Short circuit for 10 mins, $R\leq$ 5m$\Omega$ & 80$\pm$20m$\Omega$ & Short with $R\leq$ 5m$\Omega$ until explosion, fire or no temp change & $R\leq$ 5m$\Omega$ for hard short; $R\geq$ 5m$\Omega$ for soft short\vspace{3mm}\T\B\\
+
+                \textbf{Overcharge} & 100\% SOC Overcharge to 1.5 $V_{max}$ or charge for 1 hour at 1C \vspace{3mm}& Overcharge to 250\% SOC at 1C & Overcharge to 200\% SOC at 1C & Overcharge to 200\% SOC at 1C\T\B\\
+
+                \textbf{Over-discharge} & Over-discharge the 100\% SOC cell at 1C for 1.5 hours \vspace{3mm}& Over-discharge the 0\% SOC cell at 1C for 90 mins & Over-discharge the 0\% SOC cell at 1C for 90 mins & Over-discharge the cell to -100\% SOC\T\B\\
+
+                \textbf{Nail penetration} & Penetration rate 25 mm/s, $\varphi$ 5$\sim$8mm, 100\% depth & / & 80 mm/s, $\varphi$ 3mm, 100\% depth & 80 mm/s, $\varphi$ 3mm, 100\% depth\T\B\\
                 \hline
                 \end{tabular}
                 \\[10pt]
@@ -85,14 +88,10 @@ Analysis of the presence of various LIB defects and shortcomings can help to def
 Here follows a brief description of the main safety tests used to examine key LIB properties:
 
 \begin{itemize}
-    \item[--] \textbf{Overcharge tests} are intended to assess overcharge/over-discharge processes that occur in a cell when the charge and discharge process is out of control. According to the IEC standard test, the cell is first discharged to 3.0 V, and then is charged under 10 V. If the battery does not combust or explode during or after the test it is considered safe, its materials (electrolyte, active electrode materials, separators etc.) are regarded as having adequate properties, and the structural design is deemed satisfactory. The safety performance under overcharge is closely related to the charge rate, so overcharging is performed at different rates to establish at which extreme rate and voltage failure occurs.
-    \item[--] \textbf{Heating tests} assess the thermal runaway caused by a battery being heated due to local overheating, and the subsequent thermal runaway expansion. Heating is used to analyze LIBs' thermal stability and heat distribution to ensure they have sufficiently efficient heat management and capability to forecast potential hazards. The results are then used to assess how thermal abuse consequences can be alleviated. Specifically, data obtained from hot box experiments are used to simulate their thermal characteristics, and distributions of internal and external temperatures, then assess possible improvements in their design, materials, cooling systems, etc.
-    \item[--] \textbf{Short circuit tests}
-    \begin{itemize}
-        \item \textbf{External short circuit tests} assess the short circuiting that is caused by external electrical connections of battery poles under abnormal conditions. \textbf{Qua manca la prosecuzione della descrizione!}
-        \item \textbf{Internal short circuit tests} assess the short circuiting that is caused by internal electrical connections of battery poles under abnormal conditions. \textbf{Qua manca la prosecuzione della descrizione!}
-        \item \textbf{Nail penetration tests} assess effects of a battery short circuiting if the separator is penetrated by impurities. \textbf{Qua manca la prosecuzione della descrizione!}
-    \end{itemize}
+    \item[--] \textbf{Overcharge tests} are intended to assess overcharge/over-discharge processes that occur in a cell when the charge and discharge process is out of control. According to the IEC standard test, the cell is first discharged to 3.0 V, and then is charged under 10 V. If the battery does not combust or explode during or after the test it is considered safe, its materials (electrolyte, active electrode materials, separators etc.) are regarded as having adequate properties, and the structural design is deemed satisfactory. The safety performance under overcharge is closely related to the charge rate, so overcharging is performed at different rates to establish at which extreme rate and voltage failure occurs;
+    \item[--] \textbf{Heating tests} assess the thermal runaway caused by a battery being heated due to local overheating, and the subsequent thermal runaway expansion. Heating is used to analyze LIBs' thermal stability and heat distribution to ensure they have sufficiently efficient heat management and capability to forecast potential hazards. The results are then used to assess how thermal abuse consequences can be alleviated. Specifically, data obtained from hot box experiments are used to simulate their thermal characteristics, and distributions of internal and external temperatures, then assess possible improvements in their design, materials, cooling systems, etc.;
+    \item \textbf{External short circuit tests} assess the short circuiting that is caused by external electrical connections of battery poles under abnormal conditions. According to the GB31485-2015 procedure, the battery is kept at 25 $\pm$ 2 $^\circ$C in a fully charged state for 30 minutes, then the cathode and anode terminals are connected with a wire, and the external resistance is kept at 5 m$\Omega$. During this test, the temperature and voltage are monitored simultaneously, throughout the entire test. The test is considered successful if the cell does not explode or combust;
+    \item \textbf{Internal short circuit (ISC) tests} assess the short circuiting that is caused by internal electrical connections of battery poles under abnormal conditions. Several methods are used to initiate an internal short circuits, including nail penetration, heavy impact, crush and forced ISC. Nail penetration tests are the most common type of ISC tests, and they are designed to simulate internal battery short circuits that may occur when a battery's internal membrane is penetrated by impurities. According to GB/ T 31485, a fully-charged battery should be penetrated with a high temperature-resistant steel spike of $\varphi$ 5$\sim$8 mm in a direction perpendicular to the polar plate at a speed of 25 $\pm$ 5 mm/s. The penetration position should also be close to the geometric center of the penetrated surface, with the steel spike retained inside the battery. The test is considered successful if the cell does not explode or combust.
 \end{itemize}
 
 \subsection{Hazard level}
