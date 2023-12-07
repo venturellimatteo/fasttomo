@@ -223,8 +223,7 @@ Qui va l'Abstract in lingua italiana della tesi seguito dalla lista di parole ch
 
 \chapter{Conclusions and future developments}
 \label{ch:conclusions}%
-A final chapter containing the main conclusions of your research/study
-and possible future developments of your work have to be inserted in this chapter.
+\input{Chapters/Conclusions.tex}
 
 %-------------------------------------------------------------------------
 %	BIBLIOGRAPHY
@@ -241,12 +240,8 @@ and possible future developments of your work have to be inserted in this chapte
 \addtocontents{toc}{\vspace{2em}} % Add a gap in the Contents, for aesthetics
 \appendix
 \chapter{Appendix A}
-If you need to include an appendix to support the research in your thesis, you can place it at the end of the manuscript.
-An appendix contains supplementary material (figures, tables, data, codes, mathematical proofs, surveys, \dots)
-which supplement the main results contained in the previous chapters.
-
-\chapter{Appendix B}
-It may be necessary to include another appendix to better organize the presentation of supplementary material.
+\label{ch:appendixA}%
+\input{Chapters/AppendixA.tex}
 
 
 % LIST OF FIGURES
@@ -257,15 +252,15 @@ It may be necessary to include another appendix to better organize the presentat
 
 % LIST OF SYMBOLS
 % Write out the List of Symbols in this page
-\chapter*{List of Symbols} % You have to include a chapter for your list of symbols (
-\begin{table}[H]
-    \centering
-    \begin{tabular}{lll}
-        \textbf{Variable} & \textbf{Description} & \textbf{SI unit} \\\hline\\[-9px]
-        $\bm{u}$ & solid displacement & m \\[2px]
-        $\bm{u}_f$ & fluid displacement & m \\[2px]
-    \end{tabular}
-\end{table}
+% \chapter*{List of Symbols} % You have to include a chapter for your list of symbols (
+% \begin{table}[H]
+%     \centering
+%     \begin{tabular}{lll}
+%         \textbf{Variable} & \textbf{Description} & \textbf{SI unit} \\\hline\\[-9px]
+%         $\bm{u}$ & solid displacement & m \\[2px]
+%         $\bm{u}_f$ & fluid displacement & m \\[2px]
+%     \end{tabular}
+% \end{table}
 
 % ACKNOWLEDGEMENTS
 \chapter*{Acknowledgements}

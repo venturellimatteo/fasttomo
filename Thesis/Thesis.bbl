@@ -1,4 +1,4 @@
-\begin{thebibliography}{41}
+\begin{thebibliography}{64}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -12,8 +12,8 @@ Susan Solomon, Gian-Kasper Plattner, Reto Knutti, and Pierre Friedlingstein.
 
 \bibitem[Tans and Keeling(2023)]{noaa-co2}
 Pieter Tans and Ralph Keeling.
-\newblock Trends in atmoshperic carbon dioxide.
-\newblock Technical report, NOAA/GML, 2023.
+\newblock \emph{Trends in Atmoshperic Carbon Dioxide}.
+\newblock NOAA/GML, 2023.
 \newblock URL \url{https://www.gml.noaa.gov/ccgg/trends/}.
 
 \bibitem[Organization et~al.(2016)]{world2016ambient}
@@ -21,10 +21,9 @@ World~Health Organization et~al.
 \newblock Ambient air pollution: A global assessment of exposure and burden of disease.
 \newblock 2016.
 
-\bibitem[IEA(2023)]{iea-transport}
-IEA.
-\newblock Greenhouse gas emissions from energy data explorer.
-\newblock Technical report, 2023.
+\bibitem[Int(2023{\natexlab{a}})]{iea-transport}
+\emph{Greenhouse Gas Emissions from Energy Data Explorer}.
+\newblock International Energy Agency (IEA), 2023{\natexlab{a}}.
 \newblock URL \url{https://www.iea.org/data-and-statistics/data-tools/greenhouse-gas-emissions-from-energy-data-explorer}.
 
 \bibitem[Zubi et~al.(2018)Zubi, Dufo-L{\'o}pez, Carvalho, and Pasaoglu]{zubi2018lithium}
@@ -134,7 +133,7 @@ Abhishek Das, Dezhi Li, David Williams, and David Greenwood.
 
 \bibitem[Santhanagopalan et~al.(2013)Santhanagopalan, Yang, and Pesaran]{santhanagopalan2013modeling}
 Shriram Santhanagopalan, Chuanbo Yang, and Ahmad Pesaran.
-\newblock Modeling lithium ion battery safety: Venting of pouch cells; nrel (national renewable energy laboratory).
+\newblock Modeling lithium ion battery safety: Venting of pouch cells.
 \newblock Technical report, National Renewable Energy Lab.(NREL), Golden, CO (United States), 2013.
 
 \bibitem[Kang et~al.(2020)Kang, Deng, Chen, Liu, Liang, Li, Hu, and Zhao]{kang2020binder}
@@ -142,10 +141,10 @@ Yuqiong Kang, Changjian Deng, Yuqing Chen, Xinyi Liu, Zheng Liang, Tao Li, Quan 
 \newblock Binder-free electrodes and their application for li-ion batteries.
 \newblock \emph{Nanoscale Research Letters}, 15:\penalty0 1--19, 2020.
 
-\bibitem[Wang et~al.(2019)Wang, Mao, Stoliarov, and Sun]{wang2019review}
+\bibitem[Wang et~al.(2019{\natexlab{a}})Wang, Mao, Stoliarov, and Sun]{wang2019review}
 Qingsong Wang, Binbin Mao, Stanislav~I Stoliarov, and Jinhua Sun.
 \newblock A review of lithium ion battery failure mechanisms and fire prevention strategies.
-\newblock \emph{Progress in Energy and Combustion Science}, 73:\penalty0 95--131, 2019.
+\newblock \emph{Progress in Energy and Combustion Science}, 73:\penalty0 95--131, 2019{\natexlab{a}}.
 
 \bibitem[Love et~al.(2018)Love, Buesser, Johannes, and Swider-Lyons]{love2018innovating}
 Corey~T Love, Christopher Buesser, Michelle~D Johannes, and Karen~E Swider-Lyons.
@@ -172,14 +171,20 @@ PG~Balakrishnan, R~Ramesh, and T~Prem Kumar.
 \newblock Safety mechanisms in lithium-ion batteries.
 \newblock \emph{Journal of power sources}, 155\penalty0 (2):\penalty0 401--414, 2006.
 
-\bibitem[EUCAR(2019)]{eucar2019}
-EUCAR.
-\newblock Battery requirements for future automotive applications, July 2019.
-
 \bibitem[Wang et~al.(2012)Wang, Ping, Zhao, Chu, Sun, and Chen]{wang2012thermal}
 Qingsong Wang, Ping Ping, Xuejuan Zhao, Guanquan Chu, Jinhua Sun, and Chunhua Chen.
 \newblock Thermal runaway caused fire and explosion of lithium ion battery.
 \newblock \emph{Journal of power sources}, 208:\penalty0 210--224, 2012.
+
+\bibitem[Maleki et~al.(1999)Maleki, Deng, Anani, and Howard]{maleki1999thermal}
+Hossein Maleki, Guoping Deng, Anaba Anani, and Jason Howard.
+\newblock Thermal stability studies of li-ion cells and components.
+\newblock \emph{Journal of The electrochemical society}, 146\penalty0 (9):\penalty0 3224, 1999.
+
+\bibitem[Finegan et~al.(2016)Finegan, Scheel, Robinson, Tjaden, Di~Michiel, Hinds, Brett, and Shearing]{finegan2016investigating}
+Donal~P Finegan, Mario Scheel, James~B Robinson, Bernhard Tjaden, Marco Di~Michiel, Gareth Hinds, Dan~JL Brett, and Paul~R Shearing.
+\newblock Investigating lithium-ion battery materials during overcharge-induced thermal runaway: an operando and multi-scale x-ray ct study.
+\newblock \emph{Physical Chemistry Chemical Physics}, 18\penalty0 (45):\penalty0 30912--30919, 2016.
 
 \bibitem[Guo et~al.(2010)Guo, Long, Cheng, Zhou, Xu, and Cao]{guo2010three}
 Guifang Guo, Bo~Long, Bo~Cheng, Shiqiong Zhou, Peng Xu, and Binggang Cao.
@@ -196,19 +201,121 @@ Joshua Lamb and Christopher~J Orendorff.
 \newblock Evaluation of mechanical abuse techniques in lithium ion batteries.
 \newblock \emph{Journal of Power Sources}, 247:\penalty0 189--196, 2014.
 
-\bibitem[Maleki et~al.(1999)Maleki, Deng, Anani, and Howard]{maleki1999thermal}
-Hossein Maleki, Guoping Deng, Anaba Anani, and Jason Howard.
-\newblock Thermal stability studies of li-ion cells and components.
-\newblock \emph{Journal of The electrochemical society}, 146\penalty0 (9):\penalty0 3224, 1999.
+\bibitem[Jung et~al.(2017)Jung, Metzger, Maglia, Stinner, and Gasteiger]{jung2017oxygen}
+Roland Jung, Michael Metzger, Filippo Maglia, Christoph Stinner, and Hubert~A Gasteiger.
+\newblock Oxygen release and its effect on the cycling stability of linixmnycozo2 (nmc) cathode materials for li-ion batteries.
+\newblock \emph{Journal of The Electrochemical Society}, 164\penalty0 (7):\penalty0 A1361, 2017.
 
-\bibitem[Finegan et~al.(2016)Finegan, Scheel, Robinson, Tjaden, Di~Michiel, Hinds, Brett, and Shearing]{finegan2016investigating}
-Donal~P Finegan, Mario Scheel, James~B Robinson, Bernhard Tjaden, Marco Di~Michiel, Gareth Hinds, Dan~JL Brett, and Paul~R Shearing.
-\newblock Investigating lithium-ion battery materials during overcharge-induced thermal runaway: an operando and multi-scale x-ray ct study.
-\newblock \emph{Physical Chemistry Chemical Physics}, 18\penalty0 (45):\penalty0 30912--30919, 2016.
+\bibitem[Wang et~al.(2015)Wang, Hu, Yin, Li, Huo, Zhou, and Li]{wang2015alumina}
+Jing Wang, Zhiyu Hu, Xiunan Yin, Yunchao Li, Hong Huo, Jianjun Zhou, and Lin Li.
+\newblock Alumina/phenolphthalein polyetherketone ceramic composite polypropylene separator film for lithium ion power batteries.
+\newblock \emph{Electrochimica Acta}, 159:\penalty0 61--65, 2015.
+
+\bibitem[Ren et~al.(2017)Ren, Feng, Lu, Ouyang, Zheng, Li, and He]{ren2017electrochemical}
+Dongsheng Ren, Xuning Feng, Languang Lu, Minggao Ouyang, Siqi Zheng, Jianqiu Li, and Xiangming He.
+\newblock An electrochemical-thermal coupled overcharge-to-thermal-runaway model for lithium ion battery.
+\newblock \emph{Journal of power sources}, 364:\penalty0 328--340, 2017.
+
+\bibitem[Tarascon and Armand(2001)]{tarascon2001issues}
+J-M Tarascon and Michel Armand.
+\newblock Issues and challenges facing rechargeable lithium batteries.
+\newblock \emph{nature}, 414\penalty0 (6861):\penalty0 359--367, 2001.
+
+\bibitem[Kim et~al.(2014)Kim, Choi, Cho, Park, Cho, Lee, Lee, Shim, and Lee]{kim2014shape}
+Se-Hee Kim, Keun-Ho Choi, Sung-Ju Cho, Joo-Sung Park, Kuk~Young Cho, Chang~Kee Lee, Sang~Bong Lee, Jin~Kie Shim, and Sang-Young Lee.
+\newblock A shape-deformable and thermally stable solid-state electrolyte based on a plastic crystal composite polymer electrolyte for flexible/safer lithium-ion batteries.
+\newblock \emph{Journal of Materials Chemistry A}, 2\penalty0 (28):\penalty0 10854--10861, 2014.
+
+\bibitem[Liu et~al.(2020)Liu, Jia, Yuan, Wang, Gao, Yin, and Xu]{liu2020safety}
+Binghe Liu, Yikai Jia, Chunhao Yuan, Lubing Wang, Xiang Gao, Sha Yin, and Jun Xu.
+\newblock Safety issues and mechanisms of lithium-ion battery cell upon mechanical abusive loading: A review.
+\newblock \emph{Energy Storage Materials}, 24:\penalty0 85--112, 2020.
 
 \bibitem[Semenov(2013)]{semenov2013some}
 Nikola~Nikolaevich Semenov.
 \newblock \emph{Some Problems of Chemical Kinetics and Reactivity: Volume 1}, volume~1.
 \newblock Elsevier, 2013.
+
+\bibitem[Liu et~al.(2015)Liu, Stoliarov, Denlinger, Masias, and Snyder]{liu2015comprehensive}
+Xuan Liu, Stanislav~I Stoliarov, Matthew Denlinger, Alvaro Masias, and Kent Snyder.
+\newblock Comprehensive calorimetry of the thermally-induced failure of a lithium ion battery.
+\newblock \emph{Journal of Power Sources}, 280:\penalty0 516--525, 2015.
+
+\bibitem[Feng et~al.(2014)Feng, Fang, He, Ouyang, Lu, Wang, and Zhang]{feng2014thermal}
+Xuning Feng, Mou Fang, Xiangming He, Minggao Ouyang, Languang Lu, Hao Wang, and Mingxuan Zhang.
+\newblock Thermal runaway features of large format prismatic lithium ion battery using extended volume accelerating rate calorimetry.
+\newblock \emph{Journal of power sources}, 255:\penalty0 294--301, 2014.
+
+\bibitem[Min(2015)]{GBT31485}
+\emph{GB/T 31485-2015}.
+\newblock Ministry of Industry and Information Technology of the People's Republic of China, May 2015.
+
+\bibitem[Soc(2021)]{SAE2464}
+\emph{J2464-202108}.
+\newblock Society of Automotive Engineers (SAE), August 2021.
+
+\bibitem[Int(2021)]{IEC62133-2}
+\emph{IEC 62133-2}.
+\newblock International Electrochemical Commission (IEC), July 2021.
+
+\bibitem[Uni(2015)]{UN38.3}
+\emph{UN38.3, Transport of Dangerous Goods}.
+\newblock United Nations, 2015.
+
+\bibitem[Jap(2020)]{JISC8714}
+\emph{JIS C 8714}.
+\newblock Japanese Industrial Standard (JIS), October 2020.
+
+\bibitem[Und(2022)]{UL2580}
+\emph{UL 2580}.
+\newblock Underwriters Laboratories (UL), June 2022.
+
+\bibitem[Int(2023{\natexlab{b}})]{ISO16750-2:2023}
+\emph{ISO 16750-2:2023}.
+\newblock International Standardization Organization (ISO), 2023{\natexlab{b}}.
+
+\bibitem[Ohsaki et~al.(2005)Ohsaki, Kishi, Kuboki, Takami, Shimura, Sato, Sekino, and Satoh]{ohsaki2005overcharge}
+Takahisa Ohsaki, Takashi Kishi, Takashi Kuboki, Norio Takami, Nao Shimura, Yuichi Sato, Masahiro Sekino, and Asako Satoh.
+\newblock Overcharge reaction of lithium-ion batteries.
+\newblock \emph{Journal of power sources}, 146\penalty0 (1-2):\penalty0 97--100, 2005.
+
+\bibitem[Arai et~al.(2015)Arai, Okada, Sugiyama, Izuka, Gotoh, and Takeda]{arai2015situ}
+J~Arai, Y~Okada, T~Sugiyama, M~Izuka, K~Gotoh, and K~Takeda.
+\newblock In situ solid state 7li nmr observations of lithium metal deposition during overcharge in lithium ion batteries.
+\newblock \emph{Journal of The Electrochemical Society}, 162\penalty0 (6):\penalty0 A952, 2015.
+
+\bibitem[Lisbona and Snee(2011)]{lisbona2011review}
+Diego Lisbona and Timothy Snee.
+\newblock A review of hazards associated with primary lithium and lithium-ion batteries.
+\newblock \emph{Process safety and environmental protection}, 89\penalty0 (6):\penalty0 434--442, 2011.
+
+\bibitem[LI et~al.(2008)LI, GAO, and ZHANG]{li2008effect}
+Hui-Fang LI, Jun-Kui GAO, and Shao-Li ZHANG.
+\newblock Effect of overdischarge on swelling and recharge performance of lithium ion cells.
+\newblock \emph{Chinese journal of chemistry}, 26\penalty0 (9):\penalty0 1585--1588, 2008.
+
+\bibitem[Ouyang et~al.(2018)Ouyang, Chen, Liu, Wei, Weng, and Wang]{ouyang2018investigation}
+Dongxu Ouyang, Mingyi Chen, Jiahao Liu, Ruichao Wei, Jingwen Weng, and Jian Wang.
+\newblock Investigation of a commercial lithium-ion battery under overcharge/over-discharge failure conditions.
+\newblock \emph{RSC advances}, 8\penalty0 (58):\penalty0 33414--33424, 2018.
+
+\bibitem[Fransson(2024)]{fransson2024phd}
+Matilda Fransson.
+\newblock \emph{Understanding Battery Failure using High-Speed X-ray Imaging}.
+\newblock PhD thesis, University College London, 2024.
+
+\bibitem[Wang et~al.(2019{\natexlab{b}})Wang, Yang, Li, Wang, and Wang]{wang2019thermal}
+Zhi Wang, Han Yang, Yan Li, Guo Wang, and Jian Wang.
+\newblock Thermal runaway and fire behaviors of large-scale lithium ion batteries with different heating methods.
+\newblock \emph{Journal of hazardous materials}, 379:\penalty0 120730, 2019{\natexlab{b}}.
+
+\bibitem[Bandhauer et~al.(2011)Bandhauer, Garimella, and Fuller]{bandhauer2011critical}
+Todd~M Bandhauer, Srinivas Garimella, and Thomas~F Fuller.
+\newblock A critical review of thermal issues in lithium-ion batteries.
+\newblock \emph{Journal of the electrochemical society}, 158\penalty0 (3):\penalty0 R1, 2011.
+
+\bibitem[EUC(2019)]{eucar2019}
+\emph{Battery requirements for future automotive applications}.
+\newblock EUCAR, July 2019.
 
 \end{thebibliography}
