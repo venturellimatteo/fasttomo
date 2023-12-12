@@ -1,4 +1,4 @@
-\begin{thebibliography}{64}
+\begin{thebibliography}{67}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -245,6 +245,21 @@ Xuan Liu, Stanislav~I Stoliarov, Matthew Denlinger, Alvaro Masias, and Kent Snyd
 Xuning Feng, Mou Fang, Xiangming He, Minggao Ouyang, Languang Lu, Hao Wang, and Mingxuan Zhang.
 \newblock Thermal runaway features of large format prismatic lithium ion battery using extended volume accelerating rate calorimetry.
 \newblock \emph{Journal of power sources}, 255:\penalty0 294--301, 2014.
+
+\bibitem[Torabi and Esfahanian(2011)]{torabi2011study}
+F~Torabi and V~Esfahanian.
+\newblock Study of thermal--runaway in batteries i. theoretical study and formulation.
+\newblock \emph{Journal of The Electrochemical Society}, 158\penalty0 (8):\penalty0 A850, 2011.
+
+\bibitem[Wang et~al.(2010)Wang, Ping, and Sun]{wang2010catastrophe}
+Qingsong Wang, Ping Ping, and Jinhua Sun.
+\newblock Catastrophe analysis of cylindrical lithium ion battery.
+\newblock \emph{Nonlinear Dynamics}, 61:\penalty0 763--772, 2010.
+
+\bibitem[Onda et~al.(2006)Onda, Ohshima, Nakayama, Fukuda, and Araki]{onda2006thermal}
+Kazuo Onda, Takamasa Ohshima, Masato Nakayama, Kenichi Fukuda, and Takuto Araki.
+\newblock Thermal behavior of small lithium-ion battery during rapid charge and discharge cycles.
+\newblock \emph{Journal of Power sources}, 158\penalty0 (1):\penalty0 535--542, 2006.
 
 \bibitem[Min(2015)]{GBT31485}
 \emph{GB/T 31485-2015}.

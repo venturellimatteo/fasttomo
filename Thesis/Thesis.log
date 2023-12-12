@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.10.27)  11 DEC 2023 09:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.10.27)  12 DEC 2023 15:48
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1166,24 +1166,24 @@ File: Images/Chapter2/semenov-plot.png Graphic file (type png)
 <use Images/Chapter2/semenov-plot.png>
 Package pdftex.def Info: Images/Chapter2/semenov-plot.png  used on input line 87.
 (pdftex.def)             Requested size: 318.66948pt x 238.39046pt.
- [20 <./Images/Chapter2/semenov-plot.png>] [21] [22]
-<Images/Chapter2/overcharge-failure.png, id=590, 910.40125pt x 746.79pt>
+ [20 <./Images/Chapter2/semenov-plot.png>] [21] [22] [23] [24]
+<Images/Chapter2/overcharge-failure.png, id=630, 910.40125pt x 746.79pt>
 File: Images/Chapter2/overcharge-failure.png Graphic file (type png)
 <use Images/Chapter2/overcharge-failure.png>
-Package pdftex.def Info: Images/Chapter2/overcharge-failure.png  used on input line 196.
+Package pdftex.def Info: Images/Chapter2/overcharge-failure.png  used on input line 251.
 (pdftex.def)             Requested size: 364.19667pt x 298.74489pt.
- [23] [24{/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc} <./Images/Chapter2/overcharge-failure.png>]
-<Images/Chapter2/mechanical-failure.png, id=624, 861.2175pt x 370.38374pt>
+ [25{/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}] [26 <./Images/Chapter2/overcharge-failure.png>]
+<Images/Chapter2/mechanical-failure.png, id=659, 861.2175pt x 370.38374pt>
 File: Images/Chapter2/mechanical-failure.png Graphic file (type png)
 <use Images/Chapter2/mechanical-failure.png>
-Package pdftex.def Info: Images/Chapter2/mechanical-failure.png  used on input line 219.
+Package pdftex.def Info: Images/Chapter2/mechanical-failure.png  used on input line 274.
 (pdftex.def)             Requested size: 273.14923pt x 117.47401pt.
- [25 <./Images/Chapter2/mechanical-failure.png (PNG copy)>]
-Underfull \hbox (badness 10000) in paragraph at lines 242--242
+ [27 <./Images/Chapter2/mechanical-failure.png (PNG copy)>]
+Underfull \hbox (badness 10000) in paragraph at lines 297--297
 []|\T1/cmr/bx/n/10 Hazard
  []
 
-) [26] [27]
+) [28] [29]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
 (epstopdf)                    date: 2023-11-07 08:46:26
 (epstopdf)                    size: 1813066 bytes
@@ -1197,11 +1197,11 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 212.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [28
+ [30
 
 ]
 Chapter 3.
-(./Chapters/Imaging.tex) [29
+(./Chapters/Imaging.tex) [31
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1217,17 +1217,17 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 216.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [30
+ [32
 
 ]
 Chapter 4.
 (./Chapters/Segmentation.tex
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on input line 3.
-) [31
+) [33
 
-] [32]
+] [34]
 Chapter 5.
-(./Chapters/Conclusions.tex) (./Thesis.bbl [33
+(./Chapters/Conclusions.tex) (./Thesis.bbl [35
 
 
 ]
@@ -1244,18 +1244,18 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 1.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [34
+ [36
 
 ]
 Underfull \hbox (badness 2302) in paragraph at lines 14--18
 []\T1/cmr/m/n/12 Pieter Tans and Ralph Keel-ing.  \T1/cmr/m/it/12 Trends in At-mosh-peric Car-bon Diox-ide\T1/cmr/m/n/12 .
  []
 
-[35
+[37
 
-] [36] [37] [38] [39]) [40]
+] [38] [39] [40] [41]) [42]
 Appendix A.
-(./Chapters/AppendixA.tex) [41
+(./Chapters/AppendixA.tex) [43
 
 
 
@@ -1273,13 +1273,13 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 248.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [42
+ [44
 
 ] (./Thesis.lof)
 \tf@lof=\write6
 \openout6 = `Thesis.lof'.
 
- [43
+ [45
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1295,13 +1295,13 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 251.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [44
+ [46
 
 ] (./Thesis.lot)
 \tf@lot=\write7
 \openout7 = `Thesis.lot'.
 
- [45
+ [47
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1317,9 +1317,9 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 266.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [46
+ [48
 
-] [47
+] [49
 
 ]
 Package epstopdf Info: Source file: <./Images//./raggiera_polimi.eps>
@@ -1335,25 +1335,25 @@ File: ./Images//./raggiera_polimi-eps-converted-to.pdf Graphic file (type pdf)
 <use ./Images//./raggiera_polimi-eps-converted-to.pdf>
 Package pdftex.def Info: ./Images//./raggiera_polimi-eps-converted-to.pdf  used on input line 269.
 (pdftex.def)             Requested size: 507.88533pt x 507.88051pt.
- [48
+ [50
 
 ] (./Thesis.aux)
 Package rerunfilecheck Info: File `Thesis.out' has not changed.
-(rerunfilecheck)             Checksum: 1F5DD446C4874F65ADE9293CB507EC9C;5713.
+(rerunfilecheck)             Checksum: 584343E8EA632BFD59672C38F045E5B6;5713.
  ) 
 Here is how much of TeX's memory you used:
- 30890 strings out of 476025
- 585119 string characters out of 5790016
+ 30932 strings out of 476025
+ 585867 string characters out of 5790016
  1868388 words of memory out of 5000000
- 50468 multiletter control sequences out of 15000+600000
+ 50491 multiletter control sequences out of 15000+600000
  537733 words of font info for 95 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,15n,89p,1412b,754s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx0800.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1728.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sftt1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfxc1200.pfb>
-Output written on Thesis.pdf (56 pages, 6456082 bytes).
+</usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx0800.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1728.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sftt1200.pfb></usr/local/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfxc1200.pfb>
+Output written on Thesis.pdf (58 pages, 6478647 bytes).
 PDF statistics:
- 977 PDF objects out of 1000 (max. 8388607)
- 806 compressed objects within 9 object streams
- 246 named destinations out of 1000 (max. 500000)
+ 1020 PDF objects out of 1200 (max. 8388607)
+ 845 compressed objects within 9 object streams
+ 265 named destinations out of 1000 (max. 500000)
  446 words of extra memory for PDF output out of 10000 (max. 10000000)
 
