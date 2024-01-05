@@ -103,7 +103,7 @@ Semenov model allows a simple and clear interpretation of the thermal runaway pr
     \frac{\partial\left(\rho C_p T\right)}{\partial t}=-\nabla(k \nabla T)+Q_{\mathrm{ab}-\text{chem}}+Q_{\text{joul}}+Q_{\mathrm{S}}+Q_{\mathrm{p}}+Q_{\mathrm{ex}}
 \end{equation}
 
-where $\rho$ [g cm$^{-3}$] is the density, $C_p$ [J g$^{-1}$ K$^{-1}$] is the  heat capacity, $T$ [K] is the temperature, $t$ [s] is the time and $k$ [W cm$^{-1}$ K$^{-1}$] is the thermal conductivity. $Q_{\mathrm{ab}-\text{chem}}$ is the abuse chemical reaction in the battery, and the detailed reactions will be discussed in Section \ref{sec:basic-reactions}. $Q_{\text{joul}}$ is the Joule heating in the battery, $Q_{\mathrm{S}}$ is the entropy change heat, $Q_{\mathrm{p}}$ is the overpotential heat and $Q_{\mathrm{ex}}$ is the heat exchange between the system and the ambient.
+where $\rho$ [g cm$^{-3}$] is the density, $C_p$ [J g$^{-1}$ K$^{-1}$] is the  heat capacity, $T$ [K] is the temperature, $t$ [s] is the time and $k$ [W cm$^{-1}$ K$^{-1}$] is the thermal conductivity. $Q_{\mathrm{ab}-\text{chem}}$ is the abuse chemical reaction heat in the battery (reactions will be discussed in detail in Section \ref{sec:basic-reactions}), $Q_{\text{joul}}$ is the Joule heating in the battery, $Q_{\mathrm{S}}$ is the entropy change heat, $Q_{\mathrm{p}}$ is the overpotential heat and $Q_{\mathrm{ex}}$ is the heat exchange between the system and the ambient.
 
 The reaction heat generation is the total result of all possible reactions when the battery is undergoing a thermal runaway, mainly including SEI decomposition, electrodes reaction with electrolyte, electrodes decomposition. For the individual reaction, the heat generation can be expressed as $Q_{\mathrm{ab}-\text{chem}}$ \cite{wang2010catastrophe}:
 
@@ -155,30 +155,24 @@ where $h$ is the convective heat transfer coefficient, $A$ is the surface area o
 
 \subsection{Basic Reactions}
 \label{sec:basic-reactions}
+The term $Q_{\mathrm{ab}-\text{chem}}$ involves several stages contributing to the buildup of the thermal runaway, and each one causes progressively more permanent damage to the cell. % As temperature increases, the battery undergoes the following chemical transformations: SEI layer decomposition, reaction between the anode material and electrolyte, reaction between the cathode material and electrolyte, electrolyte decomposition and reaction between the anode and the binder \cite{wang2012thermal}. Many of them may occur simultaneously.
+
 \begin{table}[ht]
     \centering
     \begin{footnotesize}
-        \begin{tabular}{|P{55mm} P{28mm} P{20mm}|}
+        \begin{tabular}{|P{120mm} P{25mm}|}
             \hline
             \rowcolor{bluepoli!40}
-            \vspace{0.1mm}\textbf{Reactions} & \textbf{Temperature range [$^\circ$C]} & \textbf{Enthalpy [J/g]}\T\B \\
+            \vspace{0.1mm}\textbf{Reactions} & \textbf{Temperature range [$^\circ$C]}\T\B \\
             \hline \hline
 
-            SEI decomposition & 100-130 & 186-257\T\B\\
+            SEI decomposition: $\left(\mathrm{CH}_2 \mathrm{OCO}_2 \mathrm{Li}\right)_2 \rightarrow \mathrm{Li}_2 \mathrm{CO}_3+\mathrm{C}_2 \mathrm{H}_4+\mathrm{CO}_2+\frac{1}{2} \mathrm{O}_2$& 100-130\T\B\\
 
-            LiC$_6$/electrolyte & 110-290 & 1460-1714\T\B\\
+            Li$_x$CoO$_2$ decomposition & 178-250\T\B\\
 
-            LiC$_6$/PVDF & 220-400 & 1100-1500\T\B\\
+            Li$_x$CoO$_2$/electrolyte & 167-300\T\B\\
 
-            Li$_x$CoO$_2$ decomposition & 178-250 & 146\T\B\\
-
-            Li$_x$Ni$_{0.8}$Co$_{0.2}$O$_2$ decomposition & 175-340 & 115\T\B\\
-
-            Li$_x$CoO$_2$/electrolyte & 167-300 & 381-625\T\B\\
-
-            Li$_x$Ni$_{0.8}$Co$_{0.2}$O$_2$/electrolyte & 180-230 & 600-1256\T\B\\
-
-            Electrolyte decomposition & 225-300 & 155-258\T\B\\
+            Electrolyte decomposition & 225-300 \T\B\\
             \hline
         \end{tabular}
         \\[10pt]
@@ -187,7 +181,37 @@ where $h$ is the convective heat transfer coefficient, $A$ is the surface area o
     \end{footnotesize}
 \end{table}
 
+% \begin{table}[ht]
+%     \centering
+%     \begin{footnotesize}
+%         \begin{tabular}{|P{55mm} P{28mm} P{20mm}|}
+%             \hline
+%             \rowcolor{bluepoli!40}
+%             \vspace{0.1mm}\textbf{Reactions} & \textbf{Temperature range [$^\circ$C]} & \textbf{Enthalpy [J/g]}\T\B \\
+%             \hline \hline
 
+%             SEI decomposition & 100-130 & 186-257\T\B\\
+
+%             LiC$_6$/electrolyte & 110-290 & 1460-1714\T\B\\
+
+%             LiC$_6$/PVDF & 220-400 & 1100-1500\T\B\\
+
+%             Li$_x$CoO$_2$ decomposition & 178-250 & 146\T\B\\
+
+%             Li$_x$Ni$_{0.8}$Co$_{0.2}$O$_2$ decomposition & 175-340 & 115\T\B\\
+
+%             Li$_x$CoO$_2$/electrolyte & 167-300 & 381-625\T\B\\
+
+%             Li$_x$Ni$_{0.8}$Co$_{0.2}$O$_2$/electrolyte & 180-230 & 600-1256\T\B\\
+
+%             Electrolyte decomposition & 225-300 & 155-258\T\B\\
+%             \hline
+%         \end{tabular}
+%         \\[10pt]
+%         \caption[Exothermic reactions occurring in LIBs]{Temperature ranges and enthalpies of various exothermic reactions occurring in LIBs. Source: Chen (2021) \cite{chen2021review}.}
+%         \label{table:reactions}
+%     \end{footnotesize}
+% \end{table}
 
 \section{Safety Standards}
 \label{sec:safety-standards}
