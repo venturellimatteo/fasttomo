@@ -17,7 +17,7 @@ def OS_path(exp, OS):
     elif OS=='Linux': return '/data/projects/whaitiri/Data/Data_Processing_July2022/rot_datasets/' + exp
     else: raise ValueError('OS not recognized')
 
-# Missing features: tqdm, 4d filtering, df construction, plots
+# Missing features: 4d filtering, df construction, plots
 
 class CT_data:
 
