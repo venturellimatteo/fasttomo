@@ -1,6 +1,6 @@
 import numpy as np    
 from numpy.lib.format import open_memmap                           
-from skimage.measure import label, regionprops, marching_cubes
+from skimage.measure import label, regionprops
 from skimage.morphology import erosion, dilation, ball    
 from tqdm import tqdm                               
 import pandas as pd
@@ -95,7 +95,6 @@ def segment3D(volume, threshold, filtering3D=True, smallest_3Dvolume=50):
     mask = label(np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(4))))
     if filtering3D:
         remove_small_agglomerates(mask, smallest_3Dvolume)
-        remove_isolated_agglomerates(mask)
     return mask
 
 # function returning the path of the experiment given the experiment name and the OS
@@ -177,7 +176,6 @@ def propagate_labels(previous_mask, current_mask, forward=True):
     for previous_mask_label in ordered_labels:
         propagation_map = update_map(current_mask, previous_mask, previous_mask_label, propagation_map)
 
-    # START OF NEW CODE
     lookup_table = np.arange(np.max(current_mask)+1)
     for current_slice_label, previous_mask_label in propagation_map.items():
         lookup_table[current_slice_label] = previous_mask_label[0]
@@ -185,14 +183,6 @@ def propagate_labels(previous_mask, current_mask, forward=True):
         new_labels = np.unique(current_mask[current_mask > max_label])
         lookup_table[new_labels] = np.arange(len(new_labels)) + max_label + 1
     current_mask = np.take(lookup_table, current_mask)
-    # END OF NEW CODE
-    # for current_slice_label, previous_mask_label in propagation_map.items():
-    #     current_mask[current_mask == current_slice_label] = previous_mask_label[0]
-    # if forward:
-    #     new_labels = np.unique(current_mask[current_mask > max_label])
-    #     lookup_table = np.arange(np.max(new_labels)+1)
-    #     lookup_table[new_labels] = np.arange(len(new_labels)) + max_label + 1
-    #     current_mask = np.take(lookup_table, current_mask)
     return current_mask
 
 
