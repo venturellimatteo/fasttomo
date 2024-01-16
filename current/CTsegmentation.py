@@ -1,10 +1,11 @@
 import numpy as np    
 from numpy.lib.format import open_memmap      
 from skimage.io import imshow                     
-from skimage.measure import label, regionprops
+from skimage.measure import label, regionprops, marching_cubes
 from skimage.morphology import erosion, dilation, ball    
 from PIL import Image, ImageDraw, ImageFont
-from tqdm import tqdm                               
+from tqdm import tqdm
+from stl import mesh                               
 # import pandas as pd
 # import seaborn as sns
 # import matplotlib.pyplot as plt
@@ -284,6 +285,7 @@ class CT_data:
         settings = napari.settings.get_settings()
         settings.application.playback_fps = 5
         viewer.dims.current_step = (0, 0)
+        return
 
     def slice_movie(self, z, img_min=0, img_max=6, fps=7):
         movie_path = os.path.join(self._dir, 'movies', f'slice {z} movie')
@@ -298,6 +300,7 @@ class CT_data:
             image.save(img_path)
         movie = Movie(movie_path, img_path, self._exp)
         movie.write(fps)
+        return
 
     def render_movie(self, fps=5):
         movie_path = f'/Volumes/T7/Thesis/{self._exp}/renders'
@@ -305,3 +308,27 @@ class CT_data:
             movie = Movie(movie_path, os.path.join(movie_path, view), self._exp)
             movie.write(fps)
             print(f'{self._exp} {view} done!')
+        return
+    
+    def create_stls(self):
+        stl_path = f'/Volumes/T7/Thesis/{self._exp}/stls'
+        for time in tqdm(range(self._mask.shape[0]), desc='Creating stl files'):
+            s = self._mask[time].shape
+            mask = np.zeros((s[2], s[1], s[0]+2), dtype=np.ushort)
+            mask[:, :, 1:-1] = np.swapaxes(self._mask[time], 0, 2)
+            time_dir = os.path.join(stl_path, str(time).zfill(3))
+            if not os.path.exists(time_dir):
+                os.makedirs(time_dir)
+            verts, faces, _, values = marching_cubes(mask, 0)
+            verts = (0.004 * verts * np.array([1, 1, -1])) + np.array([-1, -1, 0.5])
+            values = values.astype(np.ushort)
+            for label in np.unique(values):
+                label_faces = faces[np.where(values[faces[:,0]] == label)]
+                stl_mesh = mesh.Mesh(np.zeros(label_faces.shape[0], dtype=mesh.Mesh.dtype))
+                for i, face in enumerate(label_faces):
+                    for j in range(3):
+                        stl_mesh.vectors[i][j] = verts[face[j]]
+                stl_mesh.save(os.path.join(time_dir, str(label).zfill(5) + '.stl'))
+        return
+
+    
