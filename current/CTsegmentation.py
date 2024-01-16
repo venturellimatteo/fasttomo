@@ -3,17 +3,17 @@ from numpy.lib.format import open_memmap
 from skimage.io import imshow                     
 from skimage.measure import label, regionprops, marching_cubes
 from skimage.morphology import erosion, dilation, ball    
+from cv2 import imread, VideoWriter, VideoWriter_fourcc
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 from stl import mesh                               
+import napari
+import os
 # import pandas as pd
 # import seaborn as sns
 # import matplotlib.pyplot as plt
 # from matplotlib.lines import Line2D   
-import napari
-from cv2 import imread, VideoWriter, VideoWriter_fourcc
-import os
-
+ 
 
 def OS_path(exp, OS):
     if OS=='Windows': return 'Z:/rot_datasets/' + exp
@@ -85,25 +85,15 @@ class Movie:
 class CT_data:
 
     def __init__(self, exp, OS='MacOS'):
-        self._dir = OS_path(exp, OS)
-        self._ct = open_memmap(os.path.join(self._dir, 'hypervolume.npy'), mode='r')  # 4D CT-scan
-        mode = 'r+' if os.path.exists(os.path.join(self._dir, 'hypervolume_mask.npy')) else 'w+'
-        self._mask = open_memmap(os.path.join(self._dir, 'hypervolume_mask.npy'),
+        self._path = OS_path(exp, OS)
+        self._ct = open_memmap(os.path.join(self._path, 'hypervolume.npy'), mode='r')  # 4D CT-scan
+        mode = 'r+' if os.path.exists(os.path.join(self._path, 'hypervolume_mask.npy')) else 'w+'
+        self._mask = open_memmap(os.path.join(self._path, 'hypervolume_mask.npy'),
                                  dtype=np.ushort, mode=mode, shape=self._ct.shape)  # 4D CT-scan segmentation map
         self._exp = exp  # Experiment name
         self._index = 0  # Integer value representing the index of the current time instant: used to determine which volume has to be segmented
         self._threshold = 0  # Value used for thresholding (this value is obtained by _find_threshold method
         return
-
-    # def resize(self, xy_pixels=700, z_pixels=260, start_time=, x_shift=, y_shift=, z_shift=):
-    #     os.rename(os.path.join(self._dir, 'hypervolume.npy'), os.path.join(self._dir, 'temp.npy'))
-    #     temp = open_memmap(os.path.join(self._dir, 'temp.npy'), mode='r')
-    #     new_shape = (self._ct.shape[0], z_pixels, xy_pixels, xy_pixels)
-    #     self._ct = open_memmap(os.path.join(self._dir, 'hypervolume.npy'),
-    #                            dtype=np.ushort, mode='w+', shape=new_shape)
-    #     for time in range(temp.shape[0]):
-    #         self._ct[time] = temp[time, :, ]
-    #     return
 
     def _find_biggest_area(self, smaller_ct, SLICES):
         mask = np.greater(smaller_ct, self._threshold)
@@ -278,17 +268,17 @@ class CT_data:
 
     def view(self, mask=True):
         viewer = napari.Viewer()
-        viewer.add_image(self._ct, name='Volume', contrast_limits = [0, 6])
+        viewer.add_image(self._ct, name=f'{self._exp} Volume', contrast_limits = [0, 6])
         if mask:
             viewer.layers['Volume'].opacity = 0.4
-            viewer.add_labels(self._mask, name='Mask', opacity=0.8)
+            viewer.add_labels(self._mask, name=f'{self._exp} Mask', opacity=0.8)
         settings = napari.settings.get_settings()
         settings.application.playback_fps = 5
         viewer.dims.current_step = (0, 0)
         return
 
     def slice_movie(self, z, img_min=0, img_max=6, fps=7):
-        movie_path = os.path.join(self._dir, 'movies', f'slice {z} movie')
+        movie_path = os.path.join(self._path, 'movies', f'slice {z} movie')
         img_path = os.path.join(movie_path, 'frames')
         if not os.path.exists(img_path):
             os.makedirs(img_path)
@@ -316,9 +306,9 @@ class CT_data:
             s = self._mask[time].shape
             mask = np.zeros((s[2], s[1], s[0]+2), dtype=np.ushort)
             mask[:, :, 1:-1] = np.swapaxes(self._mask[time], 0, 2)
-            time_dir = os.path.join(stl_path, str(time).zfill(3))
-            if not os.path.exists(time_dir):
-                os.makedirs(time_dir)
+            time_path = os.path.join(stl_path, str(time).zfill(3))
+            if not os.path.exists(time_path):
+                os.makedirs(time_path)
             verts, faces, _, values = marching_cubes(mask, 0)
             verts = (0.004 * verts * np.array([1, 1, -1])) + np.array([-1, -1, 0.5])
             values = values.astype(np.ushort)
@@ -328,7 +318,7 @@ class CT_data:
                 for i, face in enumerate(label_faces):
                     for j in range(3):
                         stl_mesh.vectors[i][j] = verts[face[j]]
-                stl_mesh.save(os.path.join(time_dir, str(label).zfill(5) + '.stl'))
+                stl_mesh.save(os.path.join(time_path, str(label).zfill(5) + '.stl'))
         return
 
     
