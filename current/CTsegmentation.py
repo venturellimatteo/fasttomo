@@ -87,9 +87,11 @@ class CT_data:
     def __init__(self, exp, OS='MacOS'):
         self._path = OS_path(exp, OS)
         self._ct = open_memmap(os.path.join(self._path, 'hypervolume.npy'), mode='r')  # 4D CT-scan
-        mode = 'r+' if os.path.exists(os.path.join(self._path, 'hypervolume_mask.npy')) else 'w+'
-        self._mask = open_memmap(os.path.join(self._path, 'hypervolume_mask.npy'),
-                                 dtype=np.ushort, mode=mode, shape=self._ct.shape)  # 4D CT-scan segmentation map
+        if os.path.exists(os.path.join(self._path, 'hypervolume_mask.npy')):
+            self._mask = open_memmap(os.path.join(self._path, 'hypervolume_mask.npy'),
+                                     dtype=np.ushort, mode='r+', shape=self._ct.shape)  # 4D CT-scan segmentation map
+        else:
+            self._mask = None
         self._exp = exp  # Experiment name
         self._index = 0  # Integer value representing the index of the current time instant: used to determine which volume has to be segmented
         self._threshold = 0  # Value used for thresholding (this value is obtained by _find_threshold method
@@ -172,27 +174,6 @@ class CT_data:
         lookup_table[new_labels] = np.arange(len(new_labels)) + previous_mask_max_label + 1
         self._mask[self._index] = np.take(lookup_table, current_mask)
         return
-
-    def segment(self, threshold_target=6800, filtering3D=True, smallest_3Dvolume=50):
-        self._threshold_target = threshold_target  # Target area (in pixels) of the external shell of the battery
-        self._filtering3D = filtering3D  # Boolean variable: if True, small agglomerate filtering is computed
-        self._smallest_3Dvolume = smallest_3Dvolume  # Lower bound for the agglomerate volume
-        progress_bar = tqdm(total=self._ct.shape[0], desc=f'{self._exp}', leave=False)
-        progress_bar.set_postfix_str(f'Evaluating threshold')
-        self._find_threshold()
-        progress_bar.set_postfix_str(f'Segmentation #{self._index + 1}')
-        self._segment3d()
-        progress_bar.update()
-        self._index += 1
-        while self._index < self._ct.shape[0]:
-            progress_bar.set_postfix_str(f'Segmentation #{self._index + 1}')
-            self._segment3d()
-            progress_bar.set_postfix_str(f'Propagation #{self._index + 1}')
-            self._propagate()
-            progress_bar.update()
-            self._index += 1
-        progress_bar.close()
-        return
     
     def _compute_regionprops(self):
         self._rps = [regionprops(self._mask[time]) for time in range(self._mask.shape[0])]
@@ -246,7 +227,7 @@ class CT_data:
             self._mask[time] = np.take(lookup_table, self._mask[time])
         return
     
-    def filtering(self, smallest_4Dvolume=250, pre_TR_filtering=True):
+    def _filtering(self, smallest_4Dvolume, pre_TR_filtering):
         progress_bar = tqdm(total=5, desc=f'{self._exp}', leave=False)
         progress_bar.set_postfix_str('Regionprops computation')
         self._compute_regionprops()
@@ -266,18 +247,45 @@ class CT_data:
         progress_bar.close() #5
         return
 
+    def segment(self, threshold_target=6800, filtering3D=True, filtering4D=True, pre_TR_filtering=True,
+                smallest_3Dvolume=50, smallest_4Dvolume=250):
+        if self._mask is None:
+            self._mask = open_memmap(os.path.join(self._path, 'hypervolume_mask.npy'),
+                                     dtype=np.ushort, mode='w+', shape=self._ct.shape)  # 4D CT-scan segmentation map
+        self._threshold_target = threshold_target  # Target area (in pixels) of the external shell of the battery
+        self._filtering3D = filtering3D  # Boolean variable: if True, small agglomerate filtering is computed
+        self._smallest_3Dvolume = smallest_3Dvolume  # Lower bound for the agglomerate volume
+        progress_bar = tqdm(total=self._ct.shape[0], desc=f'{self._exp}', leave=False)
+        progress_bar.set_postfix_str(f'Evaluating threshold')
+        self._find_threshold()
+        progress_bar.set_postfix_str(f'Segmentation #{self._index + 1}')
+        self._segment3d()
+        progress_bar.update()
+        self._index += 1
+        while self._index < self._ct.shape[0]:
+            progress_bar.set_postfix_str(f'Segmentation #{self._index + 1}')
+            self._segment3d()
+            progress_bar.set_postfix_str(f'Propagation #{self._index + 1}')
+            self._propagate()
+            progress_bar.update()
+            self._index += 1
+        progress_bar.close()
+        if filtering4D:
+            self._filtering(smallest_4Dvolume, pre_TR_filtering)
+        return
+
     def view(self, mask=True):
         viewer = napari.Viewer()
         viewer.add_image(self._ct, name=f'{self._exp} Volume', contrast_limits = [0, 6])
-        if mask:
-            viewer.layers['Volume'].opacity = 0.4
+        if mask and not self._mask is None:
+            viewer.layers[f'{self._exp} Volume'].opacity = 0.4
             viewer.add_labels(self._mask, name=f'{self._exp} Mask', opacity=0.8)
         settings = napari.settings.get_settings()
         settings.application.playback_fps = 5
         viewer.dims.current_step = (0, 0)
         return
 
-    def slice_movie(self, z, img_min=0, img_max=6, fps=7):
+    def slice_movie(self, z, img_min=0, img_max=5, fps=7):
         movie_path = os.path.join(self._path, 'movies', f'slice {z} movie')
         img_path = os.path.join(movie_path, 'frames')
         if not os.path.exists(img_path):
@@ -301,6 +309,9 @@ class CT_data:
         return
     
     def create_stls(self):
+        if self._mask is None:
+            print('Mask not found, run CT_data.segment() first!')
+            return
         stl_path = f'/Volumes/T7/Thesis/{self._exp}/stls'
         for time in tqdm(range(self._mask.shape[0]), desc='Creating stl files'):
             s = self._mask[time].shape
