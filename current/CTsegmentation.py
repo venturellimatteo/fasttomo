@@ -86,9 +86,9 @@ class CT_data:
 
     def __init__(self, exp, OS='MacOS'):
         self._path = OS_path(exp, OS)
-        self._ct = open_memmap(os.path.join(self._path, 'hypervolume.npy'), mode='r')  # 4D CT-scan
-        if os.path.exists(os.path.join(self._path, 'hypervolume_mask.npy')):
-            self._mask = open_memmap(os.path.join(self._path, 'hypervolume_mask.npy'),
+        self._ct = open_memmap(os.path.join(self._path, 'ct.npy'), mode='r')  # 4D CT-scan
+        if os.path.exists(os.path.join(self._path, 'mask.npy')):
+            self._mask = open_memmap(os.path.join(self._path, 'mask.npy'),
                                      dtype=np.ushort, mode='r+', shape=self._ct.shape)  # 4D CT-scan segmentation map
         else:
             self._mask = None
@@ -250,7 +250,7 @@ class CT_data:
     def segment(self, threshold_target=6800, filtering3D=True, filtering4D=True, pre_TR_filtering=True,
                 smallest_3Dvolume=50, smallest_4Dvolume=250):
         if self._mask is None:
-            self._mask = open_memmap(os.path.join(self._path, 'hypervolume_mask.npy'),
+            self._mask = open_memmap(os.path.join(self._path, 'mask.npy'),
                                      dtype=np.ushort, mode='w+', shape=self._ct.shape)  # 4D CT-scan segmentation map
         self._threshold_target = threshold_target  # Target area (in pixels) of the external shell of the battery
         self._filtering3D = filtering3D  # Boolean variable: if True, small agglomerate filtering is computed
