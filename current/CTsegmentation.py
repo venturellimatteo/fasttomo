@@ -22,41 +22,42 @@ def OS_path(exp, OS):
     else: raise ValueError('OS not recognized')
 
 # Missing features: ct resizing, df construction, plots
-    
-class _Image:
+
+class CT_slice():
     
     def __init__(self, array):
         self._np = np.copy(array)
+        self._PIL = Image.fromarray(self._np)
+
+    def _PIL_conversion(self):
+        self._PIL = Image.fromarray(self._np)
+        return
 
     def scale(self, img_min, img_max):
         self._np[self._np > img_max] = img_max
         self._np[self._np < img_min] = img_min
         self._np = 255 * (self._np - img_min) / (img_max - img_min)
         self._np = self._np.astype(np.uint8)
-
-    def PIL_conversion(self):
-        self._PIL = Image.fromarray(self._np)
+        self._PIL_conversion()
+        return
 
     def show(self):
         _ = imshow(self._np, cmap='gray')
+        return
 
-
-class CT_slice(_Image):
-    
-    def __init__(self, array, time):
-        super().__init__(array)
-        self._time = time
-
-    def add_time_text(self):
+    def add_time_text(self, time):
         draw = ImageDraw.Draw(self._PIL)
         image_size = self._np.shape[0]
         draw.text(xy=(image_size - 120, image_size - 30),
-                  text=f'Time = {self._time * 50} ms', 
+                  text=f'Time = {time * 50} ms', 
                   font=ImageFont.truetype('Roboto-Regular.ttf', 15),
                   fill='#FFFFFF')
+        self._np = np.array(self._PIL, dtype=np.uint8)
+        return
         
     def save(self, path):
         _ = self._PIL.save(os.path.join(path, str(self._time).zfill(3)+'.png'))
+        return
 
 
 class Movie:
@@ -92,6 +93,11 @@ class CT_data:
                                      dtype=np.ushort, mode='r+', shape=self._ct.shape)  # 4D CT-scan segmentation map
         else:
             self._mask = None
+        if os.path.exists(os.path.join(self._path, 'binary_mask.npy')):
+            self._binary_mask = open_memmap(os.path.join(self._path, 'binary_mask.npy'),
+                                     dtype=np.ushort, mode='r+', shape=self._ct.shape)  # 4D CT-scan binary mask for sidewall rupture rendering
+        else:
+            self._binary_mask = None
         self._exp = exp  # Experiment name
         self._index = 0  # Integer value representing the index of the current time instant: used to determine which volume has to be segmented
         self._threshold = 0  # Value used for thresholding (this value is obtained by _find_threshold method
@@ -222,7 +228,7 @@ class CT_data:
                 all_labels.add(rp.label)
         filtered_labels = all_labels - self._labels_to_remove
         lookup_table = np.zeros(max(all_labels) + 1, dtype=np.ushort)
-        lookup_table[list(filtered_labels)] = np.arange(len(filtered_labels)) + 1
+        lookup_table[sorted(list(filtered_labels))] = np.arange(len(filtered_labels)) + 1
         for time in range(self._ct.shape[0]):
             self._mask[time] = np.take(lookup_table, self._mask[time])
         return
@@ -273,15 +279,28 @@ class CT_data:
         if filtering4D:
             self._filtering(smallest_4Dvolume, pre_TR_filtering)
         return
+    
+    def binary_mask(self, threshold=1):
+        self._threshold = threshold
+        if self._binary_mask is None:
+            self._binary_mask = open_memmap(os.path.join(self._path, 'binary_mask.npy'),
+                                     dtype=np.ushort, mode='w+', shape=self._ct.shape)  # 4D CT-scan segmentation map
+        progress_bar = tqdm(range(self._ct.shape[0]), desc=f'{self._exp}', leave=False)
+        progress_bar.set_postfix_str(f'Binary masking: threshold = {threshold}')
+        for time in progress_bar:
+            self._binary_mask[time] = self._ct[time] > threshold
+        return
 
-    def view(self, mask=True):
+    def view(self, mask=False, binary_mask=False):
         viewer = napari.Viewer()
+        settings = napari.settings.get_settings()
+        settings.application.playback_fps = 5
         viewer.add_image(self._ct, name=f'{self._exp} Volume', contrast_limits = [0, 6])
+        if binary_mask and not self._binary_mask is None:
+            viewer.add_labels(self._binary_mask, name=f'{self._exp} Binary mask', opacity=0.8)
         if mask and not self._mask is None:
             viewer.layers[f'{self._exp} Volume'].opacity = 0.4
             viewer.add_labels(self._mask, name=f'{self._exp} Mask', opacity=0.8)
-        settings = napari.settings.get_settings()
-        settings.application.playback_fps = 5
         viewer.dims.current_step = (0, 0)
         return
 
@@ -290,46 +309,70 @@ class CT_data:
         img_path = os.path.join(movie_path, 'frames')
         if not os.path.exists(img_path):
             os.makedirs(img_path)
-        for t in range(self._ct.shape[0]):
-            image = CT_slice(self._ct[t, z], t)
+        for time in range(self._ct.shape[0]):
+            image = CT_slice(self._ct[time, z])
             image.scale(img_min, img_max)
-            image.PIL_conversion()
-            image.add_time_text()
+            image.add_time_text(time)
             image.save(img_path)
         movie = Movie(movie_path, img_path, self._exp)
         movie.write(fps)
         return
 
     def render_movie(self, fps=5):
-        movie_path = f'/Volumes/T7/Thesis/{self._exp}/renders'
+        movie_path = os.path.join(self._path, 'renders')
         for view in ['top view', 'side view', 'perspective view']:
             movie = Movie(movie_path, os.path.join(movie_path, view), self._exp)
             movie.write(fps)
             print(f'{self._exp} {view} done!')
         return
     
-    def create_stls(self):
+    def _find_mesh(self, time, is_binary_mask):
+        s = self._mask[time].shape
+        mask = np.zeros((s[2], s[1], s[0]+2), dtype=np.ushort)
+        mask[:, :, 1:-1] = np.swapaxes(self._binary_mask[time], 0, 2) if is_binary_mask else np.swapaxes(self._mask[time], 0, 2)
+        verts, faces, _, values = marching_cubes(mask, 0)
+        verts = (0.004 * verts * np.array([1, 1, -1])) + np.array([-1, -1, 0.5])
+        values = values.astype(np.ushort)
+        return verts, faces, values
+    
+    def _save_stl(self, label, verts, faces, values, time_path, is_binary_mask):
+        label_faces = faces[np.where(values[faces[:,0]] == label)]
+        stl_mesh = mesh.Mesh(np.zeros(label_faces.shape[0], dtype=mesh.Mesh.dtype))
+        for i, face in enumerate(label_faces):
+            for j in range(3):
+                stl_mesh.vectors[i][j] = verts[face[j]]
+        name = str(0).zfill(5) if is_binary_mask else str(label).zfill(5)
+        stl_mesh.save(os.path.join(time_path, name + '.stl'))
+        return
+    
+    def _create_agglomerate_stls(self, stl_path, is_sidewall_rupture):
         if self._mask is None:
-            print('Mask not found, run CT_data.segment() first!')
-            return
-        stl_path = f'/Volumes/T7/Thesis/{self._exp}/stls'
+            raise NameError('Mask not found, run CT_data.segment() first!')
         for time in tqdm(range(self._mask.shape[0]), desc='Creating stl files'):
-            s = self._mask[time].shape
-            mask = np.zeros((s[2], s[1], s[0]+2), dtype=np.ushort)
-            mask[:, :, 1:-1] = np.swapaxes(self._mask[time], 0, 2)
             time_path = os.path.join(stl_path, str(time).zfill(3))
             if not os.path.exists(time_path):
                 os.makedirs(time_path)
-            verts, faces, _, values = marching_cubes(mask, 0)
-            verts = (0.004 * verts * np.array([1, 1, -1])) + np.array([-1, -1, 0.5])
-            values = values.astype(np.ushort)
-            for label in np.unique(values):
-                label_faces = faces[np.where(values[faces[:,0]] == label)]
-                stl_mesh = mesh.Mesh(np.zeros(label_faces.shape[0], dtype=mesh.Mesh.dtype))
-                for i, face in enumerate(label_faces):
-                    for j in range(3):
-                        stl_mesh.vectors[i][j] = verts[face[j]]
-                stl_mesh.save(os.path.join(time_path, str(label).zfill(5) + '.stl'))
+            verts, faces, values = self._find_mesh(time, is_binary_mask=False)
+            for label in [label for label in np.unique(values) if label == 1 or not is_sidewall_rupture]:
+                self._save_stl(label, verts, faces, values, time_path, is_binary_mask=False)
+        return
+    
+    def _create_sidewall_stls(self, stl_path):
+        if self._binary_mask is None:
+            raise NameError('Binary mask not found, run CT_data.binary_mask() first!')
+        for time in tqdm(range(self._mask.shape[0]), desc='Creating binary stl files'):
+            time_path = os.path.join(stl_path, str(time).zfill(3))
+            if not os.path.exists(time_path):
+                os.makedirs(time_path)
+            verts, faces, values = self._find_mesh(time, is_binary_mask=True)
+            self._save_stl(1, verts, faces, values, time_path, is_binary_mask=True)
+        return
+    
+    def create_stls(self, is_sidewall_rupture=False):
+        stl_path = os.path.join(self._path, 'stls') if not is_sidewall_rupture else os.path.join(self._path, 'sidewall_stls')
+        self._create_agglomerate_stls(stl_path, is_sidewall_rupture)
+        if is_sidewall_rupture:
+            self._create_sidewall_stls(stl_path)
         return
 
     
