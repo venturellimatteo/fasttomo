@@ -5,7 +5,7 @@ import os
 # function that modifies the properties of the rendering engine
 def modify_engine():
     bpy.context.scene.render.engine = 'CYCLES'
-    bpy.context.scene.cycles.time_limit = 120
+    bpy.context.scene.cycles.time_limit = 240
     bpy.context.scene.cycles.use_adaptive_sampling = True
     bpy.context.scene.cycles.device = 'GPU'
     bpy.context.scene.render.resolution_x = 2160
@@ -13,14 +13,16 @@ def modify_engine():
     return
 
 # function that returns a color tuple given the label and the maximum value of the labels
-def modify_properties(so, label):
-    mod = so.modifiers.new(name='Smooth', type='SMOOTH')
+def modify_properties(o, label):
+    mod = o.modifiers.new(name='Smooth', type='SMOOTH')
     mod.factor = 1
     mod.iterations = 5
     if label==1:
-        so.data.materials.append(bpy.data.materials['ShellMaterial'])
+        o.data.materials.append(bpy.data.materials['ShellMaterial'])
+        o.scale[0] = 1.02
+        o.scale[1] = 1.02
     else:
-        so.data.materials.append(bpy.data.materials[f'JellyrollMaterial'])
+        o.data.materials.append(bpy.data.materials[f'JellyrollMaterial'])
     return None
     
 # function that modifies the properties of the object associated to a specific label
@@ -38,7 +40,7 @@ def create_materials():
 
 def create_folders(path, exp):
     exp_path = os.path.join(path, exp)
-    stl_path = os.path.join(exp_path, 'stls')
+    stl_path = os.path.join(exp_path, 'sidewall_stls')
     render_path = os.path.join(exp_path, 'sidewall_renders')
     persp_path = os.path.join(render_path, 'perspective view')
     if not os.path.exists(persp_path):
@@ -56,12 +58,10 @@ def add_lights():
 
 def persp_view_render(persp_path, time):
     bpy.context.scene.render.resolution_y = 2160
-    bpy.ops.object.camera_add(enter_editmode=False, location=(2.6, -2.25, 3.2), rotation=(np.pi/4, 0, np.pi/4))
+    bpy.ops.object.camera_add(enter_editmode=False, location=(2.75, -2, 3.2), rotation=(np.pi/4, 0, np.pi/4))
     bpy.context.scene.camera = bpy.context.active_object
     bpy.context.scene.render.filepath = os.path.join(persp_path, time + '.png')
     bpy.ops.render.render(write_still=True)
-    bpy.ops.object.delete()
-
 
 
 if __name__ == "__main__":
@@ -69,12 +69,20 @@ if __name__ == "__main__":
     modify_engine()
     create_materials()
     exp = 'VCT5_FT_N_Exp1'
-    
-    for o in bpy.data.objects:
-        label = int(o.name)
-        modify_properties(o, label)
     stl_path, persp_path = create_folders(path, exp)
-    time = '0'
-    time_path = os.path.join(stl_path, time)
-    add_lights()
-    persp_view_render(persp_path, time)
+    for time in os.listdir(stl_path):
+        if time in ['007', '.DS_Store']:
+            continue
+        time_path = os.path.join(stl_path, time)
+        for obj in os.listdir(time_path):
+            if obj == '.DS_Store':
+                continue
+            bpy.ops.import_mesh.stl(filepath=os.path.join(time_path, obj))
+            o = bpy.context.active_object
+            label = int(o.name)
+            modify_properties(o, label)
+        add_lights()
+        persp_view_render(persp_path, time)
+        for i in range(len(bpy.data.objects)):
+            bpy.data.objects[i].select_set(True)
+        bpy.ops.object.delete()
