@@ -289,8 +289,7 @@ class CT_data:
         progress_bar.set_postfix_str(f'Binary masking: threshold = {threshold}')
         for time in progress_bar:
             mask = np.greater(self._ct[time], threshold)
-            mask = label(np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(3))))
-            self._binary_mask[time] = self._remove_small_3d_agglomerates(mask)
+            self._binary_mask[time] = np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(3)))
         return
 
     def view(self, mask=False, binary_mask=False):
@@ -347,10 +346,11 @@ class CT_data:
         stl_mesh.save(os.path.join(time_path, name + '.stl'))
         return
     
-    def _create_agglomerate_stls(self, stl_path, is_sidewall_rupture):
+    def _create_agglomerate_stls(self, stl_path, is_sidewall_rupture, times):
         if self._mask is None:
             raise NameError('Mask not found, run CT_data.segment() first!')
-        for time in tqdm(range(self._mask.shape[0]), desc='Creating stl files'):
+        iterator = range(self._mask.shape[0]) if times is None else times
+        for time in tqdm(iterator, desc='Creating stl files'):
             time_path = os.path.join(stl_path, str(time).zfill(3))
             if not os.path.exists(time_path):
                 os.makedirs(time_path)
@@ -359,10 +359,11 @@ class CT_data:
                 self._save_stl(label, verts, faces, values, time_path, is_binary_mask=False)
         return
     
-    def _create_sidewall_stls(self, stl_path):
+    def _create_sidewall_stls(self, stl_path, times):
         if self._binary_mask is None:
             raise NameError('Binary mask not found, run CT_data.binary_mask() first!')
-        for time in tqdm(range(self._mask.shape[0]), desc='Creating binary stl files'):
+        iterator = range(self._mask.shape[0]) if times is None else times
+        for time in tqdm(iterator, desc='Creating binary stl files'):
             time_path = os.path.join(stl_path, str(time).zfill(3))
             if not os.path.exists(time_path):
                 os.makedirs(time_path)
@@ -370,11 +371,11 @@ class CT_data:
             self._save_stl(1, verts, faces, values, time_path, is_binary_mask=True)
         return
     
-    def create_stls(self, is_sidewall_rupture=False):
+    def create_stls(self, is_sidewall_rupture=False, times=None):
         stl_path = os.path.join(self._path, 'stls') if not is_sidewall_rupture else os.path.join(self._path, 'sidewall_stls')
-        self._create_agglomerate_stls(stl_path, is_sidewall_rupture)
+        self._create_agglomerate_stls(stl_path, is_sidewall_rupture, times)
         if is_sidewall_rupture:
-            self._create_sidewall_stls(stl_path)
+            self._create_sidewall_stls(stl_path, times)
         return
 
     
