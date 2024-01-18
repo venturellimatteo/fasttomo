@@ -23,7 +23,7 @@ def OS_path(exp, OS):
 
 # Missing features: ct resizing, df construction, plots
 
-class CT_slice():
+class CT_image():
     
     def __init__(self, array):
         self._np = np.copy(array)
@@ -60,7 +60,7 @@ class CT_slice():
         return
 
 
-class Movie:
+class CT_movie:
 
     def __init__(self, path, img_path, exp):
         self._path = path
@@ -311,18 +311,18 @@ class CT_data:
         if not os.path.exists(img_path):
             os.makedirs(img_path)
         for time in range(self._ct.shape[0]):
-            image = CT_slice(self._ct[time, z])
+            image = CT_image(self._ct[time, z])
             image.scale(img_min, img_max)
             image.add_time_text(time)
             image.save(img_path)
-        movie = Movie(movie_path, img_path, self._exp)
+        movie = CT_movie(movie_path, img_path, self._exp)
         movie.write(fps)
         return
 
     def render_movie(self, fps=5):
         movie_path = os.path.join(self._path, 'renders')
         for view in ['top view', 'side view', 'perspective view']:
-            movie = Movie(movie_path, os.path.join(movie_path, view), self._exp)
+            movie = CT_movie(movie_path, os.path.join(movie_path, view), self._exp)
             movie.write(fps)
             print(f'{self._exp} {view} done!')
         return

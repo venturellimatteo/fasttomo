@@ -2,8 +2,6 @@
 <!-- Start with a clear and concise title that reflects the purpose of your project. Follow it with a brief description that outlines what your pipeline does. -->
 
 ## Table of contents
-- [Fasttomo pipeline](#fasttomo-pipeline)
-  - [Table of contents](#table-of-contents)
   - [1. Installation](#1-installation)
   - [2. Usage](#2-usage)
   - [3. Examples](#3-examples)
