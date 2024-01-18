@@ -20,6 +20,7 @@ def modify_engine():
     bpy.context.scene.cycles.device = 'GPU'
     bpy.context.scene.render.resolution_x = 2160
     bpy.context.scene.render.image_settings.file_format = 'PNG'
+    bpy.context.scene.cycles.use_denoising = False
     return
 
 # function that returns a color tuple given the label and the maximum value of the labels
@@ -47,7 +48,7 @@ def create_materials(palette):
     mat['ShellMaterial'].node_tree.nodes['Principled BSDF'].inputs[21].default_value = 0.1
     return
 
-def create_folders(path):
+def create_folders(path, exp):
     exp_path = os.path.join(path, exp)
     stl_path = os.path.join(exp_path, 'stls')
     render_path = os.path.join(exp_path, 'renders')
@@ -78,7 +79,7 @@ def add_lights():
     bpy.context.object.data.shadow_soft_size = 2
     return
 
-def top_view_render(top_path):
+def top_view_render(top_path, t):
     bpy.context.scene.render.resolution_y = 2160
     bpy.ops.object.camera_add(enter_editmode=False, location=(0, 0, 1))
     bpy.context.active_object.data.type = 'ORTHO'
@@ -89,7 +90,7 @@ def top_view_render(top_path):
     bpy.ops.object.delete()
     return
 
-def side_view_render(side_path):
+def side_view_render(side_path, t):
     bpy.context.scene.render.resolution_y = 1440
     bpy.ops.object.camera_add(enter_editmode=False, location=(0, -1, 0), rotation=(np.pi/2, 0, 0))
     bpy.context.active_object.data.type = 'ORTHO'
@@ -100,7 +101,7 @@ def side_view_render(side_path):
     bpy.ops.object.delete()
     return
 
-def persp_view_render(persp_path):
+def persp_view_render(persp_path, t):
     bpy.context.scene.render.resolution_y = 2160
     bpy.ops.object.camera_add(enter_editmode=False, location=(1.8, -1.8, 2.4), rotation=(np.pi/4, 0, np.pi/4))
     bpy.context.scene.camera = bpy.context.active_object
@@ -127,9 +128,9 @@ if __name__ == "__main__":
             for obj_name in os.listdir(time_path):
                 import_object(obj_name, time_path)
             add_lights()
-            top_view_render(top_path)
-            side_view_render(side_path)
-            persp_view_render(persp_path)
+            top_view_render(top_path, t)
+            side_view_render(side_path, t)
+            persp_view_render(persp_path, t)
             for i in range(len(bpy.data.objects)):
                 bpy.data.objects[i].select_set(True)
             bpy.ops.object.delete()

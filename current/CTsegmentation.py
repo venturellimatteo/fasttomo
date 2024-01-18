@@ -280,15 +280,17 @@ class CT_data:
             self._filtering(smallest_4Dvolume, pre_TR_filtering)
         return
     
-    def binary_mask(self, threshold=1):
-        self._threshold = threshold
+    def binary_mask(self, threshold=1, smallest_3Dvolume=50):
         if self._binary_mask is None:
             self._binary_mask = open_memmap(os.path.join(self._path, 'binary_mask.npy'),
                                      dtype=np.ushort, mode='w+', shape=self._ct.shape)  # 4D CT-scan segmentation map
+        self._smallest_3Dvolume = smallest_3Dvolume
         progress_bar = tqdm(range(self._ct.shape[0]), desc=f'{self._exp}', leave=False)
         progress_bar.set_postfix_str(f'Binary masking: threshold = {threshold}')
         for time in progress_bar:
-            self._binary_mask[time] = self._ct[time] > threshold
+            mask = np.greater(self._ct[time], threshold)
+            mask = label(np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(3))))
+            self._binary_mask[time] = self._remove_small_3d_agglomerates(mask)
         return
 
     def view(self, mask=False, binary_mask=False):
