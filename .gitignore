@@ -9,6 +9,7 @@
 *.toc
 *.bib
 old_code
+docs
 thesis/Chapters
 thesis/Configuration_Files
 thesis/Data
