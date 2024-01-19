@@ -23,7 +23,7 @@ def OS_path(exp, OS):
 
 # Missing features: ct resizing, df construction, plots
 
-class CT_image():
+class FT_image():
     
     def __init__(self, array):
         self._np = np.copy(array)
@@ -60,7 +60,7 @@ class CT_image():
         return
 
 
-class CT_movie:
+class FT_movie:
 
     def __init__(self, path, img_path, exp):
         self._path = path
@@ -83,7 +83,7 @@ class CT_movie:
         self._video.release()
 
 
-class CT_data:
+class FT_data:
 
     def __init__(self, exp, OS='MacOS'):
         self._path = OS_path(exp, OS)
@@ -311,18 +311,18 @@ class CT_data:
         if not os.path.exists(img_path):
             os.makedirs(img_path)
         for time in range(self._ct.shape[0]):
-            image = CT_image(self._ct[time, z])
+            image = FT_image(self._ct[time, z])
             image.scale(img_min, img_max)
             image.add_time_text(time)
             image.save(img_path)
-        movie = CT_movie(movie_path, img_path, self._exp)
+        movie = FT_movie(movie_path, img_path, self._exp)
         movie.write(fps)
         return
 
     def render_movie(self, fps=5):
         movie_path = os.path.join(self._path, 'renders')
         for view in ['top view', 'side view', 'perspective view']:
-            movie = CT_movie(movie_path, os.path.join(movie_path, view), self._exp)
+            movie = FT_movie(movie_path, os.path.join(movie_path, view), self._exp)
             movie.write(fps)
             print(f'{self._exp} {view} done!')
         return
@@ -348,7 +348,7 @@ class CT_data:
     
     def _create_agglomerate_stls(self, stl_path, is_sidewall_rupture, times):
         if self._mask is None:
-            raise NameError('Mask not found, run CT_data.segment() first!')
+            raise NameError('Mask not found, run FT_data.segment() first!')
         iterator = range(self._mask.shape[0]) if times is None else times
         for time in tqdm(iterator, desc='Creating stl files'):
             time_path = os.path.join(stl_path, str(time).zfill(3))
@@ -361,7 +361,7 @@ class CT_data:
     
     def _create_sidewall_stls(self, stl_path, times):
         if self._binary_mask is None:
-            raise NameError('Binary mask not found, run CT_data.binary_mask() first!')
+            raise NameError('Binary mask not found, run FT_data.binary_mask() first!')
         iterator = range(self._mask.shape[0]) if times is None else times
         for time in tqdm(iterator, desc='Creating binary stl files'):
             time_path = os.path.join(stl_path, str(time).zfill(3))
