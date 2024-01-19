@@ -8,10 +8,6 @@
 *.gz
 *.toc
 *.bib
-*.bat
-**/Makefile
-**/_static
-**/_templates
 **/__pycache__
 old_code
 thesis/Chapters
