@@ -9,8 +9,9 @@
     - [`_find_biggest_area`](#_find_biggest_area)
   - [`CT_image`](#ct_image)
   - [`CT_movie`](#ct_movie)
-- [`agglomerate_render.py`](#agglomerate_renderpy)
-- [`rupture_render.py`](#rupture_renderpy)
+- [Blender scripts](#blender-scripts)
+  - [`agglomerate_render.py`](#agglomerate_renderpy)
+  - [`rupture_render.py`](#rupture_renderpy)
 
 ## `CT.py`
 
@@ -26,6 +27,8 @@
 
 ### `CT_movie`
 
-## `agglomerate_render.py`
+## Blender scripts
 
-## `rupture_render.py`
+### `agglomerate_render.py`
+
+### `rupture_render.py`
