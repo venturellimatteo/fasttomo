@@ -1,3 +1,9 @@
+"""
+FT.py
+====================================
+The core module of my example project
+"""
+
 import numpy as np    
 from numpy.lib.format import open_memmap      
 from skimage.io import imshow                     
@@ -16,6 +22,23 @@ import os
  
 
 def OS_path(exp, OS):
+    """Returns the path.
+
+    This function returns the folder path of the corresponding experiment.
+
+    Parameters
+    ----------
+    exp : str
+        Experiment name
+    OS : str
+        OS name
+
+    Returns
+    -------
+    str
+        Folder path of the corresponding experiment
+
+    """
     if OS=='Windows': return 'Z:/rot_datasets/' + exp
     elif OS=='MacOS': return '/Volumes/T7/Thesis/' + exp
     elif OS=='Linux': return '/data/projects/whaitiri/Data/Data_Processing_July2022/rot_datasets/' + exp

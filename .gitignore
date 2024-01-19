@@ -8,11 +8,14 @@
 *.gz
 *.toc
 *.bib
+*.bat
+**/Makefile
+**/_static
+**/_templates
+**/__pycache__
 old_code
-docs
 thesis/Chapters
 thesis/Configuration_Files
 thesis/Data
 thesis/Images
 .DS_Store
-**/__pycache__
