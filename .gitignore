@@ -7,4 +7,10 @@
 *.out
 *.gz
 *.toc
+*.bib
+old_code
+thesis/Chapters
+thesis/Configuration_Files
+thesis/Data
+thesis/Images
 .DS_Store
