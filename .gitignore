@@ -14,3 +14,4 @@ thesis/Configuration_Files
 thesis/Data
 thesis/Images
 .DS_Store
+**/__pycache__
