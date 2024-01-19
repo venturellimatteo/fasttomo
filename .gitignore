@@ -8,7 +8,6 @@
 *.gz
 *.toc
 *.bib
-*.tex
 old_code
 thesis/Chapters
 thesis/Configuration_Files
