@@ -2,6 +2,8 @@
 <!-- Start with a clear and concise title that reflects the purpose of your project. Follow it with a brief description that outlines what your pipeline does. -->
 
 ## Table of contents
+- [Fasttomo pipeline](#fasttomo-pipeline)
+  - [Table of contents](#table-of-contents)
   - [1. Installation](#1-installation)
   - [2. Usage](#2-usage)
   - [3. Examples](#3-examples)
@@ -28,7 +30,12 @@
 <!-- Explain any configuration options or settings that users can modify to customize the behavior of the pipeline. -->
 
 ## 6. Documentation
-<!-- If you have detailed documentation beyond the README, provide links to it. This could include API documentation, user guides, or tutorials. -->
+For detailed documentation, including API references and usage guides, please visit the [project documentation](https://fasttomo.readthedocs.io).
+
+The documentation provides comprehensive information on configuring and using the fasttomo pipeline. It includes detailed instructions, examples, and explanations to help you get started quickly.
+
+If you encounter any issues, have questions, or would like to suggest improvements to the documentation, please [open an issue](https://github.com/venturellimatteo/fasttomo/issues) on GitHub.
+
 
 ## 7. License
 <!-- Specify the license under which your project is released. This is important for users who want to understand how they can use, modify, and distribute your code. -->
