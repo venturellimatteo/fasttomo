@@ -15,10 +15,10 @@ from tqdm import tqdm
 from stl import mesh                               
 import napari
 import os
-# import pandas as pd
-# import seaborn as sns
-# import matplotlib.pyplot as plt
-# from matplotlib.lines import Line2D   
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D   
  
 
 def OS_path(exp, OS):
@@ -93,11 +93,11 @@ class FT_movie:
                                      [f for f in os.listdir(self._img_path) if f.endswith('.png')][0]))
         self._height, self._width, _ = sample.shape
 
-    def write(self, fps):
+    def write(self, fps, view):
         self._fps = fps
         frame_files = sorted([f for f in os.listdir(self._img_path) if f.endswith('.png')])
         fourcc = VideoWriter_fourcc(*'mp4v')
-        self._video = VideoWriter(os.path.join(self._path, self._exp + '.mp4'), 
+        self._video = VideoWriter(os.path.join(self._path, self._exp + ' ' + view + '.mp4'), 
                                   fourcc, self._fps, (self._width, self._height))
         for frame_file in frame_files:
             frame_path = os.path.join(self._img_path, frame_file)
@@ -236,7 +236,7 @@ class FT_data:
     
     def _find_pre_TR_agglomerates(self):
         TR_map = {'P28A_FT_H_Exp1':2, 'P28A_FT_H_Exp2':2, 'P28A_FT_H_Exp3_3':2, 'P28A_FT_H_Exp4_2':6,
-                  'P28B_ISC_FT_H_Exp2':11, 'VCT5_FT_N_Exp1':4,'VCT5_FT_N_Exp3':5, 'VCT5_FT_N_Exp4':4,
+                  'P28B_ISC_FT_H_Exp2':11, 'VCT5_FT_N_Exp1':4, 'VCT5_FT_N_Exp3':5, 'VCT5_FT_N_Exp4':4,
                   'VCT5_FT_N_Exp5':4, 'VCT5A_FT_H_Exp2':1, 'VCT5A_FT_H_Exp5':4}
         for rps in self._rps[:TR_map[self._exp]]:
             for rp in rps:
@@ -346,7 +346,7 @@ class FT_data:
         movie_path = os.path.join(self._path, 'renders')
         for view in ['top view', 'side view', 'perspective view']:
             movie = FT_movie(movie_path, os.path.join(movie_path, view), self._exp)
-            movie.write(fps)
+            movie.write(fps, view)
             print(f'{self._exp} {view} done!')
         return
     
@@ -355,7 +355,7 @@ class FT_data:
         mask = np.zeros((s[2], s[1], s[0]+2), dtype=np.ushort)
         mask[:, :, 1:-1] = np.swapaxes(self._binary_mask[time], 0, 2) if is_binary_mask else np.swapaxes(self._mask[time], 0, 2)
         verts, faces, _, values = marching_cubes(mask, 0)
-        verts = (0.004 * verts * np.array([1, 1, -1])) + np.array([-1, -1, 0.5])
+        verts = (0.004 * verts * np.array([1, -1, -1])) + np.array([-1, 1, 0.5])
         values = values.astype(np.ushort)
         return verts, faces, values
     
@@ -400,5 +400,187 @@ class FT_data:
         if is_sidewall_rupture:
             self._create_sidewall_stls(stl_path, times)
         return
-
     
+    def _set_constants(self):
+        self._XYZ_FACTOR, self._V_FACTOR, self._T_FACTOR = 0.04, 0.000064, 0.05
+        self._XY_CENTER = np.array([0, (self._mask.shape[2]-1)/2, (self._mask.shape[2]-1)/2])
+        RADIUS = 18.6/(2*self._XYZ_FACTOR)
+        HEIGHT = self._mask.shape[1]*self._XYZ_FACTOR
+        self._R_SECTIONS = np.array([RADIUS/3, 2*RADIUS/3])
+        self._Z_SECTIONS = np.array([HEIGHT/3, 2*HEIGHT/3])
+        self._R_SECTIONS_STRING = ['Core', 'Intermediate', 'External']
+        self._Z_SECTIONS_STRING = ['Top', 'Middle', 'Bottom']
+        return
+
+    def _new_df_row(self, previous_labels, label, V, centroid, t):
+        z, y, x = centroid
+        r = np.linalg.norm([x, y])
+        z_section = self._Z_SECTIONS_STRING[(z > self._Z_SECTIONS).sum()]
+        r_section = self._R_SECTIONS_STRING[(r > self._R_SECTIONS).sum()]
+        if label in previous_labels:
+            x0, y0, z0 = (self.df.iloc[previous_labels[label]][['x', 'y', 'z']]).values
+            vx, vy, vz = (x-x0)/self._T_FACTOR, (y-y0)/self._T_FACTOR, (z-z0)/self._T_FACTOR
+            vxy = np.linalg.norm([vx, vy])
+            v = np.linalg.norm([vx, vy, vz])
+            dVdt = (V - (self.df.iloc[previous_labels[label]]['V']))/self._T_FACTOR
+        else:
+            vx, vy, vxy, vz, v, dVdt = 0, 0, 0, 0, 0, V/self._T_FACTOR
+        return [t, label, x, y, z, r, vx, vy, vxy, vz, v, V, dVdt, r_section, z_section]
+    
+    def create_dataframe(self, save=True):
+        if self._mask is None:
+            raise NameError('Mask not found, run FT_data.segment() first!')
+        self.df = pd.DataFrame(columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vxy', 'vz', 'v', 'V', 'dVdt', 'r_section', 'z_section'])
+        self._set_constants()
+        current_labels = dict()
+        df_index = 0
+        for time in tqdm(range(self._mask.shape[0]), desc='Dataframe computation', leave=False):
+            previous_labels = current_labels
+            current_labels = dict()
+            rps = regionprops(self._mask[time])
+            labels = [rp.label for rp in rps if rp.label !=1]
+            volumes = [(rp.area * self._V_FACTOR) for rp in rps if rp.label !=1] 
+            centroids = [((rp.centroid - self._XY_CENTER) * self._XYZ_FACTOR) for rp in rps if rp.label !=1]
+            for label, volume, centroid in zip(labels, volumes, centroids):
+                current_labels[label] = df_index
+                self.df.loc[df_index] = self._new_df_row(previous_labels, label, volume, centroid, time * self._T_FACTOR)
+                df_index += 1
+        if save:
+            self.df.to_csv(os.path.join(self._path, 'dataframe.csv'), index=False)
+        return
+    
+    def _load_df_tot(self):
+        grouped_df = self.df.groupby('t').size().reset_index(name='N')
+        df_tot = pd.merge(self.df[['t']], grouped_df, on='t', how='left').drop_duplicates()
+        df_tot['V'] = self.df.groupby('t')['V'].sum().values
+        df_tot['V/N'] = df_tot['V'] / df_tot['N'] # np.maximum(df_tot['N'].values, 1)
+        df_tot['dVdt'] = self.df.groupby('t')['dVdt'].sum().values
+        df_tot.fillna(0, inplace=True)
+        df_tot.reset_index(drop=True, inplace=True)
+        return df_tot
+    
+    def _load_df_r(self):
+        df_r = pd.DataFrame(columns=['t', 'r_section', 'V/N'])
+        df_r['t'] = np.repeat(self.df['t'].unique(), len(self._R_SECTIONS_STRING))
+        df_r['r_section'] = np.tile(self._R_SECTIONS_STRING, len(self.df['t'].unique()))
+        grouped_N = self.df.groupby(['t', 'r_section']).size().reset_index(name='N')
+        grouped_V = self.df.groupby(['t', 'r_section'])['V'].sum().reset_index(name='V')
+        grouped_dVdt = self.df.groupby(['t', 'r_section'])['dVdt'].sum().reset_index(name='dVdt')
+        df_r = pd.merge(df_r, grouped_N, on=['t', 'r_section'], how='left')
+        df_r = pd.merge(df_r, grouped_V, on=['t', 'r_section'], how='left')
+        df_r = pd.merge(df_r, grouped_dVdt, on=['t', 'r_section'], how='left')
+        df_r.fillna(0, inplace=True)
+        df_r['V/N'] = df_r['V'] / np.maximum(df_r['N'].values, 1)
+        df_r.reset_index(drop=True, inplace=True)
+        return df_r
+    
+    def _load_df_z(self):
+        df_z = pd.DataFrame(columns=['t', 'z_section', 'V/N'])
+        df_z['t'] = np.repeat(self.df['t'].unique(), len(self._Z_SECTIONS_STRING))
+        df_z['z_section'] = np.tile(self._Z_SECTIONS_STRING, len(self.df['t'].unique()))
+        grouped_N = self.df.groupby(['t', 'z_section']).size().reset_index(name='N')
+        grouped_V = self.df.groupby(['t', 'z_section'])['V'].sum().reset_index(name='V')
+        grouped_dVdt = self.df.groupby(['t', 'z_section'])['dVdt'].sum().reset_index(name='dVdt')
+        df_z = pd.merge(df_z, grouped_N, on=['t', 'z_section'], how='left')
+        df_z = pd.merge(df_z, grouped_V, on=['t', 'z_section'], how='left')
+        df_z = pd.merge(df_z, grouped_dVdt, on=['t', 'z_section'], how='left')
+        df_z.fillna(0, inplace=True)
+        df_z['V/N'] = df_z['V'] / np.maximum(df_z['N'].values, 1)
+        df_z.reset_index(drop=True, inplace=True)
+        return df_z
+    
+    def _adjust_axes(self, axs, time_axis, x_label, draw_legend_title=True):
+        for i, ax in enumerate(axs):
+            ax.set_xlim(time_axis[0], time_axis[-1])
+            ax.set_xlabel('Time [$s$]')
+            ax.set_ylabel(x_label)
+            if draw_legend_title and i > 0:
+                ax.legend(loc='upper right')
+            ax.set_title(['Whole battery', '$r$ sections', '$z$ sections'][i])
+        return
+
+    def _plot_V_tot(self, fig, time_axis, palettes, df_tot, df_r, df_z):
+        fig.suptitle('', y=1.1, fontsize=14)
+        axs = fig.subplots(1, 3, sharey=True)
+        sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V')
+        sns.lineplot(ax=plt.twinx(ax=axs[0]), data=df_tot, x='t', y='N', color=palettes[0][1])
+        axs[0].legend(handles=[Line2D([], [], marker='_', color=palettes[0][0], label='Volume [$mm^3$]'),
+                            Line2D([], [], marker='_', color=palettes[0][1], label='Number of agglomerates')], loc='upper left')
+        sns.lineplot(ax=axs[1], data=df_r, x='t', y='V', hue='r_section', hue_order=self._R_SECTIONS_STRING, palette=palettes[1])
+        sns.lineplot(ax=axs[2], data=df_z, x='t', y='V', hue='z_section', hue_order=self._Z_SECTIONS_STRING, palette=palettes[2])
+        self._adjust_axes(axs, time_axis, 'Volume [$mm^3$]')
+        return
+
+    def _plot_V_avg(self, fig, time_axis, palettes, df_tot, df_r, df_z):
+        fig.suptitle('', y=1.1, fontsize=14)
+        axs = fig.subplots(1, 3, sharey=True)
+        sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V/N')
+        sns.lineplot(ax=axs[1], data=df_r, x='t', y='V/N', hue='r_section', hue_order=self._R_SECTIONS_STRING, palette=palettes[1])
+        sns.lineplot(ax=axs[2], data=df_z, x='t', y='V/N', hue='z_section', hue_order=self._Z_SECTIONS_STRING, palette=palettes[2])
+        self._adjust_axes(axs, time_axis, 'Volume [$mm^3$]')
+        return
+
+    def _plot_dVdt(self, fig, time_axis, palettes, df_tot, df_r, df_z):
+        fig.suptitle('', y=1.1, fontsize=14)
+        axs = fig.subplots(1, 3, sharey=True)
+        sns.lineplot(ax=axs[0], data=df_tot, x='t', y='dVdt')
+        sns.lineplot(ax=axs[1], data=df_r, x='t', y='dVdt', hue='r_section', hue_order=self._R_SECTIONS_STRING, palette=palettes[1])
+        sns.lineplot(ax=axs[2], data=df_z, x='t', y='dVdt', hue='z_section', hue_order=self._Z_SECTIONS_STRING, palette=palettes[2])
+        self._adjust_axes(axs, time_axis, 'Volume expansion rate [$mm^3/s$]')
+        return
+
+    def _plot_speed(self, fig, time_axis, palettes, _dummy1, _dummy2, _dummy3):
+        fig.suptitle('', y=1.1, fontsize=14)
+        axs = fig.subplots(1, 3, sharey=True)
+        sns.lineplot(ax=axs[0], data=self.df, x='t', y='v')
+        axs[0].set_title('Modulus')
+        sns.lineplot(ax=axs[1], data=self.df, x='t', y='vxy', color=palettes[1][1])
+        axs[1].set_title('$xy$ component')
+        sns.lineplot(ax=axs[2], data=self.df, x='t', y='vz', color=palettes[2][1])
+        axs[2].set_title('$z$ component')
+        self._adjust_axes(axs, time_axis, 'Speed [$mm/s$]', draw_legend_title=False)
+        return
+
+    def _plot_density(self, fig, time_axis, palettes, df_tot, df_r, df_z):
+        battery_volume = np.pi * (0.5 * 1.86)**2 * (260 * 0.04) # pi*(0.5*d)^2*h
+        fig.suptitle('', y=1.1, fontsize=14)
+        axs = fig.subplots(1, 3, sharey=True)
+        df_tot['N'] = df_tot['N'] / (battery_volume)
+        sns.lineplot(ax=axs[0], data=df_tot, x='t', y='N')
+        df_r.loc[df_r['r_section'] == 'Core', 'N'] = df_r.loc[df_r['r_section'] == 'Core', 'N'] / (battery_volume/9)
+        df_r.loc[df_r['r_section'] == 'Intermediate', 'N'] = df_r.loc[df_r['r_section'] == 'Intermediate', 'N'] / (battery_volume*3/9)
+        df_r.loc[df_r['r_section'] == 'External', 'N'] = df_r.loc[df_r['r_section'] == 'External', 'N'] / (battery_volume*5/9)
+        sns.lineplot(ax=axs[1], data=df_r, x='t', y='N', hue='r_section', hue_order=self._R_SECTIONS_STRING, palette=palettes[1])
+        df_z['N'] = df_z['N'] / (battery_volume*3/9)
+        sns.lineplot(ax=axs[2], data=df_z, x='t', y='N', hue='z_section', hue_order=self._Z_SECTIONS_STRING, palette=palettes[2])
+        self._adjust_axes(axs, time_axis, 'Agglomerate density [cm$^{-3}$]')
+        return
+    
+    def plots(self, save=True):
+        try:
+            self.df = pd.read_csv(os.path.join(self._path, 'dataframe.csv'))
+        except FileNotFoundError:
+            print('Dataframe not found, run FT_data.create_dataframe() first!')
+            return
+        self._R_SECTIONS_STRING = ['Core', 'Intermediate', 'External']
+        self._Z_SECTIONS_STRING = ['Top', 'Middle', 'Bottom']
+        df_tot, df_r, df_z = self._load_df_tot(), self._load_df_r(), self._load_df_z()
+        time_axis = np.arange(len(np.unique(self.df['t'])))/20
+        plt.style.use('seaborn-v0_8-paper')
+        palette1 = ['#3cb44b', '#bfef45']
+        palette2 = ['#e6194B', '#f58231', '#ffe119']
+        palette3 = ['#000075', '#4363d8', '#42d4f4'] 
+        palettes = [palette1, palette2, palette3]
+        sns.set_palette(sns.color_palette(palette1))
+        length, heigth = 5, 3.5
+        fig = plt.figure(figsize=(3*length, 5*heigth), dpi=150)
+        subfigs = fig.subfigures(5, 1, hspace=0.3)
+        progress_bar = tqdm(total=5, desc=f'{self._exp} drawing plots', leave=False)
+        for i, fun in enumerate([self._plot_V_tot, self._plot_V_avg, self._plot_dVdt, self._plot_speed, self._plot_density]):
+            fun(subfigs[i], time_axis, palettes, df_tot, df_r, df_z)
+            progress_bar.update()
+        progress_bar.close()
+        if save:
+            fig.savefig(os.path.join(self._path, 'plots.png'), dpi=300, bbox_inches='tight')
+        fig.show()
+        return

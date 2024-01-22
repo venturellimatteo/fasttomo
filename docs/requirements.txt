@@ -1,1 +1,4 @@
 sphinx-rtd-theme==2.0.0
+sphinx_autodoc
+sphinx_coverage
+sphinx_napoleon
