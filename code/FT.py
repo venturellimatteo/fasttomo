@@ -19,30 +19,6 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D   
- 
-
-def OS_path(exp, OS):
-    """Returns the path.
-
-    This function returns the folder path of the corresponding experiment.
-
-    Parameters
-    ----------
-    exp : str
-        Experiment name
-    OS : str
-        OS name
-
-    Returns
-    -------
-    str
-        Folder path of the corresponding experiment
-
-    """
-    if OS=='Windows': return 'Z:/rot_datasets/' + exp
-    elif OS=='MacOS': return '/Volumes/T7/Thesis/' + exp
-    elif OS=='Linux': return '/data/projects/whaitiri/Data/Data_Processing_July2022/rot_datasets/' + exp
-    else: raise ValueError('OS not recognized')
 
 # Missing features: ct resizing, df construction, plots
 
@@ -108,8 +84,8 @@ class FT_movie:
 
 class FT_data:
 
-    def __init__(self, exp, OS='MacOS'):
-        self._path = OS_path(exp, OS)
+    def __init__(self, exp):
+        self._path = '/Volumes/T7/Thesis/' + exp
         self._ct = open_memmap(os.path.join(self._path, 'ct.npy'), mode='r')  # 4D CT-scan
         if os.path.exists(os.path.join(self._path, 'mask.npy')):
             self._mask = open_memmap(os.path.join(self._path, 'mask.npy'),
@@ -342,7 +318,13 @@ class FT_data:
         movie.write(fps)
         return
 
-    def render_movie(self, fps=5):
+    def render_movie(self, fps=5, is_sidewall_rupture=False):
+        if is_sidewall_rupture:
+            movie_path = os.path.join(self._path, 'sidewall_renders')
+            movie = FT_movie(movie_path, os.path.join(movie_path, 'perspective view'), self._exp)
+            movie.write(fps, 'perspective view')
+            print(f'{self._exp} perspective view done!')
+            return
         movie_path = os.path.join(self._path, 'renders')
         for view in ['top view', 'side view', 'perspective view']:
             movie = FT_movie(movie_path, os.path.join(movie_path, view), self._exp)

@@ -58,7 +58,7 @@ def add_lights():
 
 def persp_view_render(persp_path, time):
     bpy.context.scene.render.resolution_y = 2160
-    bpy.ops.object.camera_add(enter_editmode=False, location=(2.75, -2, 3.2), rotation=(np.pi/4, 0, np.pi/4))
+    bpy.ops.object.camera_add(enter_editmode=False, location=(2.4, -2.4, 2.8), rotation=(np.pi/4, 0, np.pi/4))
     bpy.context.scene.camera = bpy.context.active_object
     bpy.context.scene.render.filepath = os.path.join(persp_path, time + '.png')
     bpy.ops.render.render(write_still=True)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     exp = 'VCT5_FT_N_Exp1'
     stl_path, persp_path = create_folders(path, exp)
     for time in os.listdir(stl_path):
-        if time in ['007', '.DS_Store']:
+        if time in ['.DS_Store']:
             continue
         time_path = os.path.join(stl_path, time)
         for obj in os.listdir(time_path):
