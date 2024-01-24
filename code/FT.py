@@ -1,9 +1,3 @@
-"""
-FT.py
-====================================
-The core module of my example project
-"""
-
 import numpy as np    
 from numpy.lib.format import open_memmap      
 from skimage.io import imshow                     
@@ -386,7 +380,7 @@ class FT_data:
     def _set_constants(self):
         self._XYZ_FACTOR, self._V_FACTOR, self._T_FACTOR = 0.04, 0.000064, 0.05
         self._XY_CENTER = np.array([0, (self._mask.shape[2]-1)/2, (self._mask.shape[2]-1)/2])
-        RADIUS = 18.6/(2*self._XYZ_FACTOR)
+        RADIUS = 18.6/2
         HEIGHT = self._mask.shape[1]*self._XYZ_FACTOR
         self._R_SECTIONS = np.array([RADIUS/3, 2*RADIUS/3])
         self._Z_SECTIONS = np.array([HEIGHT/3, 2*HEIGHT/3])
@@ -482,7 +476,7 @@ class FT_data:
         return
 
     def _plot_V_tot(self, fig, time_axis, palettes, df_tot, df_r, df_z):
-        fig.suptitle('', y=1.1, fontsize=14)
+        fig.suptitle('Agglomerates total volume vs time', y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V')
         sns.lineplot(ax=plt.twinx(ax=axs[0]), data=df_tot, x='t', y='N', color=palettes[0][1])
@@ -494,7 +488,7 @@ class FT_data:
         return
 
     def _plot_V_avg(self, fig, time_axis, palettes, df_tot, df_r, df_z):
-        fig.suptitle('', y=1.1, fontsize=14)
+        fig.suptitle('Agglomerates average volume vs time', y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         sns.lineplot(ax=axs[0], data=df_tot, x='t', y='V/N')
         sns.lineplot(ax=axs[1], data=df_r, x='t', y='V/N', hue='r_section', hue_order=self._R_SECTIONS_STRING, palette=palettes[1])
@@ -503,7 +497,7 @@ class FT_data:
         return
 
     def _plot_dVdt(self, fig, time_axis, palettes, df_tot, df_r, df_z):
-        fig.suptitle('', y=1.1, fontsize=14)
+        fig.suptitle('Agglomerates total volume expansion rate vs time', y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         sns.lineplot(ax=axs[0], data=df_tot, x='t', y='dVdt')
         sns.lineplot(ax=axs[1], data=df_r, x='t', y='dVdt', hue='r_section', hue_order=self._R_SECTIONS_STRING, palette=palettes[1])
@@ -512,7 +506,7 @@ class FT_data:
         return
 
     def _plot_speed(self, fig, time_axis, palettes, _dummy1, _dummy2, _dummy3):
-        fig.suptitle('', y=1.1, fontsize=14)
+        fig.suptitle('Agglomerates speed vs time', y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         sns.lineplot(ax=axs[0], data=self.df, x='t', y='v')
         axs[0].set_title('Modulus')
@@ -525,7 +519,7 @@ class FT_data:
 
     def _plot_density(self, fig, time_axis, palettes, df_tot, df_r, df_z):
         battery_volume = np.pi * (0.5 * 1.86)**2 * (260 * 0.04) # pi*(0.5*d)^2*h
-        fig.suptitle('', y=1.1, fontsize=14)
+        fig.suptitle('Agglomerates density vs time', y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         df_tot['N'] = df_tot['N'] / (battery_volume)
         sns.lineplot(ax=axs[0], data=df_tot, x='t', y='N')
