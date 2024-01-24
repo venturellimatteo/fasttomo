@@ -45,7 +45,20 @@
               <!-- Local TOC -->
               <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">Welcome to fasttomo’s documentation!</a><ul>
-<li><a class="reference internal" href="#FT.OS_path"><code class="docutils literal notranslate"><span class="pre">OS_path()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data"><code class="docutils literal notranslate"><span class="pre">FT_data</span></code></a><ul>
+<li><a class="reference internal" href="#FT.FT_data.attr1"><code class="docutils literal notranslate"><span class="pre">FT_data.attr1</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.attr2"><code class="docutils literal notranslate"><span class="pre">FT_data.attr2</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.__init__"><code class="docutils literal notranslate"><span class="pre">FT_data.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.binary_mask"><code class="docutils literal notranslate"><span class="pre">FT_data.binary_mask()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.create_dataframe"><code class="docutils literal notranslate"><span class="pre">FT_data.create_dataframe()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.create_stls"><code class="docutils literal notranslate"><span class="pre">FT_data.create_stls()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.plots"><code class="docutils literal notranslate"><span class="pre">FT_data.plots()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.render_movie"><code class="docutils literal notranslate"><span class="pre">FT_data.render_movie()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.segment"><code class="docutils literal notranslate"><span class="pre">FT_data.segment()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.slice_movie"><code class="docutils literal notranslate"><span class="pre">FT_data.slice_movie()</span></code></a></li>
+<li><a class="reference internal" href="#FT.FT_data.view"><code class="docutils literal notranslate"><span class="pre">FT_data.view()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -77,25 +90,254 @@
              
   <section id="welcome-to-fasttomo-s-documentation">
 <h1>Welcome to fasttomo’s documentation!<a class="headerlink" href="#welcome-to-fasttomo-s-documentation" title="Permalink to this heading"></a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="FT.OS_path">
-<span class="sig-prename descclassname"><span class="pre">FT.</span></span><span class="sig-name descname"><span class="pre">OS_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OS</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.OS_path" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the path.</p>
-<p>This function returns the folder path of the corresponding experiment.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="FT.FT_data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FT.</span></span><span class="sig-name descname"><span class="pre">FT_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data" title="Permalink to this definition"></a></dt>
+<dd><p>The summary line for a class docstring should fit on one line.</p>
+<p>If the class has public attributes, they may be documented here
+in an <code class="docutils literal notranslate"><span class="pre">Attributes</span></code> section and follow the same formatting as a
+function’s <code class="docutils literal notranslate"><span class="pre">Args</span></code> section. Alternatively, attributes may be documented
+inline with the attribute’s declaration (see __init__ method below).</p>
+<p>Properties created with the <code class="docutils literal notranslate"><span class="pre">&#64;property</span></code> decorator should be documented
+in the property’s getter method.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="FT.FT_data.attr1">
+<span class="sig-name descname"><span class="pre">attr1</span></span><a class="headerlink" href="#FT.FT_data.attr1" title="Permalink to this definition"></a></dt>
+<dd><p>Description of <cite>attr1</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>exp</strong> (<em>str</em>) – Experiment name</p></li>
-<li><p><strong>OS</strong> (<em>str</em>) – OS name</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Folder path of the corresponding experiment</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="FT.FT_data.attr2">
+<span class="sig-name descname"><span class="pre">attr2</span></span><a class="headerlink" href="#FT.FT_data.attr2" title="Permalink to this definition"></a></dt>
+<dd><p>Description of <cite>attr2</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Example of docstring on the __init__ method.</p>
+<p>The __init__ method may be documented in either the class level
+docstring, or as a docstring on the __init__ method itself.</p>
+<p>Either form is acceptable, but the two should not be mixed. Choose one
+convention to document the __init__ method and be consistent with it.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> (<em>str</em>) – Description of <cite>param1</cite>.</p></li>
+<li><p><strong>param2</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – Description of <cite>param2</cite>. Multiple
+lines are supported.</p></li>
+<li><p><strong>param3</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – Description of <cite>param3</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.binary_mask">
+<span class="sig-name descname"><span class="pre">binary_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smallest_3Dvolume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.binary_mask" title="Permalink to this definition"></a></dt>
+<dd><p>Class methods are similar to regular functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> – The first parameter.</p></li>
+<li><p><strong>param2</strong> – The second parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.create_dataframe">
+<span class="sig-name descname"><span class="pre">create_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.create_dataframe" title="Permalink to this definition"></a></dt>
+<dd><p>Class methods are similar to regular functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> – The first parameter.</p></li>
+<li><p><strong>param2</strong> – The second parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.create_stls">
+<span class="sig-name descname"><span class="pre">create_stls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_sidewall_rupture</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.create_stls" title="Permalink to this definition"></a></dt>
+<dd><p>Class methods are similar to regular functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> – The first parameter.</p></li>
+<li><p><strong>param2</strong> – The second parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.plots">
+<span class="sig-name descname"><span class="pre">plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.plots" title="Permalink to this definition"></a></dt>
+<dd><p>Class methods are similar to regular functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> – The first parameter.</p></li>
+<li><p><strong>param2</strong> – The second parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.render_movie">
+<span class="sig-name descname"><span class="pre">render_movie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sidewall_rupture</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.render_movie" title="Permalink to this definition"></a></dt>
+<dd><p>Class methods are similar to regular functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> – The first parameter.</p></li>
+<li><p><strong>param2</strong> – The second parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.segment">
+<span class="sig-name descname"><span class="pre">segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filtering3D</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filtering4D</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_TR_filtering</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smallest_3Dvolume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smallest_4Dvolume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.segment" title="Permalink to this definition"></a></dt>
+<dd><p>Class methods are similar to regular functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> – The first parameter.</p></li>
+<li><p><strong>param2</strong> – The second parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.slice_movie">
+<span class="sig-name descname"><span class="pre">slice_movie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.slice_movie" title="Permalink to this definition"></a></dt>
+<dd><p>Class methods are similar to regular functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> – The first parameter.</p></li>
+<li><p><strong>param2</strong> – The second parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FT.FT_data.view">
+<span class="sig-name descname"><span class="pre">view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FT.FT_data.view" title="Permalink to this definition"></a></dt>
+<dd><p>Class methods are similar to regular functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not include the <cite>self</cite> parameter in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> section.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param1</strong> – The first parameter.</p></li>
+<li><p><strong>param2</strong> – The second parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if successful, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <div class="toctree-wrapper compound">

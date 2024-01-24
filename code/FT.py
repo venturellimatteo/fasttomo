@@ -16,7 +16,7 @@ from matplotlib.lines import Line2D
 
 # Missing features: ct resizing, df construction, plots
 
-class FT_image():
+class _FT_image():
     
     def __init__(self, array):
         self._np = np.copy(array)
@@ -53,7 +53,7 @@ class FT_image():
         return
 
 
-class FT_movie:
+class _FT_movie:
 
     def __init__(self, path, img_path, exp):
         self._path = path
@@ -77,8 +77,49 @@ class FT_movie:
 
 
 class FT_data:
+    """The summary line for a class docstring should fit on one line.
+
+    If the class has public attributes, they may be documented here
+    in an ``Attributes`` section and follow the same formatting as a
+    function's ``Args`` section. Alternatively, attributes may be documented
+    inline with the attribute's declaration (see __init__ method below).
+
+    Properties created with the ``@property`` decorator should be documented
+    in the property's getter method.
+
+    Attributes
+    ----------
+    attr1 : str
+        Description of `attr1`.
+    attr2 : :obj:`int`, optional
+        Description of `attr2`.
+
+    """
 
     def __init__(self, exp):
+        """Example of docstring on the __init__ method.
+
+        The __init__ method may be documented in either the class level
+        docstring, or as a docstring on the __init__ method itself.
+
+        Either form is acceptable, but the two should not be mixed. Choose one
+        convention to document the __init__ method and be consistent with it.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1 : str
+            Description of `param1`.
+        param2 : :obj:`list` of :obj:`str`
+            Description of `param2`. Multiple
+            lines are supported.
+        param3 : :obj:`int`, optional
+            Description of `param3`.
+
+        """
         self._path = '/Volumes/T7/Thesis/' + exp
         self._ct = open_memmap(os.path.join(self._path, 'ct.npy'), mode='r')  # 4D CT-scan
         if os.path.exists(os.path.join(self._path, 'mask.npy')):
@@ -248,6 +289,26 @@ class FT_data:
 
     def segment(self, threshold_target=6800, filtering3D=True, filtering4D=True, pre_TR_filtering=True,
                 smallest_3Dvolume=50, smallest_4Dvolume=250):
+        """Class methods are similar to regular functions.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1
+            The first parameter.
+        param2
+            The second parameter.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+
         if self._mask is None:
             self._mask = open_memmap(os.path.join(self._path, 'mask.npy'),
                                      dtype=np.ushort, mode='w+', shape=self._ct.shape)  # 4D CT-scan segmentation map
@@ -274,6 +335,26 @@ class FT_data:
         return
     
     def binary_mask(self, threshold=1, smallest_3Dvolume=50):
+        """Class methods are similar to regular functions.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1
+            The first parameter.
+        param2
+            The second parameter.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+
         if self._binary_mask is None:
             self._binary_mask = open_memmap(os.path.join(self._path, 'binary_mask.npy'),
                                      dtype=np.ushort, mode='w+', shape=self._ct.shape)  # 4D CT-scan segmentation map
@@ -286,6 +367,26 @@ class FT_data:
         return
 
     def view(self, mask=False, binary_mask=False):
+        """Class methods are similar to regular functions.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1
+            The first parameter.
+        param2
+            The second parameter.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+
         viewer = napari.Viewer()
         settings = napari.settings.get_settings()
         settings.application.playback_fps = 5
@@ -299,29 +400,69 @@ class FT_data:
         return
 
     def slice_movie(self, z, img_min=0, img_max=5, fps=7):
+        """Class methods are similar to regular functions.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1
+            The first parameter.
+        param2
+            The second parameter.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+
         movie_path = os.path.join(self._path, 'movies', f'slice {z} movie')
         img_path = os.path.join(movie_path, 'frames')
         if not os.path.exists(img_path):
             os.makedirs(img_path)
         for time in range(self._ct.shape[0]):
-            image = FT_image(self._ct[time, z])
+            image = _FT_image(self._ct[time, z])
             image.scale(img_min, img_max)
             image.add_time_text(time)
             image.save(img_path)
-        movie = FT_movie(movie_path, img_path, self._exp)
+        movie = _FT_movie(movie_path, img_path, self._exp)
         movie.write(fps)
         return
 
     def render_movie(self, fps=5, is_sidewall_rupture=False):
+        """Class methods are similar to regular functions.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1
+            The first parameter.
+        param2
+            The second parameter.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+
         if is_sidewall_rupture:
             movie_path = os.path.join(self._path, 'sidewall_renders')
-            movie = FT_movie(movie_path, os.path.join(movie_path, 'perspective view'), self._exp)
+            movie = _FT_movie(movie_path, os.path.join(movie_path, 'perspective view'), self._exp)
             movie.write(fps, 'perspective view')
             print(f'{self._exp} perspective view done!')
             return
         movie_path = os.path.join(self._path, 'renders')
         for view in ['top view', 'side view', 'perspective view']:
-            movie = FT_movie(movie_path, os.path.join(movie_path, view), self._exp)
+            movie = _FT_movie(movie_path, os.path.join(movie_path, view), self._exp)
             movie.write(fps, view)
             print(f'{self._exp} {view} done!')
         return
@@ -371,6 +512,26 @@ class FT_data:
         return
     
     def create_stls(self, is_sidewall_rupture=False, times=None):
+        """Class methods are similar to regular functions.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1
+            The first parameter.
+        param2
+            The second parameter.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+
         stl_path = os.path.join(self._path, 'stls') if not is_sidewall_rupture else os.path.join(self._path, 'sidewall_stls')
         self._create_agglomerate_stls(stl_path, is_sidewall_rupture, times)
         if is_sidewall_rupture:
@@ -404,6 +565,26 @@ class FT_data:
         return [t, label, x, y, z, r, vx, vy, vxy, vz, v, V, dVdt, r_section, z_section]
     
     def create_dataframe(self, save=True):
+        """Class methods are similar to regular functions.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1
+            The first parameter.
+        param2
+            The second parameter.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+
         if self._mask is None:
             raise NameError('Mask not found, run FT_data.segment() first!')
         self.df = pd.DataFrame(columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vxy', 'vz', 'v', 'V', 'dVdt', 'r_section', 'z_section'])
@@ -533,6 +714,26 @@ class FT_data:
         return
     
     def plots(self, save=True):
+        """Class methods are similar to regular functions.
+
+        Note
+        ----
+        Do not include the `self` parameter in the ``Parameters`` section.
+
+        Parameters
+        ----------
+        param1
+            The first parameter.
+        param2
+            The second parameter.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+
         try:
             self.df = pd.read_csv(os.path.join(self._path, 'dataframe.csv'))
         except FileNotFoundError:

@@ -6,7 +6,9 @@
 Welcome to fasttomo's documentation!
 ====================================
 
-.. autofunction:: FT.OS_path
+.. autoclass:: FT.FT_data
+   :special-members: __init__
+   :members:
 
 .. toctree::
    :maxdepth: 2
