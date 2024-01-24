@@ -56,9 +56,9 @@ class _FT_image():
 class _FT_movie:
 
     def __init__(self, path, img_path, exp):
-        self._path = path
+        self.path = path
         self._img_path = img_path
-        self._exp = exp
+        self.exp = exp
         sample = imread(os.path.join(self._img_path, 
                                      [f for f in os.listdir(self._img_path) if f.endswith('.png')][0]))
         self._height, self._width, _ = sample.shape
@@ -67,7 +67,7 @@ class _FT_movie:
         self._fps = fps
         frame_files = sorted([f for f in os.listdir(self._img_path) if f.endswith('.png')])
         fourcc = VideoWriter_fourcc(*'mp4v')
-        self._video = VideoWriter(os.path.join(self._path, self._exp + ' ' + view + '.mp4'), 
+        self._video = VideoWriter(os.path.join(self.path, self.exp + ' ' + view + '.mp4'), 
                                   fourcc, self._fps, (self._width, self._height))
         for frame_file in frame_files:
             frame_path = os.path.join(self._img_path, frame_file)
@@ -77,62 +77,46 @@ class _FT_movie:
 
 
 class FT_data:
-    """The summary line for a class docstring should fit on one line.
+    """Class used to read, process and write CT data.
 
-    If the class has public attributes, they may be documented here
-    in an ``Attributes`` section and follow the same formatting as a
-    function's ``Args`` section. Alternatively, attributes may be documented
-    inline with the attribute's declaration (see __init__ method below).
+    Here should go the detailed description of the class.
 
-    Properties created with the ``@property`` decorator should be documented
-    in the property's getter method.
+    Parameters
+    ----------
+    exp : str
+        Experiment name.
+    parent_folder : str
+        Path of the parent folder containing the experiments folders.
 
     Attributes
     ----------
-    attr1 : str
-        Description of `attr1`.
-    attr2 : :obj:`int`, optional
-        Description of `attr2`.
+    exp : str
+        Experiment name.
+    path : str
+        Experiment folder path.
+    ct : numpy.ndarray
+        4D CT-scan.
+    mask : numpy.ndarray
+        4D segmentation mask of ``ct``.
+    binary_mask : numpy.ndarray
+        4D binary mask used to render the sidewall ruptures.
 
     """
 
-    def __init__(self, exp):
-        """Example of docstring on the __init__ method.
-
-        The __init__ method may be documented in either the class level
-        docstring, or as a docstring on the __init__ method itself.
-
-        Either form is acceptable, but the two should not be mixed. Choose one
-        convention to document the __init__ method and be consistent with it.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
-
-        Parameters
-        ----------
-        param1 : str
-            Description of `param1`.
-        param2 : :obj:`list` of :obj:`str`
-            Description of `param2`. Multiple
-            lines are supported.
-        param3 : :obj:`int`, optional
-            Description of `param3`.
-
-        """
-        self._path = '/Volumes/T7/Thesis/' + exp
-        self._ct = open_memmap(os.path.join(self._path, 'ct.npy'), mode='r')  # 4D CT-scan
-        if os.path.exists(os.path.join(self._path, 'mask.npy')):
-            self._mask = open_memmap(os.path.join(self._path, 'mask.npy'),
-                                     dtype=np.ushort, mode='r+', shape=self._ct.shape)  # 4D CT-scan segmentation map
+    def __init__(self, exp, parent_folder='/Volumes/T7/Thesis/'):
+        self.exp = exp  # Experiment name
+        self.path = '/Volumes/T7/Thesis/' + exp
+        self.ct = open_memmap(os.path.join(self.path, 'ct.npy'), mode='r')  # 4D CT-scan
+        if os.path.exists(os.path.join(self.path, 'mask.npy')):
+            self.mask = open_memmap(os.path.join(self.path, 'mask.npy'),
+                                     dtype=np.ushort, mode='r+', shape=self.ct.shape)  # 4D CT-scan segmentation map
         else:
-            self._mask = None
-        if os.path.exists(os.path.join(self._path, 'binary_mask.npy')):
-            self._binary_mask = open_memmap(os.path.join(self._path, 'binary_mask.npy'),
-                                     dtype=np.ushort, mode='r+', shape=self._ct.shape)  # 4D CT-scan binary mask for sidewall rupture rendering
+            self.mask = None
+        if os.path.exists(os.path.join(self.path, 'binary_mask.npy')):
+            self.binary_mask = open_memmap(os.path.join(self.path, 'binary_mask.npy'),
+                                     dtype=np.ushort, mode='r+', shape=self.ct.shape)  # 4D CT-scan binary mask for sidewall rupture rendering
         else:
-            self._binary_mask = None
-        self._exp = exp  # Experiment name
+            self.binary_mask = None
         self._index = 0  # Integer value representing the index of the current time instant: used to determine which volume has to be segmented
         self._threshold = 0  # Value used for thresholding (this value is obtained by _find_threshold method
         return
@@ -145,7 +129,7 @@ class FT_data:
 
     def _find_threshold(self):
         DELTA = 100; SLICES = 10; step = 1; flag=False; add=True
-        smaller_ct = np.array([self._ct[0,i] for i in np.linspace(0, self._ct.shape[1]-1, SLICES, dtype=int)])
+        smaller_ct = np.array([self.ct[0,i] for i in np.linspace(0, self.ct.shape[1]-1, SLICES, dtype=int)])
         while not flag:
             current_area = self._find_biggest_area(smaller_ct, SLICES)
             if current_area > self._threshold_target + DELTA:  # if the area is larger than target, the threshold is increased in order to reduce the area
@@ -166,7 +150,7 @@ class FT_data:
         return np.take(lookup_table, mask)
 
     def _segment3d(self):
-        mask = np.greater(self._ct[self._index], self._threshold)
+        mask = np.greater(self.ct[self._index], self._threshold)
         mask = label(np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(4))))
         if self._filtering3D:
             mask = self._remove_small_3d_agglomerates(mask)
@@ -176,7 +160,7 @@ class FT_data:
             lookup_table = np.zeros(np.max(current_labels)+1, dtype=np.ushort)
             lookup_table[current_labels] = np.arange(len(current_labels)) + 1
             mask = np.take(lookup_table, mask)
-        self._mask[self._index] = mask
+        self.mask[self._index] = mask
         return
     
     def _dictionary_update_condition(self, current_mask_label, count):
@@ -188,8 +172,8 @@ class FT_data:
 
     def _create_label_propagation_map(self):
         self._label_propagation_map = dict()  # Dictionary used for label propagation 
-        previous_mask = self._mask[self._index - 1]
-        current_mask = self._mask[self._index]
+        previous_mask = self.mask[self._index - 1]
+        current_mask = self.mask[self._index]
         rps = regionprops(previous_mask)
         ordered_previous_mask_labels = np.array([rp.label for rp in rps])[np.argsort([rp.area for rp in rps])]
         for previous_mask_label in ordered_previous_mask_labels:
@@ -202,8 +186,8 @@ class FT_data:
         return
 
     def _propagate(self):
-        previous_mask_max_label = np.max(self._mask[self._index - 1])
-        current_mask = self._mask[self._index]
+        previous_mask_max_label = np.max(self.mask[self._index - 1])
+        current_mask = self.mask[self._index]
         current_mask[current_mask > 0] += previous_mask_max_label + 1
         self._create_label_propagation_map()
         lookup_table = np.zeros(np.max(current_mask)+1, dtype=np.ushort)
@@ -212,11 +196,11 @@ class FT_data:
         new_labels = np.setdiff1d([rp.label for rp in regionprops(current_mask)],
                                   [*self._label_propagation_map])  # current mask labels that were not propagated from previous mask
         lookup_table[new_labels] = np.arange(len(new_labels)) + previous_mask_max_label + 1
-        self._mask[self._index] = np.take(lookup_table, current_mask)
+        self.mask[self._index] = np.take(lookup_table, current_mask)
         return
     
     def _compute_regionprops(self):
-        self._rps = [regionprops(self._mask[time]) for time in range(self._mask.shape[0])]
+        self._rps = [regionprops(self.mask[time]) for time in range(self.mask.shape[0])]
         self._labels_to_remove = set()
         return
 
@@ -249,7 +233,7 @@ class FT_data:
         TR_map = {'P28A_FT_H_Exp1':2, 'P28A_FT_H_Exp2':2, 'P28A_FT_H_Exp3_3':2, 'P28A_FT_H_Exp4_2':6,
                   'P28B_ISC_FT_H_Exp2':11, 'VCT5_FT_N_Exp1':4, 'VCT5_FT_N_Exp3':5, 'VCT5_FT_N_Exp4':4,
                   'VCT5_FT_N_Exp5':4, 'VCT5A_FT_H_Exp2':1, 'VCT5A_FT_H_Exp5':4}
-        for rps in self._rps[:TR_map[self._exp]]:
+        for rps in self._rps[:TR_map[self.exp]]:
             for rp in rps:
                 if rp.label != 1:
                     self._labels_to_remove.add(rp.label)
@@ -263,12 +247,12 @@ class FT_data:
         filtered_labels = all_labels - self._labels_to_remove
         lookup_table = np.zeros(max(all_labels) + 1, dtype=np.ushort)
         lookup_table[sorted(list(filtered_labels))] = np.arange(len(filtered_labels)) + 1
-        for time in range(self._ct.shape[0]):
-            self._mask[time] = np.take(lookup_table, self._mask[time])
+        for time in range(self.ct.shape[0]):
+            self.mask[time] = np.take(lookup_table, self.mask[time])
         return
     
     def _filtering(self, smallest_4Dvolume, pre_TR_filtering):
-        progress_bar = tqdm(total=5, desc=f'{self._exp}', leave=False)
+        progress_bar = tqdm(total=5, desc=f'{self.exp}', leave=False)
         progress_bar.set_postfix_str('Regionprops computation')
         self._compute_regionprops()
         progress_bar.update() #1
@@ -309,20 +293,20 @@ class FT_data:
 
         """
 
-        if self._mask is None:
-            self._mask = open_memmap(os.path.join(self._path, 'mask.npy'),
-                                     dtype=np.ushort, mode='w+', shape=self._ct.shape)  # 4D CT-scan segmentation map
+        if self.mask is None:
+            self.mask = open_memmap(os.path.join(self.path, 'mask.npy'),
+                                     dtype=np.ushort, mode='w+', shape=self.ct.shape)  # 4D CT-scan segmentation map
         self._threshold_target = threshold_target  # Target area (in pixels) of the external shell of the battery
         self._filtering3D = filtering3D  # Boolean variable: if True, small agglomerate filtering is computed
         self._smallest_3Dvolume = smallest_3Dvolume  # Lower bound for the agglomerate volume
-        progress_bar = tqdm(total=self._ct.shape[0], desc=f'{self._exp}', leave=False)
+        progress_bar = tqdm(total=self.ct.shape[0], desc=f'{self.exp}', leave=False)
         progress_bar.set_postfix_str(f'Evaluating threshold')
         self._find_threshold()
         progress_bar.set_postfix_str(f'Segmentation #{self._index + 1}')
         self._segment3d()
         progress_bar.update()
         self._index += 1
-        while self._index < self._ct.shape[0]:
+        while self._index < self.ct.shape[0]:
             progress_bar.set_postfix_str(f'Segmentation #{self._index + 1}')
             self._segment3d()
             progress_bar.set_postfix_str(f'Propagation #{self._index + 1}')
@@ -334,7 +318,7 @@ class FT_data:
             self._filtering(smallest_4Dvolume, pre_TR_filtering)
         return
     
-    def binary_mask(self, threshold=1, smallest_3Dvolume=50):
+    def binary_segment(self, threshold=1, smallest_3Dvolume=50):
         """Class methods are similar to regular functions.
 
         Note
@@ -355,15 +339,15 @@ class FT_data:
 
         """
 
-        if self._binary_mask is None:
-            self._binary_mask = open_memmap(os.path.join(self._path, 'binary_mask.npy'),
-                                     dtype=np.ushort, mode='w+', shape=self._ct.shape)  # 4D CT-scan segmentation map
+        if self.binary_mask is None:
+            self.binary_mask = open_memmap(os.path.join(self.path, 'binary_mask.npy'),
+                                     dtype=np.ushort, mode='w+', shape=self.ct.shape)  # 4D CT-scan segmentation map
         self._smallest_3Dvolume = smallest_3Dvolume
-        progress_bar = tqdm(range(self._ct.shape[0]), desc=f'{self._exp}', leave=False)
+        progress_bar = tqdm(range(self.ct.shape[0]), desc=f'{self.exp}', leave=False)
         progress_bar.set_postfix_str(f'Binary masking: threshold = {threshold}')
         for time in progress_bar:
-            mask = np.greater(self._ct[time], threshold)
-            self._binary_mask[time] = np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(3)))
+            mask = np.greater(self.ct[time], threshold)
+            self.binary_mask[time] = np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(3)))
         return
 
     def view(self, mask=False, binary_mask=False):
@@ -390,12 +374,12 @@ class FT_data:
         viewer = napari.Viewer()
         settings = napari.settings.get_settings()
         settings.application.playback_fps = 5
-        viewer.add_image(self._ct, name=f'{self._exp} Volume', contrast_limits = [0, 6])
-        if binary_mask and not self._binary_mask is None:
-            viewer.add_labels(self._binary_mask, name=f'{self._exp} Binary mask', opacity=0.8)
-        if mask and not self._mask is None:
-            viewer.layers[f'{self._exp} Volume'].opacity = 0.4
-            viewer.add_labels(self._mask, name=f'{self._exp} Mask', opacity=0.8)
+        viewer.add_image(self.ct, name=f'{self.exp} Volume', contrast_limits = [0, 6])
+        if binary_mask and not self.binary_mask is None:
+            viewer.add_labels(self.binary_mask, name=f'{self.exp} Binary mask', opacity=0.8)
+        if mask and not self.mask is None:
+            viewer.layers[f'{self.exp} Volume'].opacity = 0.4
+            viewer.add_labels(self.mask, name=f'{self.exp} Mask', opacity=0.8)
         viewer.dims.current_step = (0, 0)
         return
 
@@ -420,16 +404,16 @@ class FT_data:
 
         """
 
-        movie_path = os.path.join(self._path, 'movies', f'slice {z} movie')
+        movie_path = os.path.join(self.path, 'movies', f'slice {z} movie')
         img_path = os.path.join(movie_path, 'frames')
         if not os.path.exists(img_path):
             os.makedirs(img_path)
-        for time in range(self._ct.shape[0]):
-            image = _FT_image(self._ct[time, z])
+        for time in range(self.ct.shape[0]):
+            image = _FT_image(self.ct[time, z])
             image.scale(img_min, img_max)
             image.add_time_text(time)
             image.save(img_path)
-        movie = _FT_movie(movie_path, img_path, self._exp)
+        movie = _FT_movie(movie_path, img_path, self.exp)
         movie.write(fps)
         return
 
@@ -455,22 +439,22 @@ class FT_data:
         """
 
         if is_sidewall_rupture:
-            movie_path = os.path.join(self._path, 'sidewall_renders')
-            movie = _FT_movie(movie_path, os.path.join(movie_path, 'perspective view'), self._exp)
+            movie_path = os.path.join(self.path, 'sidewall_renders')
+            movie = _FT_movie(movie_path, os.path.join(movie_path, 'perspective view'), self.exp)
             movie.write(fps, 'perspective view')
-            print(f'{self._exp} perspective view done!')
+            print(f'{self.exp} perspective view done!')
             return
-        movie_path = os.path.join(self._path, 'renders')
+        movie_path = os.path.join(self.path, 'renders')
         for view in ['top view', 'side view', 'perspective view']:
-            movie = _FT_movie(movie_path, os.path.join(movie_path, view), self._exp)
+            movie = _FT_movie(movie_path, os.path.join(movie_path, view), self.exp)
             movie.write(fps, view)
-            print(f'{self._exp} {view} done!')
+            print(f'{self.exp} {view} done!')
         return
     
     def _find_mesh(self, time, is_binary_mask):
-        s = self._mask[time].shape
+        s = self.mask[time].shape
         mask = np.zeros((s[2], s[1], s[0]+2), dtype=np.ushort)
-        mask[:, :, 1:-1] = np.swapaxes(self._binary_mask[time], 0, 2) if is_binary_mask else np.swapaxes(self._mask[time], 0, 2)
+        mask[:, :, 1:-1] = np.swapaxes(self.binary_mask[time], 0, 2) if is_binary_mask else np.swapaxes(self.mask[time], 0, 2)
         verts, faces, _, values = marching_cubes(mask, 0)
         verts = (0.004 * verts * np.array([1, -1, -1])) + np.array([-1, 1, 0.5])
         values = values.astype(np.ushort)
@@ -487,9 +471,9 @@ class FT_data:
         return
     
     def _create_agglomerate_stls(self, stl_path, is_sidewall_rupture, times):
-        if self._mask is None:
+        if self.mask is None:
             raise NameError('Mask not found, run FT_data.segment() first!')
-        iterator = range(self._mask.shape[0]) if times is None else times
+        iterator = range(self.mask.shape[0]) if times is None else times
         for time in tqdm(iterator, desc='Creating stl files'):
             time_path = os.path.join(stl_path, str(time).zfill(3))
             if not os.path.exists(time_path):
@@ -500,9 +484,9 @@ class FT_data:
         return
     
     def _create_sidewall_stls(self, stl_path, times):
-        if self._binary_mask is None:
+        if self.binary_mask is None:
             raise NameError('Binary mask not found, run FT_data.binary_mask() first!')
-        iterator = range(self._mask.shape[0]) if times is None else times
+        iterator = range(self.mask.shape[0]) if times is None else times
         for time in tqdm(iterator, desc='Creating binary stl files'):
             time_path = os.path.join(stl_path, str(time).zfill(3))
             if not os.path.exists(time_path):
@@ -532,7 +516,7 @@ class FT_data:
 
         """
 
-        stl_path = os.path.join(self._path, 'stls') if not is_sidewall_rupture else os.path.join(self._path, 'sidewall_stls')
+        stl_path = os.path.join(self.path, 'stls') if not is_sidewall_rupture else os.path.join(self.path, 'sidewall_stls')
         self._create_agglomerate_stls(stl_path, is_sidewall_rupture, times)
         if is_sidewall_rupture:
             self._create_sidewall_stls(stl_path, times)
@@ -540,9 +524,9 @@ class FT_data:
     
     def _set_constants(self):
         self._XYZ_FACTOR, self._V_FACTOR, self._T_FACTOR = 0.04, 0.000064, 0.05
-        self._XY_CENTER = np.array([0, (self._mask.shape[2]-1)/2, (self._mask.shape[2]-1)/2])
+        self._XY_CENTER = np.array([0, (self.mask.shape[2]-1)/2, (self.mask.shape[2]-1)/2])
         RADIUS = 18.6/2
-        HEIGHT = self._mask.shape[1]*self._XYZ_FACTOR
+        HEIGHT = self.mask.shape[1]*self._XYZ_FACTOR
         self._R_SECTIONS = np.array([RADIUS/3, 2*RADIUS/3])
         self._Z_SECTIONS = np.array([HEIGHT/3, 2*HEIGHT/3])
         self._R_SECTIONS_STRING = ['Core', 'Intermediate', 'External']
@@ -585,16 +569,16 @@ class FT_data:
 
         """
 
-        if self._mask is None:
+        if self.mask is None:
             raise NameError('Mask not found, run FT_data.segment() first!')
         self.df = pd.DataFrame(columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vxy', 'vz', 'v', 'V', 'dVdt', 'r_section', 'z_section'])
         self._set_constants()
         current_labels = dict()
         df_index = 0
-        for time in tqdm(range(self._mask.shape[0]), desc='Dataframe computation', leave=False):
+        for time in tqdm(range(self.mask.shape[0]), desc='Dataframe computation', leave=False):
             previous_labels = current_labels
             current_labels = dict()
-            rps = regionprops(self._mask[time])
+            rps = regionprops(self.mask[time])
             labels = [rp.label for rp in rps if rp.label !=1]
             volumes = [(rp.area * self._V_FACTOR) for rp in rps if rp.label !=1] 
             centroids = [((rp.centroid - self._XY_CENTER) * self._XYZ_FACTOR) for rp in rps if rp.label !=1]
@@ -603,7 +587,7 @@ class FT_data:
                 self.df.loc[df_index] = self._new_df_row(previous_labels, label, volume, centroid, time * self._T_FACTOR)
                 df_index += 1
         if save:
-            self.df.to_csv(os.path.join(self._path, 'dataframe.csv'), index=False)
+            self.df.to_csv(os.path.join(self.path, 'dataframe.csv'), index=False)
         return
     
     def _load_df_tot(self):
@@ -735,7 +719,7 @@ class FT_data:
         """
 
         try:
-            self.df = pd.read_csv(os.path.join(self._path, 'dataframe.csv'))
+            self.df = pd.read_csv(os.path.join(self.path, 'dataframe.csv'))
         except FileNotFoundError:
             print('Dataframe not found, run FT_data.create_dataframe() first!')
             return
@@ -752,12 +736,12 @@ class FT_data:
         length, heigth = 5, 3.5
         fig = plt.figure(figsize=(3*length, 5*heigth), dpi=150)
         subfigs = fig.subfigures(5, 1, hspace=0.3)
-        progress_bar = tqdm(total=5, desc=f'{self._exp} drawing plots', leave=False)
+        progress_bar = tqdm(total=5, desc=f'{self.exp} drawing plots', leave=False)
         for i, fun in enumerate([self._plot_V_tot, self._plot_V_avg, self._plot_dVdt, self._plot_speed, self._plot_density]):
             fun(subfigs[i], time_axis, palettes, df_tot, df_r, df_z)
             progress_bar.update()
         progress_bar.close()
         if save:
-            fig.savefig(os.path.join(self._path, 'plots.png'), dpi=300, bbox_inches='tight')
+            fig.savefig(os.path.join(self.path, 'plots.png'), dpi=300, bbox_inches='tight')
         fig.show()
         return
