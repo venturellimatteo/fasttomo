@@ -77,15 +77,17 @@ class _Movie:
 
 
 class Data:
-    """Class used to read, process and write CT data.
+    """Class used to read and process CT data.
 
-    Here should go the detailed description of the class.
+    The Data class is designed for processing and analyzing volumetric image data. 
+    It provides various functionalities including segmentation, visualization, 
+    movie creation, 3D model generation, and data analysis.
 
     Parameters
     ----------
     exp : str
         Experiment name.
-    parent_folder : str
+    parent_folder : str, optional
         Path of the parent folder containing the experiments folders.
 
     Attributes
@@ -277,7 +279,7 @@ class Data:
 
     def segment(self, threshold_target=6800, filtering3D=True, filtering4D=True, pre_TR_filtering=True,
                 smallest_3Dvolume=50, smallest_4Dvolume=250):
-        """Description of class method here.
+        """Segment the volumetric data based on specified thresholds and filters.
 
         Parameters
         ----------
@@ -344,15 +346,16 @@ class Data:
             self.jellyroll_mask[time] = np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(3)))
         return
 
-    def view(self, mask=False, binary_mask=False):
-        """Description of class method here.
+    def view(self, mask=False, jellyroll_mask=False):
+        """Display data within Napari interactive viewer, optionally overlaying 
+        agglomerate segmentation mask or jellyroll mask.
 
         Parameters
         ----------
-        mask
-            Description here.
-        binary_mask
-            Description here.
+        mask : bool, optional
+            Display mask overlay, by default False.
+        binary_mask : bool, optional
+            Display jellyroll mask overlay, by default False.
 
         """
 
@@ -360,7 +363,7 @@ class Data:
         settings = napari.settings.get_settings()
         settings.application.playback_fps = 5
         viewer.add_image(self.ct, name=f'{self.exp} Volume', contrast_limits = [0, 6])
-        if binary_mask and not self.jellyroll_mask is None:
+        if jellyroll_mask and not self.jellyroll_mask is None:
             viewer.add_labels(self.jellyroll_mask, name=f'{self.exp} Binary mask', opacity=0.8)
         if mask and not self.mask is None:
             viewer.layers[f'{self.exp} Volume'].opacity = 0.4
@@ -369,18 +372,18 @@ class Data:
         return
 
     def create_slice_movie(self, z, img_min=0, img_max=5, fps=7):
-        """Description of class method here.
+        """Create a movie by slicing through the data at the specified z-level.
 
         Parameters
         ----------
-        z
-            Description here.
-        img_min
-            Description here.
-        img_max
-            Description here.
-        fps
-            Description here.
+        z: int
+            The z-level at which to slice through the data.
+        img_min : int, optional
+            Minimum intensity value for image scaling, by default 0.
+        img_max : int, optional
+            Maximum intensity value for image scaling, by default 5.
+        fps : int, optional
+            Frames per second for the movie, by default 7.
 
         """
 
@@ -403,9 +406,9 @@ class Data:
         Parameters
         ----------
         fps
-            Description here.
+            Frames per second for the movie, by default 5.
         is_sidewall_rupture
-            Description here.
+            Flag to indicate if sidewall rupture is to be considered.
 
         """
 
