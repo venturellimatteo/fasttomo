@@ -6,7 +6,7 @@
 Welcome to fasttomo's documentation!
 ====================================
 
-.. autoclass:: FT.FT_data
+.. autoclass:: FT.Data
    :members:
 
 .. toctree::
