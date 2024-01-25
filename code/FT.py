@@ -16,7 +16,7 @@ from matplotlib.lines import Line2D
 
 # Missing features: ct resizing, df construction, plots
 
-class _FT_image():
+class _Image():
     
     def __init__(self, array):
         self._np = np.copy(array)
@@ -53,7 +53,7 @@ class _FT_image():
         return
 
 
-class _FT_movie:
+class _Movie:
 
     def __init__(self, path, img_path, exp):
         self.path = path
@@ -76,7 +76,7 @@ class _FT_movie:
         self._video.release()
 
 
-class FT_data:
+class Data:
     """Class used to read, process and write CT data.
 
     Here should go the detailed description of the class.
@@ -94,29 +94,33 @@ class FT_data:
         Experiment name.
     path : str
         Experiment folder path.
-    ct : numpy.ndarray
-        4D CT-scan.
-    mask : numpy.ndarray
-        4D segmentation mask of ``ct``.
-    binary_mask : numpy.ndarray
-        4D binary mask used to render the sidewall ruptures.
+    ct : numpy.ndarray (dtype=np.half)
+        4D CT-scan recorded in (t, z, x, y) format, loaded from ``path/ct.npy'``.
+    mask : numpy.ndarray (dtype=np.ushort)
+        4D segmentation mask of ``self.ct``. If file ``path/mask.npy`` does not 
+        exist at the moment of class instantiation, the file is created. The shape
+        of the array is the same as ``self.ct``.
+    jellyroll_mask : numpy.ndarray (dtype=np.ushort)
+        4D binary mask of the jellyroll. If file ``path/jellyroll_mask.npy`` does not 
+        exist at the moment of class instantiation, the file is created. The shape
+        of the array is the same as ``self.ct``.
 
     """
 
-    def __init__(self, exp, parent_folder='/Volumes/T7/Thesis/'):
+    def __init__(self, exp, parent_folder='/Volumes/T7/Thesis'):
         self.exp = exp  # Experiment name
-        self.path = '/Volumes/T7/Thesis/' + exp
+        self.path = os.path.join(parent_folder, exp)
         self.ct = open_memmap(os.path.join(self.path, 'ct.npy'), mode='r')  # 4D CT-scan
         if os.path.exists(os.path.join(self.path, 'mask.npy')):
             self.mask = open_memmap(os.path.join(self.path, 'mask.npy'),
                                      dtype=np.ushort, mode='r+', shape=self.ct.shape)  # 4D CT-scan segmentation map
         else:
             self.mask = None
-        if os.path.exists(os.path.join(self.path, 'binary_mask.npy')):
-            self.binary_mask = open_memmap(os.path.join(self.path, 'binary_mask.npy'),
+        if os.path.exists(os.path.join(self.path, 'jellyroll_mask.npy')):
+            self.jellyroll_mask = open_memmap(os.path.join(self.path, 'jellyroll_mask.npy'),
                                      dtype=np.ushort, mode='r+', shape=self.ct.shape)  # 4D CT-scan binary mask for sidewall rupture rendering
         else:
-            self.binary_mask = None
+            self.jellyroll_mask = None
         self._index = 0  # Integer value representing the index of the current time instant: used to determine which volume has to be segmented
         self._threshold = 0  # Value used for thresholding (this value is obtained by _find_threshold method
         return
@@ -273,23 +277,22 @@ class FT_data:
 
     def segment(self, threshold_target=6800, filtering3D=True, filtering4D=True, pre_TR_filtering=True,
                 smallest_3Dvolume=50, smallest_4Dvolume=250):
-        """Class methods are similar to regular functions.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
+        """Description of class method here.
 
         Parameters
         ----------
-        param1
-            The first parameter.
-        param2
-            The second parameter.
-
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+        threshold_target
+            Description here.
+        filtering3D
+            Description here.
+        filtering4D
+            Description here.
+        pre_TR_filtering
+            Description here.
+        smallest_3Dvolume
+            Description here.
+        smallest_4Dvolume
+            Description here.
 
         """
 
@@ -318,56 +321,38 @@ class FT_data:
             self._filtering(smallest_4Dvolume, pre_TR_filtering)
         return
     
-    def binary_segment(self, threshold=1, smallest_3Dvolume=50):
-        """Class methods are similar to regular functions.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
+    def segment_jellyroll(self, threshold=1, smallest_3Dvolume=50):
+        """Description of class method here.
 
         Parameters
         ----------
-        param1
-            The first parameter.
-        param2
-            The second parameter.
-
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+        threshold
+            Description here.
+        smallest_3Dvolume
+            Description here.
 
         """
 
-        if self.binary_mask is None:
-            self.binary_mask = open_memmap(os.path.join(self.path, 'binary_mask.npy'),
+        if self.jellyroll_mask is None:
+            self.jellyroll_mask = open_memmap(os.path.join(self.path, 'jellyroll_mask.npy'),
                                      dtype=np.ushort, mode='w+', shape=self.ct.shape)  # 4D CT-scan segmentation map
         self._smallest_3Dvolume = smallest_3Dvolume
         progress_bar = tqdm(range(self.ct.shape[0]), desc=f'{self.exp}', leave=False)
         progress_bar.set_postfix_str(f'Binary masking: threshold = {threshold}')
         for time in progress_bar:
             mask = np.greater(self.ct[time], threshold)
-            self.binary_mask[time] = np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(3)))
+            self.jellyroll_mask[time] = np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(3)))
         return
 
     def view(self, mask=False, binary_mask=False):
-        """Class methods are similar to regular functions.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
+        """Description of class method here.
 
         Parameters
         ----------
-        param1
-            The first parameter.
-        param2
-            The second parameter.
-
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+        mask
+            Description here.
+        binary_mask
+            Description here.
 
         """
 
@@ -375,32 +360,27 @@ class FT_data:
         settings = napari.settings.get_settings()
         settings.application.playback_fps = 5
         viewer.add_image(self.ct, name=f'{self.exp} Volume', contrast_limits = [0, 6])
-        if binary_mask and not self.binary_mask is None:
-            viewer.add_labels(self.binary_mask, name=f'{self.exp} Binary mask', opacity=0.8)
+        if binary_mask and not self.jellyroll_mask is None:
+            viewer.add_labels(self.jellyroll_mask, name=f'{self.exp} Binary mask', opacity=0.8)
         if mask and not self.mask is None:
             viewer.layers[f'{self.exp} Volume'].opacity = 0.4
             viewer.add_labels(self.mask, name=f'{self.exp} Mask', opacity=0.8)
         viewer.dims.current_step = (0, 0)
         return
 
-    def slice_movie(self, z, img_min=0, img_max=5, fps=7):
-        """Class methods are similar to regular functions.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
+    def create_slice_movie(self, z, img_min=0, img_max=5, fps=7):
+        """Description of class method here.
 
         Parameters
         ----------
-        param1
-            The first parameter.
-        param2
-            The second parameter.
-
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+        z
+            Description here.
+        img_min
+            Description here.
+        img_max
+            Description here.
+        fps
+            Description here.
 
         """
 
@@ -409,44 +389,35 @@ class FT_data:
         if not os.path.exists(img_path):
             os.makedirs(img_path)
         for time in range(self.ct.shape[0]):
-            image = _FT_image(self.ct[time, z])
+            image = _Image(self.ct[time, z])
             image.scale(img_min, img_max)
             image.add_time_text(time)
             image.save(img_path)
-        movie = _FT_movie(movie_path, img_path, self.exp)
+        movie = _Movie(movie_path, img_path, self.exp)
         movie.write(fps)
         return
 
-    def render_movie(self, fps=5, is_sidewall_rupture=False):
-        """Class methods are similar to regular functions.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
+    def create_render_movie(self, fps=5, is_sidewall_rupture=False):
+        """Description of class method here.
 
         Parameters
         ----------
-        param1
-            The first parameter.
-        param2
-            The second parameter.
-
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+        fps
+            Description here.
+        is_sidewall_rupture
+            Description here.
 
         """
 
         if is_sidewall_rupture:
             movie_path = os.path.join(self.path, 'sidewall_renders')
-            movie = _FT_movie(movie_path, os.path.join(movie_path, 'perspective view'), self.exp)
+            movie = _Movie(movie_path, os.path.join(movie_path, 'perspective view'), self.exp)
             movie.write(fps, 'perspective view')
             print(f'{self.exp} perspective view done!')
             return
         movie_path = os.path.join(self.path, 'renders')
         for view in ['top view', 'side view', 'perspective view']:
-            movie = _FT_movie(movie_path, os.path.join(movie_path, view), self.exp)
+            movie = _Movie(movie_path, os.path.join(movie_path, view), self.exp)
             movie.write(fps, view)
             print(f'{self.exp} {view} done!')
         return
@@ -454,7 +425,7 @@ class FT_data:
     def _find_mesh(self, time, is_binary_mask):
         s = self.mask[time].shape
         mask = np.zeros((s[2], s[1], s[0]+2), dtype=np.ushort)
-        mask[:, :, 1:-1] = np.swapaxes(self.binary_mask[time], 0, 2) if is_binary_mask else np.swapaxes(self.mask[time], 0, 2)
+        mask[:, :, 1:-1] = np.swapaxes(self.jellyroll_mask[time], 0, 2) if is_binary_mask else np.swapaxes(self.mask[time], 0, 2)
         verts, faces, _, values = marching_cubes(mask, 0)
         verts = (0.004 * verts * np.array([1, -1, -1])) + np.array([-1, 1, 0.5])
         values = values.astype(np.ushort)
@@ -472,7 +443,7 @@ class FT_data:
     
     def _create_agglomerate_stls(self, stl_path, is_sidewall_rupture, times):
         if self.mask is None:
-            raise NameError('Mask not found, run FT_data.segment() first!')
+            raise NameError('Mask not found, run Data.segment() first!')
         iterator = range(self.mask.shape[0]) if times is None else times
         for time in tqdm(iterator, desc='Creating stl files'):
             time_path = os.path.join(stl_path, str(time).zfill(3))
@@ -484,8 +455,8 @@ class FT_data:
         return
     
     def _create_sidewall_stls(self, stl_path, times):
-        if self.binary_mask is None:
-            raise NameError('Binary mask not found, run FT_data.binary_mask() first!')
+        if self.jellyroll_mask is None:
+            raise NameError('Binary mask not found, run Data.binary_mask() first!')
         iterator = range(self.mask.shape[0]) if times is None else times
         for time in tqdm(iterator, desc='Creating binary stl files'):
             time_path = os.path.join(stl_path, str(time).zfill(3))
@@ -496,23 +467,14 @@ class FT_data:
         return
     
     def create_stls(self, is_sidewall_rupture=False, times=None):
-        """Class methods are similar to regular functions.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
+        """Description of class method here.
 
         Parameters
         ----------
-        param1
-            The first parameter.
-        param2
-            The second parameter.
-
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+        is_sidewall_rupture
+            Description here.
+        times
+            Description here.
 
         """
 
@@ -548,29 +510,13 @@ class FT_data:
             vx, vy, vxy, vz, v, dVdt = 0, 0, 0, 0, 0, V/self._T_FACTOR
         return [t, label, x, y, z, r, vx, vy, vxy, vz, v, V, dVdt, r_section, z_section]
     
-    def create_dataframe(self, save=True):
-        """Class methods are similar to regular functions.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
-
-        Parameters
-        ----------
-        param1
-            The first parameter.
-        param2
-            The second parameter.
-
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+    def create_dataframe(self):
+        """Description of class method here.
 
         """
 
         if self.mask is None:
-            raise NameError('Mask not found, run FT_data.segment() first!')
+            raise NameError('Mask not found, run Data.segment() first!')
         self.df = pd.DataFrame(columns=['t', 'label', 'x', 'y', 'z', 'r', 'vx', 'vy', 'vxy', 'vz', 'v', 'V', 'dVdt', 'r_section', 'z_section'])
         self._set_constants()
         current_labels = dict()
@@ -586,8 +532,7 @@ class FT_data:
                 current_labels[label] = df_index
                 self.df.loc[df_index] = self._new_df_row(previous_labels, label, volume, centroid, time * self._T_FACTOR)
                 df_index += 1
-        if save:
-            self.df.to_csv(os.path.join(self.path, 'dataframe.csv'), index=False)
+        self.df.to_csv(os.path.join(self.path, 'dataframe.csv'), index=False)
         return
     
     def _load_df_tot(self):
@@ -698,30 +643,19 @@ class FT_data:
         return
     
     def plots(self, save=True):
-        """Class methods are similar to regular functions.
-
-        Note
-        ----
-        Do not include the `self` parameter in the ``Parameters`` section.
+        """Description of class method here.
 
         Parameters
         ----------
-        param1
-            The first parameter.
-        param2
-            The second parameter.
-
-        Returns
-        -------
-        bool
-            True if successful, False otherwise.
+        is_sidewall_rupture
+            Description here.
 
         """
 
         try:
             self.df = pd.read_csv(os.path.join(self.path, 'dataframe.csv'))
         except FileNotFoundError:
-            print('Dataframe not found, run FT_data.create_dataframe() first!')
+            print('Dataframe not found, run Data.create_dataframe() first!')
             return
         self._R_SECTIONS_STRING = ['Core', 'Intermediate', 'External']
         self._Z_SECTIONS_STRING = ['Top', 'Middle', 'Bottom']
