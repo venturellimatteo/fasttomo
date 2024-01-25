@@ -117,7 +117,7 @@ if __name__ == "__main__":
     modify_engine()
     create_materials(palette)
     experiments = exp_list()
-    experiments = ['VCT5_FT_N_Exp1']
+    experiments = ['P28A_FT_H_Exp2']
     
     for exp in experiments:
         stl_path, side_path, top_path, persp_path = create_folders(path, exp)
