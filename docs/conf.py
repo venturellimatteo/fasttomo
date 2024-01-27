@@ -18,6 +18,8 @@ release = '0.1'
 
 extensions = ['autoapi.extension', 'sphinx.ext.napoleon']
 autoapi_dirs = ['../code']
+autoapi_file_patterns = ['FT.py']
+autoapi_options = ['members', 'undoc-members', 'show-inheritance', 'show-module-summary', 'special-members', 'imported-members'] # 
 napoleon_numpy_docstring = True
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

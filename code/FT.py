@@ -98,7 +98,7 @@ class Data:
     path : str
         Experiment folder path.
     ct : numpy.ndarray (dtype=np.half)
-        4D CT-scan recorded in (t, z, x, y) format, loaded from ``path/ct.npy'``.
+        4D CT-scan recorded in ``(t, z, x, y)`` format, loaded from ``path/ct.npy``.
     mask : numpy.ndarray (dtype=np.ushort)
         4D segmentation mask of ``self.ct``. If file ``path/mask.npy`` does not 
         exist at the moment of class instantiation, the file is created. The shape

@@ -12,36 +12,8 @@ Classes
 
 .. autoapisummary::
 
-   FT._Image
-   FT._Movie
    FT.Data
 
-
-
-
-.. py:class:: _Image(array)
-
-
-   .. py:method:: _PIL_conversion()
-
-
-   .. py:method:: scale(img_min, img_max)
-
-
-   .. py:method:: show()
-
-
-   .. py:method:: add_time_text(time)
-
-
-   .. py:method:: save(path)
-
-
-
-.. py:class:: _Movie(path, img_path, exp)
-
-
-   .. py:method:: write(fps, view)
 
 
 
@@ -73,7 +45,7 @@ Classes
 
    .. attribute:: ct
 
-      4D CT-scan recorded in (t, z, x, y) format, loaded from ``path/ct.npy'``.
+      4D CT-scan recorded in ``(t, z, x, y)`` format, loaded from ``path/ct.npy``.
 
       :type: numpy.ndarray (dtype=np.half)
 
@@ -92,45 +64,6 @@ Classes
       of the array is the same as ``self.ct``.
 
       :type: numpy.ndarray (dtype=np.ushort)
-
-   .. py:method:: _find_biggest_area(smaller_ct, SLICES)
-
-
-   .. py:method:: _find_threshold()
-
-
-   .. py:method:: _remove_small_3d_agglomerates(mask)
-
-
-   .. py:method:: _segment3d()
-
-
-   .. py:method:: _dictionary_update_condition(current_mask_label, count)
-
-
-   .. py:method:: _create_label_propagation_map()
-
-
-   .. py:method:: _propagate()
-
-
-   .. py:method:: _compute_regionprops()
-
-
-   .. py:method:: _find_isolated_agglomerates()
-
-
-   .. py:method:: _find_small_4d_agglomerates(smallest_4Dvolume)
-
-
-   .. py:method:: _find_pre_TR_agglomerates()
-
-
-   .. py:method:: _update_labels()
-
-
-   .. py:method:: _filtering(smallest_4Dvolume, pre_TR_filtering)
-
 
    .. py:method:: segment(threshold_target=6800, filtering3D=True, filtering4D=True, pre_TR_filtering=True, smallest_3Dvolume=50, smallest_4Dvolume=250)
 
@@ -195,18 +128,6 @@ Classes
       :type rupture: bool, optional
 
 
-   .. py:method:: _find_mesh(time, is_binary_mask)
-
-
-   .. py:method:: _save_stl(label, verts, faces, values, time_path, is_binary_mask)
-
-
-   .. py:method:: _create_agglomerate_stls(stl_path, rupture, times)
-
-
-   .. py:method:: _create_sidewall_stls(stl_path, times)
-
-
    .. py:method:: create_stls(rupture=False, times=None)
 
       Description of class method here.
@@ -217,44 +138,11 @@ Classes
       :type times: list, optional
 
 
-   .. py:method:: _set_constants()
-
-
-   .. py:method:: _new_df_row(previous_labels, label, V, centroid, t)
-
-
    .. py:method:: create_dataframe()
 
       Description of class method here.
 
 
-
-
-   .. py:method:: _load_df_tot()
-
-
-   .. py:method:: _load_df_r()
-
-
-   .. py:method:: _load_df_z()
-
-
-   .. py:method:: _adjust_axes(axs, time_axis, x_label, draw_legend_title=True)
-
-
-   .. py:method:: _plot_V_tot(fig, time_axis, palettes, df_tot, df_r, df_z)
-
-
-   .. py:method:: _plot_V_avg(fig, time_axis, palettes, df_tot, df_r, df_z)
-
-
-   .. py:method:: _plot_dVdt(fig, time_axis, palettes, df_tot, df_r, df_z)
-
-
-   .. py:method:: _plot_speed(fig, time_axis, palettes, _dummy1, _dummy2, _dummy3)
-
-
-   .. py:method:: _plot_density(fig, time_axis, palettes, df_tot, df_r, df_z)
 
 
    .. py:method:: plots(save=True)
