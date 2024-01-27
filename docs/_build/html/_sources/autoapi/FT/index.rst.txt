@@ -153,12 +153,16 @@ Classes
       :type save: bool, optional
 
 
-   .. py:method:: render(rupture=False)
+   .. py:method:: render(rupture=False, blender_executable_path='/Applications/Blender.app/Contents/MacOS/Blender', parent_path='/Users/matteoventurelli/Documents/VS Code/MasterThesis/code/blender')
 
       Description of class method here.
 
       :param rupture: Description here.
       :type rupture: bool, optional
+      :param blender_executable_path: Description here.
+      :type blender_executable_path: str, optional
+      :param parent_path: Description here.
+      :type parent_path: str, optional
 
 
 

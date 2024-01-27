@@ -48,6 +48,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../FT/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">FT</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../render/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">render</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../rupture_render/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rupture_render</span></code></a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agglomerate_render</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-contents">Module Contents</a><ul>
@@ -115,13 +116,13 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#agglomerate_render.add_lights" title="agglomerate_render.add_lights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_lights</span></code></a>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#agglomerate_render.top_view_render" title="agglomerate_render.top_view_render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">top_view_render</span></code></a>(top_path, t)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#agglomerate_render.top_view_render" title="agglomerate_render.top_view_render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">top_view_render</span></code></a>(top_path, time)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#agglomerate_render.side_view_render" title="agglomerate_render.side_view_render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">side_view_render</span></code></a>(side_path, t)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#agglomerate_render.side_view_render" title="agglomerate_render.side_view_render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">side_view_render</span></code></a>(side_path, time)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#agglomerate_render.persp_view_render" title="agglomerate_render.persp_view_render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">persp_view_render</span></code></a>(persp_path, t)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#agglomerate_render.persp_view_render" title="agglomerate_render.persp_view_render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">persp_view_render</span></code></a>(persp_path, time)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -173,17 +174,17 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="agglomerate_render.top_view_render">
-<span class="sig-prename descclassname"><span class="pre">agglomerate_render.</span></span><span class="sig-name descname"><span class="pre">top_view_render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#agglomerate_render.top_view_render" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">agglomerate_render.</span></span><span class="sig-name descname"><span class="pre">top_view_render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#agglomerate_render.top_view_render" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="agglomerate_render.side_view_render">
-<span class="sig-prename descclassname"><span class="pre">agglomerate_render.</span></span><span class="sig-name descname"><span class="pre">side_view_render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">side_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#agglomerate_render.side_view_render" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">agglomerate_render.</span></span><span class="sig-name descname"><span class="pre">side_view_render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">side_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#agglomerate_render.side_view_render" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="agglomerate_render.persp_view_render">
-<span class="sig-prename descclassname"><span class="pre">agglomerate_render.</span></span><span class="sig-name descname"><span class="pre">persp_view_render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">persp_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#agglomerate_render.persp_view_render" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">agglomerate_render.</span></span><span class="sig-name descname"><span class="pre">persp_view_render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">persp_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#agglomerate_render.persp_view_render" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py data">

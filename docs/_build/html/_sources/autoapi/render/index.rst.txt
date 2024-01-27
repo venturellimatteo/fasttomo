@@ -1,0 +1,70 @@
+:py:mod:`render`
+================
+
+.. py:module:: render
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   render.color_palette
+   render.modify_engine
+   render.modify_properties
+   render.create_materials
+   render.create_folders
+   render.import_object
+   render.add_lights
+   render.top_view_render
+   render.side_view_render
+   render.persp_view_render
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   render.time_path
+
+
+.. py:function:: color_palette()
+
+
+.. py:function:: modify_engine(isJellyroll)
+
+
+.. py:function:: modify_properties(obj, label, isJellyroll)
+
+
+.. py:function:: create_materials(isJellyroll)
+
+
+.. py:function:: create_folders(path, exp)
+
+
+.. py:function:: import_object(obj_name, time_path, isJellyroll)
+
+
+.. py:function:: add_lights()
+
+
+.. py:function:: top_view_render(top_path, time)
+
+
+.. py:function:: side_view_render(side_path, time)
+
+
+.. py:function:: persp_view_render(persp_path, time, isJellyroll)
+
+
+.. py:data:: time_path
+
+   
+
