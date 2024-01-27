@@ -1,0 +1,69 @@
+:py:mod:`conf`
+==============
+
+.. py:module:: conf
+
+
+Module Contents
+---------------
+
+.. py:data:: project
+   :value: 'fasttomo'
+
+   
+
+.. py:data:: copyright
+   :value: '2024, Matteo Venturelli'
+
+   
+
+.. py:data:: author
+   :value: 'Matteo Venturelli'
+
+   
+
+.. py:data:: release
+   :value: '0.1'
+
+   
+
+.. py:data:: extensions
+   :value: ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'autoapi.extension']
+
+   
+
+.. py:data:: napoleon_numpy_docstring
+   :value: True
+
+   
+
+.. py:data:: templates_path
+   :value: ['_templates']
+
+   
+
+.. py:data:: exclude_patterns
+   :value: ['_build', 'Thumbs.db', '.DS_Store']
+
+   
+
+.. py:data:: autoapi_dirs
+   :value: ['.']
+
+   
+
+.. py:data:: html_theme
+   :value: 'sphinx_rtd_theme'
+
+   
+
+.. py:data:: html_theme_path
+   :value: ['_themes']
+
+   
+
+.. py:data:: html_static_path
+   :value: ['_static']
+
+   
+

@@ -1,0 +1,71 @@
+:py:mod:`agglomerate_render`
+============================
+
+.. py:module:: agglomerate_render
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   agglomerate_render.color_palette
+   agglomerate_render.modify_engine
+   agglomerate_render.modify_properties
+   agglomerate_render.create_materials
+   agglomerate_render.create_folders
+   agglomerate_render.import_object
+   agglomerate_render.add_lights
+   agglomerate_render.top_view_render
+   agglomerate_render.side_view_render
+   agglomerate_render.persp_view_render
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   agglomerate_render.path
+
+
+.. py:function:: color_palette()
+
+
+.. py:function:: modify_engine()
+
+
+.. py:function:: modify_properties(so, label, palette)
+
+
+.. py:function:: create_materials(palette)
+
+
+.. py:function:: create_folders(path, exp)
+
+
+.. py:function:: import_object(obj_name, time_path)
+
+
+.. py:function:: add_lights()
+
+
+.. py:function:: top_view_render(top_path, t)
+
+
+.. py:function:: side_view_render(side_path, t)
+
+
+.. py:function:: persp_view_render(persp_path, t)
+
+
+.. py:data:: path
+   :value: '/Volumes/T7/Thesis'
+
+   
+
