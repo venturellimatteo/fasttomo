@@ -1,19 +1,6 @@
 # Fasttomo pipeline
 <!-- Start with a clear and concise title that reflects the purpose of your project. Follow it with a brief description that outlines what your pipeline does. -->
 
-## Table of contents
-- [Fasttomo pipeline](#fasttomo-pipeline)
-  - [Table of contents](#table-of-contents)
-  - [1. Installation](#1-installation)
-  - [2. Usage](#2-usage)
-  - [3. Examples](#3-examples)
-  - [4. Results](#4-results)
-  - [5. Configuration](#5-configuration)
-  - [6. Documentation](#6-documentation)
-  - [7. License](#7-license)
-  - [8. Acknowledgments](#8-acknowledgments)
-  - [9. Contact Information](#9-contact-information)
-
 ## 1. Installation
 <!-- Provide detailed instructions on how to install your pipeline. Include any dependencies and system requirements. You might also want to include installation commands for easy setup. -->
 To install `fasttomo`, follow these steps:
