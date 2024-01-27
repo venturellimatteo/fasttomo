@@ -8,6 +8,8 @@
 *.gz
 *.toc
 *.bib
+agglomerate_render.py
+rupture_render.py
 **/__pycache__
 old_code
 thesis/Chapters

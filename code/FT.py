@@ -684,21 +684,24 @@ class Data:
         fig.show()
         return
     
-    def render(self, rupture=False):
+    def render(self, rupture=False,
+               blender_executable_path = '/Applications/Blender.app/Contents/MacOS/Blender',
+               parent_path = '/Users/matteoventurelli/Documents/VS Code/MasterThesis/code/blender'):
         """Description of class method here.
 
         Parameters
         ----------
         rupture: bool, optional
             Description here.
-
+        blender_executable_path: str, optional
+            Description here.
+        parent_path: str, optional
+            Description here.
         """
 
-        blender_executable_path = '/Applications/Blender.app/Contents/MacOS/Blender'
-        parent_path = '/Users/matteoventurelli/Documents/VS Code/MasterThesis/code/blender'
         blender_file_path = os.path.join(parent_path, 'surface_rendering.blend')
-        script_filename = 'rupture_render.py' if rupture else 'agglomerate_render.py'
-        script_path = os.path.join(parent_path, script_filename)
-        command = [blender_executable_path, blender_file_path, '--background', '--python', script_path, '--'+self.exp]
+        script_path = os.path.join(parent_path, 'render.py')
+        command = [blender_executable_path, blender_file_path, '--background', '--python', script_path, 
+                   '--' + self.path, '--' + self.exp, '--' + rupture]
         subprocess.run(command)
         return
