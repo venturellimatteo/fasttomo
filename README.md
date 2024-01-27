@@ -26,7 +26,7 @@ To install FastTomo, follow these steps:
 2. Navigate to the project directory:
    
    ```bash
-   cd your-project
+   cd fasttomo
   
 3. Create a conda virtual environment:
    
