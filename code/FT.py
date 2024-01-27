@@ -699,7 +699,7 @@ class Data:
             Description here.
         """
 
-        blender_file_path = os.path.join(parent_path, 'surface_rendering.blend')
+        blender_file_path = os.path.join(parent_path, 'render.blend')
         script_path = os.path.join(parent_path, 'render.py')
         command = [blender_executable_path, blender_file_path, '--background', '--python', script_path, 
                    '--' + self.path, '--' + self.exp, '--' + rupture]
