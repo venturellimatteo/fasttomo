@@ -284,17 +284,17 @@ class Data:
 
         Parameters
         ----------
-        threshold_target
+        threshold_target: int, optional
             Description here.
-        filtering3D
+        filtering3D: bool, optional
             Description here.
-        filtering4D
+        filtering4D: bool, optional
             Description here.
-        pre_TR_filtering
+        pre_TR_filtering: bool, optional
             Description here.
-        smallest_3Dvolume
+        smallest_3Dvolume: int, optional
             Description here.
-        smallest_4Dvolume
+        smallest_4Dvolume: int, optional
             Description here.
 
         """
@@ -329,9 +329,9 @@ class Data:
 
         Parameters
         ----------
-        threshold
+        threshold: float, optional
             Description here.
-        smallest_3Dvolume
+        smallest_3Dvolume: : int, optional
             Description here.
 
         """
@@ -401,19 +401,19 @@ class Data:
         movie.write(fps)
         return
 
-    def create_render_movie(self, fps=5, is_sidewall_rupture=False):
+    def create_render_movie(self, fps=5, rupture=False):
         """Description of class method here.
 
         Parameters
         ----------
-        fps
+        fps: int, optional
             Frames per second for the movie, by default 5.
-        is_sidewall_rupture
+        rupture: bool, optional
             Flag to indicate if sidewall rupture is to be considered.
 
         """
 
-        if is_sidewall_rupture:
+        if rupture:
             movie_path = os.path.join(self.path, 'sidewall_renders')
             movie = _Movie(movie_path, os.path.join(movie_path, 'perspective view'), self.exp)
             movie.write(fps, 'perspective view')
@@ -445,7 +445,7 @@ class Data:
         stl_mesh.save(os.path.join(time_path, name + '.stl'))
         return
     
-    def _create_agglomerate_stls(self, stl_path, is_sidewall_rupture, times):
+    def _create_agglomerate_stls(self, stl_path, rupture, times):
         if self.mask is None:
             raise NameError('Mask not found, run Data.segment() first!')
         iterator = range(self.mask.shape[0]) if times is None else times
@@ -454,7 +454,7 @@ class Data:
             if not os.path.exists(time_path):
                 os.makedirs(time_path)
             verts, faces, values = self._find_mesh(time, is_binary_mask=False)
-            for label in [label for label in np.unique(values) if label == 1 or not is_sidewall_rupture]:
+            for label in [label for label in np.unique(values) if label == 1 or not rupture]:
                 self._save_stl(label, verts, faces, values, time_path, is_binary_mask=False)
         return
     
@@ -470,21 +470,21 @@ class Data:
             self._save_stl(1, verts, faces, values, time_path, is_binary_mask=True)
         return
     
-    def create_stls(self, is_sidewall_rupture=False, times=None):
+    def create_stls(self, rupture=False, times=None):
         """Description of class method here.
 
         Parameters
         ----------
-        is_sidewall_rupture
+        rupture: bool, optional
             Description here.
-        times
+        times: list, optional
             Description here.
 
         """
 
-        stl_path = os.path.join(self.path, 'stls') if not is_sidewall_rupture else os.path.join(self.path, 'sidewall_stls')
-        self._create_agglomerate_stls(stl_path, is_sidewall_rupture, times)
-        if is_sidewall_rupture:
+        stl_path = os.path.join(self.path, 'stls') if not rupture else os.path.join(self.path, 'sidewall_stls')
+        self._create_agglomerate_stls(stl_path, rupture, times)
+        if rupture:
             self._create_sidewall_stls(stl_path, times)
         return
     
@@ -651,7 +651,7 @@ class Data:
 
         Parameters
         ----------
-        is_sidewall_rupture
+        save: bool, optional
             Description here.
 
         """
@@ -685,6 +685,15 @@ class Data:
         return
     
     def render(self, rupture=False):
+        """Description of class method here.
+
+        Parameters
+        ----------
+        rupture: bool, optional
+            Description here.
+
+        """
+
         blender_executable_path = '/Applications/Blender.app/Contents/MacOS/Blender'
         parent_path = '/Users/matteoventurelli/Documents/VS Code/MasterThesis/code/blender'
         blender_file_path = os.path.join(parent_path, 'surface_rendering.blend')
