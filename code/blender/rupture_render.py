@@ -1,5 +1,6 @@
-import bpy                                  # type: ignore
-import numpy as np                          # type: ignore
+import bpy # type: ignore
+import numpy as np
+import sys
 import os
 
 # function that modifies the properties of the rendering engine
@@ -68,7 +69,7 @@ if __name__ == "__main__":
     path = '/Volumes/T7/Thesis'
     modify_engine()
     create_materials()
-    exp = 'VCT5_FT_N_Exp1'
+    exp = sys.argv[1]
     stl_path, persp_path = create_folders(path, exp)
     for time in os.listdir(stl_path):
         if time in ['.DS_Store']:

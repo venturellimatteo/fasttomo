@@ -1,11 +1,7 @@
-import bpy                                  # type: ignore
-import numpy as np                          # type: ignore
+import bpy # type: ignore
+import numpy as np
+import sys
 import os
-
-def exp_list():
-    return ['P28A_FT_H_Exp1', 'P28A_FT_H_Exp2', 'P28A_FT_H_Exp3_3', 'P28A_FT_H_Exp4_2',
-            'P28B_ISC_FT_H_Exp2', 'VCT5_FT_N_Exp1', 'VCT5_FT_N_Exp3', 'VCT5_FT_N_Exp4',
-            'VCT5_FT_N_Exp5', 'VCT5A_FT_H_Exp2', 'VCT5A_FT_H_Exp5']
 
 def color_palette():
     return np.array([[0.90, 0.01, 0.01], [0.96, 0.33, 0.01], [1.00, 0.90, 0.01], [0.02, 0.70, 0.04],
@@ -116,22 +112,19 @@ if __name__ == "__main__":
     palette = color_palette()
     modify_engine()
     create_materials(palette)
-    experiments = exp_list()
-    experiments = ['P28A_FT_H_Exp2']
-    
-    for exp in experiments:
-        stl_path, side_path, top_path, persp_path = create_folders(path, exp)
-        iterable = os.listdir(stl_path)
-        for t in iterable:
-            if t == '.DS_Store':
-                continue
-            time_path = os.path.join(stl_path, t)
-            for obj_name in os.listdir(time_path):
-                import_object(obj_name, time_path)
-            add_lights()
-            top_view_render(top_path, t)
-            side_view_render(side_path, t)
-            persp_view_render(persp_path, t)
-            for i in range(len(bpy.data.objects)):
-                bpy.data.objects[i].select_set(True)
-            bpy.ops.object.delete()
+    exp = sys.argv[1]
+    stl_path, side_path, top_path, persp_path = create_folders(path, exp)
+    iterable = os.listdir(stl_path)
+    for t in iterable:
+        if t == '.DS_Store':
+            continue
+        time_path = os.path.join(stl_path, t)
+        for obj_name in os.listdir(time_path):
+            import_object(obj_name, time_path)
+        add_lights()
+        top_view_render(top_path, t)
+        side_view_render(side_path, t)
+        persp_view_render(persp_path, t)
+        for i in range(len(bpy.data.objects)):
+            bpy.data.objects[i].select_set(True)
+        bpy.ops.object.delete()

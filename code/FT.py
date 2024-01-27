@@ -6,7 +6,8 @@ from skimage.morphology import erosion, dilation, ball
 from cv2 import imread, VideoWriter, VideoWriter_fourcc
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
-from stl import mesh                               
+from stl import mesh
+import subprocess                               
 import napari
 import os
 import pandas as pd
@@ -681,4 +682,14 @@ class Data:
         if save:
             fig.savefig(os.path.join(self.path, 'plots.png'), dpi=300, bbox_inches='tight')
         fig.show()
+        return
+    
+    def render(self, rupture=False):
+        blender_executable_path = '/Applications/Blender.app/Contents/MacOS/Blender'
+        parent_path = '/Users/matteoventurelli/Documents/VS Code/MasterThesis/code/blender'
+        blender_file_path = os.path.join(parent_path, 'surface_rendering.blend')
+        script_filename = 'rupture_render.py' if rupture else 'agglomerate_render.py'
+        script_path = os.path.join(parent_path, script_filename)
+        command = [blender_executable_path, blender_file_path, '--background', '--python', script_path, '--'+self.exp]
+        subprocess.run(command)
         return
