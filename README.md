@@ -16,7 +16,7 @@
 
 ## 1. Installation
 <!-- Provide detailed instructions on how to install your pipeline. Include any dependencies and system requirements. You might also want to include installation commands for easy setup. -->
-To install FastTomo, follow these steps:
+To install `fasttomo`, follow these steps:
 
 1. First, clone the repository to your local machine:
 
