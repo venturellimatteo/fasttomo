@@ -7,8 +7,6 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import os
-import sys
-sys.path.insert(0, os.path.abspath('../code'))
 
 project = 'fasttomo'
 copyright = '2024, Matteo Venturelli'
@@ -18,12 +16,11 @@ release = '0.1'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'autoapi.extension']
+extensions = ['autoapi.extension', 'sphinx.ext.napoleon']
+autoapi_dirs = ['../code']
 napoleon_numpy_docstring = True
-
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-autoapi_dirs = ['.']
 
 
 # -- Options for HTML output -------------------------------------------------

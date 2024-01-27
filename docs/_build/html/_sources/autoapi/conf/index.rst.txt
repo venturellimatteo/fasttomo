@@ -28,7 +28,12 @@ Module Contents
    
 
 .. py:data:: extensions
-   :value: ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon', 'autoapi.extension']
+   :value: ['autoapi.extension', 'sphinx.ext.napoleon']
+
+   
+
+.. py:data:: autoapi_dirs
+   :value: ['.']
 
    
 
@@ -44,11 +49,6 @@ Module Contents
 
 .. py:data:: exclude_patterns
    :value: ['_build', 'Thumbs.db', '.DS_Store']
-
-   
-
-.. py:data:: autoapi_dirs
-   :value: ['.']
 
    
 

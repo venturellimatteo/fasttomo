@@ -1,0 +1,55 @@
+:py:mod:`rupture_render`
+========================
+
+.. py:module:: rupture_render
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   rupture_render.modify_engine
+   rupture_render.modify_properties
+   rupture_render.create_materials
+   rupture_render.create_folders
+   rupture_render.add_lights
+   rupture_render.persp_view_render
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   rupture_render.path
+
+
+.. py:function:: modify_engine()
+
+
+.. py:function:: modify_properties(o, label)
+
+
+.. py:function:: create_materials()
+
+
+.. py:function:: create_folders(path, exp)
+
+
+.. py:function:: add_lights()
+
+
+.. py:function:: persp_view_render(persp_path, time)
+
+
+.. py:data:: path
+   :value: '/Volumes/T7/Thesis'
+
+   
+
