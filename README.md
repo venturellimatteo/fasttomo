@@ -15,7 +15,40 @@
   - [9. Contact Information](#9-contact-information)
 
 ## 1. Installation
-<!-- Provide detailed instructions on how to install your pipeline. Include any dependencies and system requirements. You might also want to include installation commands for easy setup. --> 
+<!-- Provide detailed instructions on how to install your pipeline. Include any dependencies and system requirements. You might also want to include installation commands for easy setup. -->
+To install FastTomo, follow these steps:
+
+1. First, clone the repository to your local machine:
+
+   ```bash
+   git clone https://github.com/venturellimatteo/fasttomo.git
+  
+2. Navigate to the project directory:
+   
+   ```bash
+   cd your-project
+  
+3. Create a conda virtual environment:
+   
+   ```bash
+   conda create -n venv
+   
+4. Activate the virtual environment:
+   
+   ```bash
+   conda activate venv
+
+5. Install `Python 3.8.17`:
+   
+   ```bash
+   conda install python==3.8.17
+
+6. Install `requirements.txt` dependencies:
+   
+   ```bash
+   pip install -r requirements.txt
+
+
 
 ## 2. Usage
 <!-- Clearly explain how to use your pipeline. Include examples and command-line syntax if applicable. If there are configuration files, provide information on how to customize them. -->
