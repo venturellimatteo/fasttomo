@@ -22,6 +22,7 @@ class _Image:
     def __init__(self, array):
         self._np = np.copy(array)
         self._PIL = Image.fromarray(self._np)
+        return
 
     def _PIL_conversion(self):
         self._PIL = Image.fromarray(self._np)
@@ -68,6 +69,7 @@ class _Movie:
             )
         )
         self._height, self._width, _ = sample.shape
+        return
 
     def write(self, fps, view):
         self._fps = fps
@@ -86,6 +88,7 @@ class _Movie:
             frame = imread(frame_path)
             self._video.write(frame)
         self._video.release()
+        return
 
 
 class Data:
