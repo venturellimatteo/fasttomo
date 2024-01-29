@@ -6,7 +6,7 @@ This page contains auto-generated API reference documentation [#f1]_.
 .. toctree::
    :titlesonly:
 
-   /autoapi/FT/index
+   /autoapi/fasttomo/index
    /autoapi/render/index
    /autoapi/rupture_render/index
    /autoapi/agglomerate_render/index

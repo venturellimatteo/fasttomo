@@ -1,0 +1,16 @@
+:py:mod:`fasttomo`
+==================
+
+.. py:module:: fasttomo
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   fasttomo/index.rst
+   test/index.rst
+
+
