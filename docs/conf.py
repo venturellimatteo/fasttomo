@@ -17,7 +17,7 @@ release = '0.1'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['autoapi.extension', 'sphinx.ext.napoleon']
-autoapi_dirs = ['../code']
+autoapi_dirs = ['../src/fasttomo']
 autoapi_options = ['members', 'undoc-members', 'show-inheritance', 'show-module-summary', 'special-members', 'imported-members'] # 
 napoleon_numpy_docstring = True
 templates_path = ['_templates']
