@@ -11,6 +11,7 @@
 agglomerate_render.py
 rupture_render.py
 setup.py
+__init__.py
 **/__pycache__
 old_code
 thesis/Chapters
