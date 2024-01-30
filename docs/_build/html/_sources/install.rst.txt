@@ -1,0 +1,19 @@
+To install ``fasttomo``, follow these steps:
+
+1. First, clone the repository to your local machine:
+   >>> git clone https://github.com/venturellimatteo/fasttomo.git
+  
+2. Navigate to the project directory:
+   >>> cd fasttomo
+  
+3. Create a conda virtual environment:
+   >>> conda create -n venv
+
+4. Activate the virtual environment:
+   >>> conda activate venv
+
+5. Install ``Python 3.8.17``:
+   >>> conda install python==3.8.17
+
+6. Install ``requirements.txt`` dependencies:
+   >>> pip install -r requirements.txt

@@ -16,7 +16,7 @@ release = "0.1"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["autoapi.extension", "sphinx.ext.napoleon"]
+extensions = ["myst_parser", "autoapi.extension", "sphinx.ext.napoleon"]
 autoapi_dirs = ["../src/fasttomo"]
 autoapi_options = [
     "members",

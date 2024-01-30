@@ -7,8 +7,8 @@ Welcome to fasttomo's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   install
 
 
 
