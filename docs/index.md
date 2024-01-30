@@ -5,7 +5,7 @@
 
 # fasttomo
 
-Welcome to **`fasttomo`**, a Python package designed to address the critical task of identifying copper agglomerates in lithium-ion batteries during thermal runaway. Developed as part of my Master's thesis at ESRF (European Synchrotron Radiation Facility) from October 2023 to March 2024, `fasttomo` offers a powerful set of tools for analyzing and visualizing 4-dimensional CT data in `(t, z, y, x)` format.
+Introducing **`fasttomo`**, a specialized Python package crafted for the essential task of detecting copper agglomerates in lithium-ion batteries during thermal runaway events. This package, a product of my Master's thesis at the European Synchrotron Radiation Facility (ESRF) between October 2023 and March 2024, provides a suite of analytical and visualization tools for handling 4-dimensional CT data.
 
 ## Contents
 
