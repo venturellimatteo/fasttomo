@@ -10,7 +10,7 @@ Welcome to **`fasttomo`**, a Python package designed to address the critical tas
 - Visualize data interactively, with the option to overlay segmentation masks.
 - Extract and plot various agglomerate features, such as volume, speed, and density.
 - Generate `.stl` mesh representations of the segmentation masks.
-- Seamlessly import `.stl` meshes into [Blender](https://www.blender.org) for detailed rendering.
+- Seamlessly import `.stl` meshes into Blender for detailed rendering.
 - Create dynamic movies by sequencing still images.
 
 `fasttomo` is a valuable tool for researchers, scientists, and engineers working on battery technology, providing insights into the behavior and characteristics of copper agglomerates in lithium-ion batteries under thermal stress.
