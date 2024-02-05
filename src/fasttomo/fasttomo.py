@@ -565,7 +565,9 @@ class Data:
 
     def _create_sidewall_stls(self, stl_path, times):
         if self.jellyroll_mask is None:
-            raise NameError("Binary mask not found, run Data.binary_mask() first!")
+            raise NameError(
+                "Binary mask not found, run Data.segment_jellyroll() first!"
+            )
         iterator = range(self.mask.shape[0]) if times is None else times
         for time in tqdm(iterator, desc="Creating binary stl files"):
             time_path = os.path.join(stl_path, str(time).zfill(3))
@@ -930,7 +932,7 @@ class Data:
         self,
         rupture=False,
         blender_executable_path="/Applications/Blender.app/Contents/MacOS/Blender",
-        parent_path="/Users/matteoventurelli/Documents/VS Code/MasterThesis/code/blender",
+        parent_path="/Users/matteoventurelli/Documents/VS Code/MasterThesis/src/fasttomo/blender/",
     ):
         """Description of class method here.
 
@@ -952,9 +954,9 @@ class Data:
             "--background",
             "--python",
             script_path,
-            "--" + self.path,
-            "--" + self.exp,
-            "--" + rupture,
+            "--",
+            self.path,
+            str(rupture),
         ]
         subprocess.run(command)
         return
