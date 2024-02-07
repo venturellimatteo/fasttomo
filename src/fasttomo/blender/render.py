@@ -66,7 +66,7 @@ def create_materials(isJellyroll):
     mat["ShellMaterial"].node_tree.nodes["Principled BSDF"].inputs[21].default_value = (
         0.75 if isJellyroll else 0.1
     )
-    if not isJellyroll:
+    if isJellyroll:
         mat.new(name="JellyrollMaterial")
         mat["JellyrollMaterial"].use_nodes = True
         mat["JellyrollMaterial"].node_tree.nodes["Principled BSDF"].inputs[
@@ -127,9 +127,13 @@ def add_lights():
 
 def top_view_render(top_path, time):
     bpy.context.scene.render.resolution_y = 2160
-    bpy.ops.object.camera_add(enter_editmode=False, location=(0, 0, 1))
+    bpy.ops.object.camera_add(
+        enter_editmode=False, location=(0.2, -0.2, 1)
+    )  # 0,2 0,2 1 for P42A_ISC_FT_H_Exp2, 0, 0, 1 for others
     bpy.context.active_object.data.type = "ORTHO"
-    bpy.context.object.data.ortho_scale = 2
+    bpy.context.object.data.ortho_scale = (
+        2.5  # 2.5 for P42A_ISC_FT_H_Exp2, 2 for others
+    )
     bpy.context.scene.camera = bpy.context.active_object
     bpy.context.scene.render.filepath = os.path.join(top_path, time + ".png")
     bpy.ops.render.render(write_still=True)
@@ -140,10 +144,16 @@ def top_view_render(top_path, time):
 def side_view_render(side_path, time):
     bpy.context.scene.render.resolution_y = 1440
     bpy.ops.object.camera_add(
-        enter_editmode=False, location=(0, -1, 0), rotation=(np.pi / 2, 0, 0)
+        enter_editmode=False,
+        location=(0.2, -1.5, -0.02),
+        rotation=(
+            np.pi / 2,
+            0,
+            0,
+        ),  # (0.2, -1.5, -0.02) if P42A_ISC_FT_H_Exp2, else (0, -1, 0)
     )
     bpy.context.active_object.data.type = "ORTHO"
-    bpy.context.object.data.ortho_scale = 2
+    bpy.context.object.data.ortho_scale = 2.5  # 2.5 if P42A_ISC_FT_H_Exp2, else 2
     bpy.context.scene.camera = bpy.context.active_object
     bpy.context.scene.render.filepath = os.path.join(side_path, time + ".png")
     bpy.ops.render.render(write_still=True)
@@ -153,7 +163,9 @@ def side_view_render(side_path, time):
 
 def persp_view_render(persp_path, time, isJellyroll):
     bpy.context.scene.render.resolution_y = 2160
-    location = (2.4, -2.4, 2.8) if isJellyroll else (1.8, -1.8, 2.4)
+    location = (
+        (2.4, -2.4, 3) if isJellyroll else (2.4, -2.4, 3)
+    )  # location = (2.4, -2.4, 2.8) if isJellyroll else (1.8, -1.8, 2.4)
     bpy.ops.object.camera_add(
         enter_editmode=False, location=location, rotation=(np.pi / 4, 0, np.pi / 4)
     )

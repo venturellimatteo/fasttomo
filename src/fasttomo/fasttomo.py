@@ -15,8 +15,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-# Missing features: ct resizing, df construction, plots
-
 
 class _Image:
     def __init__(self, array):
