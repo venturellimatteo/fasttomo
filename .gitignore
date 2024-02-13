@@ -8,6 +8,7 @@
 *.gz
 *.toc
 *.bib
+*.tex
 agglomerate_render.py
 rupture_render.py
 setup.py
