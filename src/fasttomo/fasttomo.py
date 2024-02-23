@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.lib.format import open_memmap
-from skimage.io import imshow
+from skimage.io import imshow, imsave
 from skimage.measure import label, regionprops, marching_cubes
 from skimage.morphology import erosion, dilation, ball
 from cv2 import imread, VideoWriter, VideoWriter_fourcc
@@ -19,18 +19,20 @@ from matplotlib.lines import Line2D
 class _Image:
     def __init__(self, array):
         self._np = np.copy(array)
-        self._PIL = Image.fromarray(self._np)
+        # self._PIL = Image.fromarray(self._np)
         return
 
     def _PIL_conversion(self):
         self._PIL = Image.fromarray(self._np)
         return
 
-    def scale(self, img_min, img_max):
+    def scale(self, img_min, img_max, invert=False):
         self._np[self._np > img_max] = img_max
         self._np[self._np < img_min] = img_min
         self._np = 255 * (self._np - img_min) / (img_max - img_min)
         self._np = self._np.astype(np.uint8)
+        if invert:
+            self._np = 255 - self._np
         self._PIL_conversion()
         return
 
@@ -52,6 +54,13 @@ class _Image:
 
     def save(self, path):
         _ = self._PIL.save(os.path.join(path, str(self._time).zfill(3) + ".png"))
+        return
+
+    def save_skimage(self, path, time, z, crop=0):
+        _ = imsave(
+            os.path.join(path, str(time).zfill(3) + "-" + str(z).zfill(3) + ".png"),
+            self._np[crop:-crop, crop:-crop],
+        )
         return
 
 
@@ -454,7 +463,12 @@ class Data:
         viewer = napari.Viewer()
         settings = napari.settings.get_settings()
         settings.application.playback_fps = 5
-        viewer.add_image(self.ct, name=f"{self.exp} Volume", contrast_limits=[0, 6])
+        viewer.add_image(
+            self.ct,
+            name=f"{self.exp} Volume",
+            contrast_limits=[0.1, 3.5],
+            colormap="gray_r",
+        )
         if jellyroll_mask and not self.jellyroll_mask is None:
             viewer.add_labels(
                 self.jellyroll_mask, name=f"{self.exp} Binary mask", opacity=0.8
@@ -463,6 +477,25 @@ class Data:
             viewer.layers[f"{self.exp} Volume"].opacity = 0.4
             viewer.add_labels(self.mask, name=f"{self.exp} Mask", opacity=0.8)
         viewer.dims.current_step = (0, 0)
+        return
+
+    def save_slice(self, time, z, contrast_limits=[0.1, 3.5], crop=0):
+        """Save a slice of the 4D CT-scan to a .png file.
+
+        Parameters
+        ----------
+        time : int
+            Time index of the slice to be saved.
+        z : int
+            Z-level index of the slice to be saved.
+        contrast_limits : list, optional
+            Minimum and maximum intensity values for image scaling, by default [0.1, 3.5].
+
+        """
+
+        image = _Image(self.ct[time, z])
+        image.scale(contrast_limits[0], contrast_limits[1], invert=True)
+        image.save_skimage(self.path, time, z, crop)
         return
 
     def create_slice_movie(self, z, img_min=0, img_max=5, fps=7):
