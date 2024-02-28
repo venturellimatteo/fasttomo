@@ -77,7 +77,7 @@ The MIT License is a permissive open-source license that allows you to use, modi
 ## 7. Acknowledgments
 <!-- Give credit to any external libraries, tools, or resources that you used in your project. This is a good practice to show appreciation for the work of others. -->
 
-I would like to extend my heartfelt gratitude to two remarkable individuals who played pivotal roles in the success of this project, not only as supervisors but also as friends.
+<!-- I would like to extend my heartfelt gratitude to two remarkable individuals who played pivotal roles in the success of this project, not only as supervisors but also as friends.
 
 **Matilda** has been an extraordinary mentor, friend, and source of inspiration. Beyond her exceptional guidance in the academic realm, Matilda shared countless precious moments and provided unwavering support.
 
@@ -85,7 +85,7 @@ I would like to extend my heartfelt gratitude to two remarkable individuals who 
 
 I feel profoundly fortunate to have Matilda and Ludo as supervisors and friends, and their influence on this project and my personal development cannot be overstated.
 
-Thank you for being such essential pillars of support and belief in this project.
+Thank you for being such essential pillars of support and belief in this project. -->
 
 ## 8. Contact Information
 <!-- Provide a way for users to contact you if they have questions, feedback, or want to collaborate. This could be an email address, a link to your personal website, or a discussion forum. -->
