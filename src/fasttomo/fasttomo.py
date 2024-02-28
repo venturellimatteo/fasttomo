@@ -5,6 +5,7 @@ from skimage.measure import label, regionprops, marching_cubes
 from skimage.morphology import erosion, dilation, ball
 from cv2 import imread, VideoWriter, VideoWriter_fourcc
 from PIL import Image, ImageDraw, ImageFont
+from napari.utils.colormaps import label_colormap
 from tqdm import tqdm
 from stl import mesh
 import subprocess
@@ -163,7 +164,7 @@ class Data:
         areas = [rp.area for rp in regionprops(mask)]
         return np.max(areas) / SLICES
 
-    def _find_threshold(self):
+    def _find_threshold(self, threshold_target):
         DELTA = 100
         SLICES = 10
         step = 1
@@ -178,7 +179,7 @@ class Data:
         while not flag:
             current_area = self._find_biggest_area(smaller_ct, SLICES)
             if (
-                current_area > self._threshold_target + DELTA
+                current_area > threshold_target + DELTA
             ):  # if the area is larger than target, the threshold is increased in order to reduce the area
                 step = (
                     step / 2 if not add else step
@@ -186,7 +187,7 @@ class Data:
                 self._threshold += step
                 add = True
             elif (
-                current_area < self._threshold_target - DELTA
+                current_area < threshold_target - DELTA
             ):  # if the area is smaller than target, the threshold is decreased in order to increase the area
                 step = step / 2 if add else step
                 self._threshold -= step
@@ -195,18 +196,18 @@ class Data:
                 flag = True
         return
 
-    def _remove_small_3d_agglomerates(self, mask):
+    def _remove_small_3d_agglomerates(self, mask, smallest_3Dvolume):
         bincount = np.bincount(mask.flatten())
         lookup_table = np.where(
-            bincount < self._smallest_3Dvolume, 0, np.arange(len(bincount))
+            bincount < smallest_3Dvolume, 0, np.arange(len(bincount))
         )
         return np.take(lookup_table, mask)
 
-    def _segment3d(self):
+    def _segment3d(self, filtering3D, smallest_3Dvolume):
         mask = np.greater(self.ct[self._index], self._threshold)
         mask = label(np.logical_and(mask, dilation(erosion(mask, ball(1)), ball(4))))
-        if self._filtering3D:
-            mask = self._remove_small_3d_agglomerates(mask)
+        if filtering3D:
+            mask = self._remove_small_3d_agglomerates(mask, smallest_3Dvolume)
         if self._index == 0:
             rps = regionprops(mask)
             current_labels = np.array([rp.label for rp in rps])[
@@ -311,6 +312,7 @@ class Data:
             "P28A_FT_H_Exp2": 2,
             "P28A_FT_H_Exp3_3": 2,
             "P28A_FT_H_Exp4_2": 6,
+            "P28A_FT_H_Exp5_3": 52,
             "P28B_ISC_FT_H_Exp2": 11,
             "VCT5_FT_N_Exp1": 4,
             "VCT5_FT_N_Exp3": 5,
@@ -319,6 +321,9 @@ class Data:
             "VCT5A_FT_H_Exp2": 1,
             "VCT5A_FT_H_Exp5": 4,
         }
+        if self.exp not in TR_map:
+            print("No pre-TR filtering for this experiment.")
+            return
         for rps in self._rps[: TR_map[self.exp]]:
             for rp in rps:
                 if rp.label != 1:
@@ -373,15 +378,15 @@ class Data:
         Parameters
         ----------
         threshold_target: int, optional
-            Description here.
+            Target area (in pixels) of the external shell of the battery.
         filtering3D: bool, optional
-            Description here.
+            Small agglomerate filtering is computed if True.
         filtering4D: bool, optional
             Description here.
         pre_TR_filtering: bool, optional
             Description here.
         smallest_3Dvolume: int, optional
-            Description here.
+            Lower bound for the agglomerate volume during filtering.
         smallest_4Dvolume: int, optional
             Description here.
 
@@ -394,16 +399,11 @@ class Data:
                 mode="w+",
                 shape=self.ct.shape,
             )  # 4D CT-scan segmentation map
-        self._threshold_target = threshold_target  # Target area (in pixels) of the external shell of the battery
-        self._filtering3D = filtering3D  # Boolean variable: if True, small agglomerate filtering is computed
-        self._smallest_3Dvolume = (
-            smallest_3Dvolume  # Lower bound for the agglomerate volume
-        )
         progress_bar = tqdm(total=self.ct.shape[0], desc=f"{self.exp}", leave=False)
         progress_bar.set_postfix_str(f"Evaluating threshold")
-        self._find_threshold()
+        self._find_threshold(threshold_target)
         progress_bar.set_postfix_str(f"Segmentation #{self._index + 1}")
-        self._segment3d()
+        self._segment3d(filtering3D, smallest_3Dvolume)
         progress_bar.update()
         self._index += 1
         while self._index < self.ct.shape[0]:
