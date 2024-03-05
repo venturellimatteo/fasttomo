@@ -768,7 +768,7 @@ class Data:
         return
 
     def _plot_V_tot(self, fig, time_axis, palettes, df_tot, df_r, df_z):
-        fig.suptitle("Agglomerates total volume vs time", y=1.1, fontsize=14)
+        fig.suptitle("Agglomerates total volume", y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         sns.lineplot(ax=axs[0], data=df_tot, x="t", y="V")
         sns.lineplot(
@@ -811,7 +811,7 @@ class Data:
         return
 
     def _plot_V_avg(self, fig, time_axis, palettes, df_tot, df_r, df_z):
-        fig.suptitle("Agglomerates average volume vs time", y=1.1, fontsize=14)
+        fig.suptitle("Agglomerates average volume", y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         sns.lineplot(ax=axs[0], data=df_tot, x="t", y="V/N")
         sns.lineplot(
@@ -836,9 +836,7 @@ class Data:
         return
 
     def _plot_dVdt(self, fig, time_axis, palettes, df_tot, df_r, df_z):
-        fig.suptitle(
-            "Agglomerates total volume expansion rate vs time", y=1.1, fontsize=14
-        )
+        fig.suptitle("Agglomerates total volume derivative", y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         sns.lineplot(ax=axs[0], data=df_tot, x="t", y="dVdt")
         sns.lineplot(
@@ -863,7 +861,7 @@ class Data:
         return
 
     def _plot_speed(self, fig, time_axis, palettes, _dummy1, _dummy2, _dummy3):
-        fig.suptitle("Agglomerates speed vs time", y=1.1, fontsize=14)
+        fig.suptitle("Agglomerates speed", y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         sns.lineplot(ax=axs[0], data=self.df, x="t", y="v")
         axs[0].set_title("Modulus")
@@ -872,11 +870,13 @@ class Data:
         sns.lineplot(ax=axs[2], data=self.df, x="t", y="vz", color=palettes[2][1])
         axs[2].set_title("$z$ component")
         self._adjust_axes(axs, time_axis, "Speed [$mm/s$]", draw_legend_title=False)
+        axs[1].set_title("$xy$ component")
+        axs[2].set_title("$z$ component")
         return
 
     def _plot_density(self, fig, time_axis, palettes, df_tot, df_r, df_z):
         battery_volume = np.pi * (0.5 * 1.86) ** 2 * (260 * 0.04)  # pi*(0.5*d)^2*h
-        fig.suptitle("Agglomerates density vs time", y=1.1, fontsize=14)
+        fig.suptitle("Agglomerates density", y=1.1, fontsize=14)
         axs = fig.subplots(1, 3, sharey=True)
         df_tot["N"] = df_tot["N"] / (battery_volume)
         sns.lineplot(ax=axs[0], data=df_tot, x="t", y="N")
@@ -928,6 +928,7 @@ class Data:
             return
         self._R_SECTIONS_STRING = ["Core", "Intermediate", "External"]
         self._Z_SECTIONS_STRING = ["Top", "Middle", "Bottom"]
+        self.df["t"] = self.df["t"] - self.df["t"][0]
         df_tot, df_r, df_z = self._load_df_tot(), self._load_df_r(), self._load_df_z()
         time_axis = np.arange(len(np.unique(self.df["t"]))) / 20
         plt.style.use("seaborn-v0_8-paper")
