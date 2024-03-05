@@ -9,6 +9,7 @@
 *.toc
 *.bib
 *.tex
+*.xml
 agglomerate_render.py
 rupture_render.py
 setup.py
