@@ -3,6 +3,17 @@
 
 .. py:module:: render
 
+.. autoapi-nested-parse::
+
+   This module contains the functions to render the agglomerates and
+   jellyroll in ``Blender``. The module is called from the ``Data.render``
+   method in the ``fasttomo`` package to run within ``Blender``.
+   The script imports the STL files for each time instant for a specific
+   experiment and renders either the agglomerates or the jellyroll
+   (to show the sidewall rupture) in three different views: side, top
+   and perspective.
+
+
 
 Module Contents
 ---------------
@@ -31,40 +42,121 @@ Attributes
 
 .. autoapisummary::
 
-   render.time_path
+   render.isJellyroll
 
 
 .. py:function:: color_palette()
 
+   Returns the color palette used for the different labels.
+
+   :returns: **palette** -- 10x3 array of RGB values for highly distinguishable colors.
+   :rtype: np.array
+
 
 .. py:function:: modify_engine(isJellyroll)
+
+   Modifies the properties of the rendering engine.
+
+   :param isJellyroll: Whether agglomerates or jellyroll are being rendered.
+                       Default is ``False``.
+   :type isJellyroll: bool
 
 
 .. py:function:: modify_properties(obj, label, isJellyroll)
 
+   Modifies the properties of the object associated to a
+   specific label. A smoothing modifier is added to the
+   object and the material is assigned based on the label.
+
+   :param isJellyroll: Whether agglomerates or jellyroll are being rendered.
+                       Default is ``False``.
+   :type isJellyroll: bool
+
 
 .. py:function:: create_materials(isJellyroll)
 
+   Creates the materials for the different labels. A black
+   material is assigned to the battery casing, a grey material
+   to the jellyroll and different colors for the agglomerates.
 
-.. py:function:: create_folders(path, exp)
+   :param isJellyroll: Whether agglomerates or jellyroll are being rendered.
+                       Default is ``False``.
+   :type isJellyroll: bool
+
+
+.. py:function:: create_folders(path, isJellyroll)
+
+   Returns the path for the STL files. Creates and returns the
+   folder to store the renders for the side, top and perspective
+   views.
+
+   :param path: Path to the experiment folder.
+   :type path: str
+   :param isJellyroll: Whether agglomerates or jellyroll are being rendered.
+                       Default is ``False``.
+   :type isJellyroll: bool
+
+   :returns: * **stl_path** (*str*) -- Path to the STL files.
+             * **side_path** (*str*) -- Path to the side view renders.
+             * **top_path** (*str*) -- Path to the top view renders.
+             * **persp_path** (*str*) -- Path to the perspective view renders.
 
 
 .. py:function:: import_object(obj_name, time_path, isJellyroll)
 
+   Imports the STL file for a specific label, creates the associated
+   ``Blender`` object and modifies its properties.
+
+   :param obj_name: Name of the STL file.
+   :type obj_name: str
+   :param time_path: Path to the folder containing the STL files for a specific
+                     time instant.
+   :type time_path: str
+   :param isJellyroll: Whether agglomerates or jellyroll are being rendered.
+                       Default is ``False``.
+   :type isJellyroll: bool
+
 
 .. py:function:: add_lights()
+
+   Adds two point lights to the scene.
+
 
 
 .. py:function:: top_view_render(top_path, time)
 
+   Renders the top view of the scene in orthographic mode.
+
+   :param top_path: Path to the folder containing the top view renders.
+   :type top_path: str
+   :param time: Time instant for the render.
+   :type time: str
+
 
 .. py:function:: side_view_render(side_path, time)
+
+   Renders the side view of the scene in orthographic mode.
+
+   :param side_path: Path to the folder containing the side view renders.
+   :type side_path: str
+   :param time: Time instant for the render.
+   :type time: str
 
 
 .. py:function:: persp_view_render(persp_path, time, isJellyroll)
 
+   Renders a perspective view of the scene.
 
-.. py:data:: time_path
+   :param persp_path: Path to the folder containing the perspective view renders.
+   :type persp_path: str
+   :param time: Time instant for the render.
+   :type time: str
+   :param isJellyroll: Whether agglomerates or jellyroll are being rendered.
+                       Default is ``False``.
+   :type isJellyroll: bool
+
+
+.. py:data:: isJellyroll
 
    
 

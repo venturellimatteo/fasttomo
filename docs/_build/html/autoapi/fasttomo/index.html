@@ -39,10 +39,11 @@
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=e031e9a9"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/fasttomo/index';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="fasttomo.fasttomo" href="fasttomo/index.html" />
+    <link rel="next" title="render" href="../render/index.html" />
     <link rel="prev" title="API Reference" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -279,14 +280,8 @@ document.write(`
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fasttomo</span></code></a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="fasttomo/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fasttomo.fasttomo</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="test/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fasttomo.test</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fasttomo</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../render/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">render</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../rupture_render/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rupture_render</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../agglomerate_render/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agglomerate_render</span></code></a></li>
 </ul>
 </div>
 </nav></div>
@@ -346,14 +341,218 @@ document.write(`
                   
   <section id="module-fasttomo">
 <span id="fasttomo"></span><h1><a class="reference internal" href="#module-fasttomo" title="fasttomo"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fasttomo</span></code></a><a class="headerlink" href="#module-fasttomo" title="Permalink to this heading">#</a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="fasttomo/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fasttomo.fasttomo</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="test/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fasttomo.test</span></code></a></li>
+<p>This module contains the <code class="docutils literal notranslate"><span class="pre">Data</span></code> class, which is designed for processing and
+analyzing volumetric image data. The <code class="docutils literal notranslate"><span class="pre">Data</span></code> class is used to create a <code class="docutils literal notranslate"><span class="pre">Data</span></code>
+object, which is then used to perform various operations, including
+segmentation, visualization, movie creation, 3D model generation, and data
+analysis.</p>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">#</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#fasttomo.Data" title="fasttomo.Data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Data</span></code></a></p></td>
+<td><p>The Data class is designed for processing and analyzing volumetric image data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="fasttomo.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fasttomo.</span></span><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/Volumes/T7/Thesis'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data" title="Permalink to this definition">#</a></dt>
+<dd><p>The Data class is designed for processing and analyzing volumetric image data.
+It provides various functionalities including segmentation, visualization,
+movie creation, 3D model generation, and data analysis. A <code class="docutils literal notranslate"><span class="pre">Data</span></code> object for
+a specific experiment is initialized with the experiment name and the parent
+folder containing the experiments folders.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exp</strong> (<em>str</em>) – Experiment name.</p></li>
+<li><p><strong>parent_folder</strong> (<em>str</em><em>, </em><em>optional</em>) – Path of the parent folder containing the experiments folders. By default
+“/Volumes/T7/Thesis”. Experiments folders must contain 4D tomography data
+in <span class="math notranslate nohighlight">\((t,z,y,x)\)</span> format in a <code class="docutils literal notranslate"><span class="pre">ct.npy</span></code> file.</p></li>
 </ul>
-</div>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.segment">
+<span class="sig-name descname"><span class="pre">segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filtering3D</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filtering4D</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_TR_filtering</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smallest_3Dvolume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smallest_4Dvolume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.segment" title="Permalink to this definition">#</a></dt>
+<dd><p>Segments the volumetric data <code class="docutils literal notranslate"><span class="pre">ct.npy</span></code> creating a 4D mask <code class="docutils literal notranslate"><span class="pre">mask.npy</span></code>.
+First, the threshold value is found by iteratively adjusting it to obtain
+a target area of the external shell of the battery. Then, the 3D mask is
+obtained by thresholding each volume and removing small agglomerates.
+Agglomerate labels are propagated from one volume to the next to ensure
+label consistency through time. Finally, 4D filtering is applied to remove
+small agglomerates, agglomerates appearing before the start of thermal
+runaway, and agglomerates appearing in only one time instant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold_target</strong> (<em>int</em><em>, </em><em>optional</em>) – Target area (in pixels) of the external shell of the battery.
+Default is 6800.</p></li>
+<li><p><strong>filtering3D</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to remove agglomerates with a volume smaller than
+<code class="docutils literal notranslate"><span class="pre">smallest_3Dvolume</span></code> in each reconstructed volume. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>filtering4D</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to remove agglomerates whose cumulative volume (sum
+of agglomerate volume for each time instant) is smaller than
+<code class="docutils literal notranslate"><span class="pre">smallest_4Dvolume</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>pre_TR_filtering</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to remove agglomerates appearing before the start of
+thermal runaway. Thermal runaway start time instant has to be
+specified in <code class="docutils literal notranslate"><span class="pre">TR_map</span></code> list in <code class="docutils literal notranslate"><span class="pre">_find_pre_TR_agglomerates</span></code> function.
+Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>smallest_3Dvolume</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum volume (in voxels) of an agglomerate in a single reconstructed
+volume. Default is 50.</p></li>
+<li><p><strong>smallest_4Dvolume</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum cumulative volume (in voxels) of an agglomerate in all
+reconstructed volumes. Default is 250.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.segment_jellyroll">
+<span class="sig-name descname"><span class="pre">segment_jellyroll</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smallest_3Dvolume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.segment_jellyroll" title="Permalink to this definition">#</a></dt>
+<dd><p>Segments the volumetric data <code class="docutils literal notranslate"><span class="pre">ct.npy</span></code> creating a 4D binary mask <code class="docutils literal notranslate"><span class="pre">jellyroll_mask.npy</span></code>.
+The binary mask is obtained by thresholding each volume and applying a binary
+morphological operation to remove small isolated regions and reconstruction artifacts.
+<code class="docutils literal notranslate"><span class="pre">jellyroll_mask.npy</span></code> is used for rendering the sidewall rupture of the battery.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Threshold value for binary masking. Default is 1.</p></li>
+<li><p><strong>smallest_3Dvolume</strong> (<em>: int</em><em>, </em><em>optional</em>) – Minimum volume (in voxels) of an agglomerate in a single reconstructed
+volume. Default is 50.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.view">
+<span class="sig-name descname"><span class="pre">view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jellyroll_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.view" title="Permalink to this definition">#</a></dt>
+<dd><p>Display tomography data within <code class="docutils literal notranslate"><span class="pre">napari</span></code> interactive viewer,
+optionally overlaying agglomerate segmentation mask <cite>mask.npy</cite>
+or <code class="docutils literal notranslate"><span class="pre">jellyroll_mask.npy</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Display mask overlay if <code class="docutils literal notranslate"><span class="pre">True</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>binary_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Display jellyroll mask overlay if <code class="docutils literal notranslate"><span class="pre">True</span></code>. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.save_slice">
+<span class="sig-name descname"><span class="pre">save_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast_limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.1,</span> <span class="pre">3.5]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.save_slice" title="Permalink to this definition">#</a></dt>
+<dd><p>Save a slice of the 4D CT-scan to a <code class="docutils literal notranslate"><span class="pre">.png</span></code> file in the experiment folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>int</em>) – Time index of the slice to be saved.</p></li>
+<li><p><strong>z</strong> (<em>int</em>) – Z-level index of the slice to be saved.</p></li>
+<li><p><strong>contrast_limits</strong> (<em>list</em><em>, </em><em>optional</em>) – Minimum and maximum intensity values for image scaling. Default is <code class="docutils literal notranslate"><span class="pre">[0.1,</span> <span class="pre">3.5]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.create_slice_movie">
+<span class="sig-name descname"><span class="pre">create_slice_movie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.create_slice_movie" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a movie by slicing through the data at the specified z-level
+and adding a time label to each frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>int</em>) – The z-level at which to slice through the data.</p></li>
+<li><p><strong>img_min</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum intensity value for image scaling. Default is 0.</p></li>
+<li><p><strong>img_max</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum intensity value for image scaling. Default is 5.</p></li>
+<li><p><strong>fps</strong> (<em>int</em><em>, </em><em>optional</em>) – Frames per second for the movie. Default is 7.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.create_stls">
+<span class="sig-name descname"><span class="pre">create_stls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rupture</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.create_stls" title="Permalink to this definition">#</a></dt>
+<dd><p>Create <code class="docutils literal notranslate"><span class="pre">.stl</span></code> files for each agglomerate at each time instant. The files
+are saved in the <code class="docutils literal notranslate"><span class="pre">stls</span></code> folder in the experiment folder. If <code class="docutils literal notranslate"><span class="pre">rupture</span></code> is
+set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, the function creates <code class="docutils literal notranslate"><span class="pre">.stl</span></code> files for the binary mask
+used to render the sidewall rupture of the battery. The files are saved in
+the <code class="docutils literal notranslate"><span class="pre">sidewall_stls</span></code> folder in the experiment folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rupture</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to create <code class="docutils literal notranslate"><span class="pre">.stl</span></code> files for the binary mask. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>times</strong> (<em>list</em><em>, </em><em>optional</em>) – List of time instants for which to create <code class="docutils literal notranslate"><span class="pre">.stl</span></code> files. Default is <code class="docutils literal notranslate"><span class="pre">None</span></code>
+(<code class="docutils literal notranslate"><span class="pre">stl</span></code> files for all time instants are created).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.create_dataframe">
+<span class="sig-name descname"><span class="pre">create_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.create_dataframe" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a dataframe containing agglomerate properties such as centroid
+coordinates, velocity, volume, volume derivative, radial section location
+and vertical section location. The dataframe is saved as <code class="docutils literal notranslate"><span class="pre">dataframe.csv</span></code>
+in the experiment folder.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.plots">
+<span class="sig-name descname"><span class="pre">plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.plots" title="Permalink to this definition">#</a></dt>
+<dd><p>Create and display plots of agglomerate properties over time.
+These include total volume, average volume, volume expansion rate, speed,
+and density. The plots are saved as <code class="docutils literal notranslate"><span class="pre">plots.png</span></code> in the experiment folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to save the plots as <code class="docutils literal notranslate"><span class="pre">plots.png</span></code> in the experiment folder.
+Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rupture</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blender_executable_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/Applications/Blender.app/Contents/MacOS/Blender'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/Users/matteoventurelli/Documents/VS</span> <span class="pre">Code/MasterThesis/src/fasttomo/blender/'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.render" title="Permalink to this definition">#</a></dt>
+<dd><p>Render the agglomerates in the 4D mask using <code class="docutils literal notranslate"><span class="pre">Blender</span></code>.
+Run <code class="docutils literal notranslate"><span class="pre">Data.segment()</span></code> (or <code class="docutils literal notranslate"><span class="pre">Data.segment_jellyroll()</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">Data.create_stls()</span></code> before running this method. This method
+calls the <code class="xref py py-func docutils literal notranslate"><span class="pre">render.py()</span></code> script to render the agglomerates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rupture</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to render the sidewall rupture. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>blender_executable_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the Blender executable. Default is <code class="docutils literal notranslate"><span class="pre">&quot;/Applications/Blender.app/Contents/MacOS/Blender&quot;</span></code>.</p></li>
+<li><p><strong>parent_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the folder containing the <code class="docutils literal notranslate"><span class="pre">render.blend</span></code> and <code class="docutils literal notranslate"><span class="pre">render.py</span></code> files. Default is
+<code class="docutils literal notranslate"><span class="pre">&quot;/Users/matteoventurelli/Documents/VS</span> <span class="pre">Code/MasterThesis/src/fasttomo/blender/&quot;</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fasttomo.Data.create_render_movie">
+<span class="sig-name descname"><span class="pre">create_render_movie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rupture</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fasttomo.Data.create_render_movie" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a movie by sequencing rendered frames written with <code class="docutils literal notranslate"><span class="pre">Data.render()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fps</strong> (<em>int</em><em>, </em><em>optional</em>) – Frames per second for the movie. Default is 5.</p></li>
+<li><p><strong>rupture</strong> (<em>bool</em><em>, </em><em>optional</em>) – Set to <cite>True</cite> to create a movie for the sidewall rupture. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 </section>
 
@@ -377,11 +576,11 @@ document.write(`
       </div>
     </a>
     <a class="right-next"
-       href="fasttomo/index.html"
+       href="../render/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fasttomo.fasttomo</span></code></p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">render</span></code></p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -401,7 +600,25 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data"><code class="docutils literal notranslate"><span class="pre">Data</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.segment"><code class="docutils literal notranslate"><span class="pre">Data.segment()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.segment_jellyroll"><code class="docutils literal notranslate"><span class="pre">Data.segment_jellyroll()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.view"><code class="docutils literal notranslate"><span class="pre">Data.view()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.save_slice"><code class="docutils literal notranslate"><span class="pre">Data.save_slice()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.create_slice_movie"><code class="docutils literal notranslate"><span class="pre">Data.create_slice_movie()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.create_stls"><code class="docutils literal notranslate"><span class="pre">Data.create_stls()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.create_dataframe"><code class="docutils literal notranslate"><span class="pre">Data.create_dataframe()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.plots"><code class="docutils literal notranslate"><span class="pre">Data.plots()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.render"><code class="docutils literal notranslate"><span class="pre">Data.render()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#fasttomo.Data.create_render_movie"><code class="docutils literal notranslate"><span class="pre">Data.create_render_movie()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

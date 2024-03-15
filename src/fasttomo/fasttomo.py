@@ -1,3 +1,13 @@
+"""
+
+This module contains the ``Data`` class, which is designed for processing and
+analyzing volumetric image data. The ``Data`` class is used to create a ``Data`` 
+object, which is then used to perform various operations, including
+segmentation, visualization, movie creation, 3D model generation, and data
+analysis. 
+
+"""
+
 import numpy as np
 from numpy.lib.format import open_memmap
 from skimage.io import imshow, imsave
@@ -5,7 +15,6 @@ from skimage.measure import label, regionprops, marching_cubes
 from skimage.morphology import erosion, dilation, ball
 from cv2 import imread, VideoWriter, VideoWriter_fourcc
 from PIL import Image, ImageDraw, ImageFont
-from napari.utils.colormaps import label_colormap
 from tqdm import tqdm
 from stl import mesh
 import subprocess
@@ -20,7 +29,6 @@ from matplotlib.lines import Line2D
 class _Image:
     def __init__(self, array):
         self._np = np.copy(array)
-        # self._PIL = Image.fromarray(self._np)
         return
 
     def _PIL_conversion(self):
@@ -53,8 +61,8 @@ class _Image:
         self._np = np.array(self._PIL, dtype=np.uint8)
         return
 
-    def save(self, path):
-        _ = self._PIL.save(os.path.join(path, str(self._time).zfill(3) + ".png"))
+    def save(self, path, time):
+        _ = self._PIL.save(os.path.join(path, str(time).zfill(3) + ".png"))
         return
 
     def save_skimage(self, path, time, z, crop=0):
@@ -100,35 +108,22 @@ class _Movie:
 
 
 class Data:
-    """Class used to read and process CT data.
+    """
 
     The Data class is designed for processing and analyzing volumetric image data.
     It provides various functionalities including segmentation, visualization,
-    movie creation, 3D model generation, and data analysis.
+    movie creation, 3D model generation, and data analysis. A ``Data`` object for
+    a specific experiment is initialized with the experiment name and the parent
+    folder containing the experiments folders.
 
     Parameters
     ----------
     exp : str
         Experiment name.
     parent_folder : str, optional
-        Path of the parent folder containing the experiments folders.
-
-    Attributes
-    ----------
-    exp : str
-        Experiment name.
-    path : str
-        Experiment folder path.
-    ct : numpy.ndarray (dtype=np.half)
-        4D CT-scan recorded in ``(t, z, x, y)`` format, loaded from ``path/ct.npy``.
-    mask : numpy.ndarray (dtype=np.ushort)
-        4D segmentation mask of ``self.ct``. If file ``path/mask.npy`` does not
-        exist at the moment of class instantiation, the file is created. The shape
-        of the array is the same as ``self.ct``.
-    jellyroll_mask : numpy.ndarray (dtype=np.ushort)
-        4D binary mask of the jellyroll. If file ``path/jellyroll_mask.npy`` does not
-        exist at the moment of class instantiation, the file is created. The shape
-        of the array is the same as ``self.ct``.
+        Path of the parent folder containing the experiments folders. By default
+        "/Volumes/T7/Thesis". Experiments folders must contain 4D tomography data
+        in :math:`(t,z,y,x)` format in a ``ct.npy`` file.
 
     """
 
@@ -373,22 +368,40 @@ class Data:
         smallest_3Dvolume=50,
         smallest_4Dvolume=250,
     ):
-        """Segment the volumetric data based on specified thresholds and filters.
+        """
+
+        Segments the volumetric data ``ct.npy`` creating a 4D mask ``mask.npy``.
+        First, the threshold value is found by iteratively adjusting it to obtain
+        a target area of the external shell of the battery. Then, the 3D mask is
+        obtained by thresholding each volume and removing small agglomerates.
+        Agglomerate labels are propagated from one volume to the next to ensure
+        label consistency through time. Finally, 4D filtering is applied to remove
+        small agglomerates, agglomerates appearing before the start of thermal
+        runaway, and agglomerates appearing in only one time instant.
 
         Parameters
         ----------
         threshold_target: int, optional
             Target area (in pixels) of the external shell of the battery.
+            Default is 6800.
         filtering3D: bool, optional
-            Small agglomerate filtering is computed if True.
+            Set to ``True`` to remove agglomerates with a volume smaller than
+            ``smallest_3Dvolume`` in each reconstructed volume. Default is ``True``.
         filtering4D: bool, optional
-            Description here.
+            Set to ``True`` to remove agglomerates whose cumulative volume (sum
+            of agglomerate volume for each time instant) is smaller than
+            ``smallest_4Dvolume``. Default is ``True``.
         pre_TR_filtering: bool, optional
-            Description here.
+            Set to ``True`` to remove agglomerates appearing before the start of
+            thermal runaway. Thermal runaway start time instant has to be
+            specified in ``TR_map`` list in ``_find_pre_TR_agglomerates`` function.
+            Default is ``True``.
         smallest_3Dvolume: int, optional
-            Lower bound for the agglomerate volume during filtering.
+            Minimum volume (in voxels) of an agglomerate in a single reconstructed
+            volume. Default is 50.
         smallest_4Dvolume: int, optional
-            Description here.
+            Minimum cumulative volume (in voxels) of an agglomerate in all
+            reconstructed volumes. Default is 250.
 
         """
 
@@ -419,14 +432,20 @@ class Data:
         return
 
     def segment_jellyroll(self, threshold=1, smallest_3Dvolume=50):
-        """Description of class method here.
+        """
+
+        Segments the volumetric data ``ct.npy`` creating a 4D binary mask ``jellyroll_mask.npy``.
+        The binary mask is obtained by thresholding each volume and applying a binary
+        morphological operation to remove small isolated regions and reconstruction artifacts.
+        ``jellyroll_mask.npy`` is used for rendering the sidewall rupture of the battery.
 
         Parameters
         ----------
         threshold: float, optional
-            Description here.
+            Threshold value for binary masking. Default is 1.
         smallest_3Dvolume: : int, optional
-            Description here.
+            Minimum volume (in voxels) of an agglomerate in a single reconstructed
+            volume. Default is 50.
 
         """
 
@@ -448,15 +467,17 @@ class Data:
         return
 
     def view(self, mask=False, jellyroll_mask=False):
-        """Display data within Napari interactive viewer, optionally overlaying
-        agglomerate segmentation mask or jellyroll mask.
+        """
+        Display tomography data within ``napari`` interactive viewer,
+        optionally overlaying agglomerate segmentation mask `mask.npy`
+        or ``jellyroll_mask.npy``.
 
         Parameters
         ----------
         mask : bool, optional
-            Display mask overlay, by default False.
+            Display mask overlay if ``True``. Default is ``False``.
         binary_mask : bool, optional
-            Display jellyroll mask overlay, by default False.
+            Display jellyroll mask overlay if ``True``. Default is ``False``.
 
         """
 
@@ -480,7 +501,9 @@ class Data:
         return
 
     def save_slice(self, time, z, contrast_limits=[0.1, 3.5], crop=0):
-        """Save a slice of the 4D CT-scan to a .png file.
+        """
+
+        Save a slice of the 4D CT-scan to a ``.png`` file in the experiment folder.
 
         Parameters
         ----------
@@ -489,7 +512,7 @@ class Data:
         z : int
             Z-level index of the slice to be saved.
         contrast_limits : list, optional
-            Minimum and maximum intensity values for image scaling, by default [0.1, 3.5].
+            Minimum and maximum intensity values for image scaling. Default is ``[0.1, 3.5]``.
 
         """
 
@@ -499,18 +522,21 @@ class Data:
         return
 
     def create_slice_movie(self, z, img_min=0, img_max=5, fps=7):
-        """Create a movie by slicing through the data at the specified z-level.
+        """
+
+        Create a movie by slicing through the data at the specified z-level
+        and adding a time label to each frame.
 
         Parameters
         ----------
         z: int
             The z-level at which to slice through the data.
         img_min : int, optional
-            Minimum intensity value for image scaling, by default 0.
+            Minimum intensity value for image scaling. Default is 0.
         img_max : int, optional
-            Maximum intensity value for image scaling, by default 5.
+            Maximum intensity value for image scaling. Default is 5.
         fps : int, optional
-            Frames per second for the movie, by default 7.
+            Frames per second for the movie. Default is 7.
 
         """
 
@@ -522,36 +548,9 @@ class Data:
             image = _Image(self.ct[time, z])
             image.scale(img_min, img_max)
             image.add_time_text(time)
-            image.save(img_path)
+            image.save(img_path, time)
         movie = _Movie(movie_path, img_path, self.exp)
         movie.write(fps)
-        return
-
-    def create_render_movie(self, fps=5, rupture=False):
-        """Description of class method here.
-
-        Parameters
-        ----------
-        fps: int, optional
-            Frames per second for the movie, by default 5.
-        rupture: bool, optional
-            Flag to indicate if sidewall rupture is to be considered.
-
-        """
-
-        if rupture:
-            movie_path = os.path.join(self.path, "sidewall_renders")
-            movie = _Movie(
-                movie_path, os.path.join(movie_path, "perspective view"), self.exp
-            )
-            movie.write(fps, "perspective view")
-            print(f"{self.exp} perspective view done!")
-            return
-        movie_path = os.path.join(self.path, "renders")
-        for view in ["top view", "side view", "perspective view"]:
-            movie = _Movie(movie_path, os.path.join(movie_path, view), self.exp)
-            movie.write(fps, view)
-            print(f"{self.exp} {view} done!")
         return
 
     def _find_mesh(self, time, is_binary_mask):
@@ -609,14 +608,21 @@ class Data:
         return
 
     def create_stls(self, rupture=False, times=None):
-        """Description of class method here.
+        """
+
+        Create ``.stl`` files for each agglomerate at each time instant. The files
+        are saved in the ``stls`` folder in the experiment folder. If ``rupture`` is
+        set to ``True``, the function creates ``.stl`` files for the binary mask
+        used to render the sidewall rupture of the battery. The files are saved in
+        the ``sidewall_stls`` folder in the experiment folder.
 
         Parameters
         ----------
         rupture: bool, optional
-            Description here.
+            Set to ``True`` to create ``.stl`` files for the binary mask. Default is ``False``.
         times: list, optional
-            Description here.
+            List of time instants for which to create ``.stl`` files. Default is ``None``
+            (``stl`` files for all time instants are created).
 
         """
 
@@ -663,7 +669,14 @@ class Data:
         return [t, label, x, y, z, r, vx, vy, vxy, vz, v, V, dVdt, r_section, z_section]
 
     def create_dataframe(self):
-        """Description of class method here."""
+        """
+
+        Create a dataframe containing agglomerate properties such as centroid
+        coordinates, velocity, volume, volume derivative, radial section location
+        and vertical section location. The dataframe is saved as ``dataframe.csv``
+        in the experiment folder.
+
+        """
 
         if self.mask is None:
             raise NameError("Mask not found, run Data.segment() first!")
@@ -912,12 +925,17 @@ class Data:
         return
 
     def plots(self, save=True):
-        """Description of class method here.
+        """
+
+        Create and display plots of agglomerate properties over time.
+        These include total volume, average volume, volume expansion rate, speed,
+        and density. The plots are saved as ``plots.png`` in the experiment folder.
 
         Parameters
         ----------
         save: bool, optional
-            Description here.
+            Set to ``True`` to save the plots as ``plots.png`` in the experiment folder.
+            Default is ``True``.
 
         """
 
@@ -966,16 +984,22 @@ class Data:
         blender_executable_path="/Applications/Blender.app/Contents/MacOS/Blender",
         parent_path="/Users/matteoventurelli/Documents/VS Code/MasterThesis/src/fasttomo/blender/",
     ):
-        """Description of class method here.
+        """
+
+        Render the agglomerates in the 4D mask using ``Blender``.
+        Run ``Data.segment()`` (or ``Data.segment_jellyroll()``) and
+        ``Data.create_stls()`` before running this method. This method
+        calls the :py:func:`render.py` script to render the agglomerates.
 
         Parameters
         ----------
         rupture: bool, optional
-            Description here.
+            Set to ``True`` to render the sidewall rupture. Default is ``False``.
         blender_executable_path: str, optional
-            Description here.
+            Path to the Blender executable. Default is ``"/Applications/Blender.app/Contents/MacOS/Blender"``.
         parent_path: str, optional
-            Description here.
+            Path to the folder containing the ``render.blend`` and ``render.py`` files. Default is
+            ``"/Users/matteoventurelli/Documents/VS Code/MasterThesis/src/fasttomo/blender/"``.
         """
 
         blender_file_path = os.path.join(parent_path, "render.blend")
@@ -991,4 +1015,34 @@ class Data:
             str(rupture),
         ]
         subprocess.run(command)
+        return
+
+    def create_render_movie(self, fps=5, rupture=False):
+        """
+
+        Create a movie by sequencing rendered frames written with ``Data.render()``.
+
+
+        Parameters
+        ----------
+        fps: int, optional
+            Frames per second for the movie. Default is 5.
+        rupture: bool, optional
+            Set to `True` to create a movie for the sidewall rupture. Default is ``False``.
+
+        """
+
+        if rupture:
+            movie_path = os.path.join(self.path, "sidewall_renders")
+            movie = _Movie(
+                movie_path, os.path.join(movie_path, "perspective view"), self.exp
+            )
+            movie.write(fps, "perspective view")
+            print(f"{self.exp} perspective view done!")
+            return
+        movie_path = os.path.join(self.path, "renders")
+        for view in ["top view", "side view", "perspective view"]:
+            movie = _Movie(movie_path, os.path.join(movie_path, view), self.exp)
+            movie.write(fps, view)
+            print(f"{self.exp} {view} done!")
         return

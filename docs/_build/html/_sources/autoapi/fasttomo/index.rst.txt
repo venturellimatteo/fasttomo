@@ -3,14 +3,192 @@
 
 .. py:module:: fasttomo
 
+.. autoapi-nested-parse::
 
-Submodules
-----------
-.. toctree::
-   :titlesonly:
-   :maxdepth: 1
+   This module contains the ``Data`` class, which is designed for processing and
+   analyzing volumetric image data. The ``Data`` class is used to create a ``Data``
+   object, which is then used to perform various operations, including
+   segmentation, visualization, movie creation, 3D model generation, and data
+   analysis.
 
-   fasttomo/index.rst
-   test/index.rst
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   fasttomo.Data
+
+
+
+
+.. py:class:: Data(exp, parent_folder='/Volumes/T7/Thesis')
+
+
+   The Data class is designed for processing and analyzing volumetric image data.
+   It provides various functionalities including segmentation, visualization,
+   movie creation, 3D model generation, and data analysis. A ``Data`` object for
+   a specific experiment is initialized with the experiment name and the parent
+   folder containing the experiments folders.
+
+   :param exp: Experiment name.
+   :type exp: str
+   :param parent_folder: Path of the parent folder containing the experiments folders. By default
+                         "/Volumes/T7/Thesis". Experiments folders must contain 4D tomography data
+                         in :math:`(t,z,y,x)` format in a ``ct.npy`` file.
+   :type parent_folder: str, optional
+
+   .. py:method:: segment(threshold_target=6800, filtering3D=True, filtering4D=True, pre_TR_filtering=True, smallest_3Dvolume=50, smallest_4Dvolume=250)
+
+      Segments the volumetric data ``ct.npy`` creating a 4D mask ``mask.npy``.
+      First, the threshold value is found by iteratively adjusting it to obtain
+      a target area of the external shell of the battery. Then, the 3D mask is
+      obtained by thresholding each volume and removing small agglomerates.
+      Agglomerate labels are propagated from one volume to the next to ensure
+      label consistency through time. Finally, 4D filtering is applied to remove
+      small agglomerates, agglomerates appearing before the start of thermal
+      runaway, and agglomerates appearing in only one time instant.
+
+      :param threshold_target: Target area (in pixels) of the external shell of the battery.
+                               Default is 6800.
+      :type threshold_target: int, optional
+      :param filtering3D: Set to ``True`` to remove agglomerates with a volume smaller than
+                          ``smallest_3Dvolume`` in each reconstructed volume. Default is ``True``.
+      :type filtering3D: bool, optional
+      :param filtering4D: Set to ``True`` to remove agglomerates whose cumulative volume (sum
+                          of agglomerate volume for each time instant) is smaller than
+                          ``smallest_4Dvolume``. Default is ``True``.
+      :type filtering4D: bool, optional
+      :param pre_TR_filtering: Set to ``True`` to remove agglomerates appearing before the start of
+                               thermal runaway. Thermal runaway start time instant has to be
+                               specified in ``TR_map`` list in ``_find_pre_TR_agglomerates`` function.
+                               Default is ``True``.
+      :type pre_TR_filtering: bool, optional
+      :param smallest_3Dvolume: Minimum volume (in voxels) of an agglomerate in a single reconstructed
+                                volume. Default is 50.
+      :type smallest_3Dvolume: int, optional
+      :param smallest_4Dvolume: Minimum cumulative volume (in voxels) of an agglomerate in all
+                                reconstructed volumes. Default is 250.
+      :type smallest_4Dvolume: int, optional
+
+
+   .. py:method:: segment_jellyroll(threshold=1, smallest_3Dvolume=50)
+
+      Segments the volumetric data ``ct.npy`` creating a 4D binary mask ``jellyroll_mask.npy``.
+      The binary mask is obtained by thresholding each volume and applying a binary
+      morphological operation to remove small isolated regions and reconstruction artifacts.
+      ``jellyroll_mask.npy`` is used for rendering the sidewall rupture of the battery.
+
+      :param threshold: Threshold value for binary masking. Default is 1.
+      :type threshold: float, optional
+      :param smallest_3Dvolume: Minimum volume (in voxels) of an agglomerate in a single reconstructed
+                                volume. Default is 50.
+      :type smallest_3Dvolume: : int, optional
+
+
+   .. py:method:: view(mask=False, jellyroll_mask=False)
+
+      Display tomography data within ``napari`` interactive viewer,
+      optionally overlaying agglomerate segmentation mask `mask.npy`
+      or ``jellyroll_mask.npy``.
+
+      :param mask: Display mask overlay if ``True``. Default is ``False``.
+      :type mask: bool, optional
+      :param binary_mask: Display jellyroll mask overlay if ``True``. Default is ``False``.
+      :type binary_mask: bool, optional
+
+
+   .. py:method:: save_slice(time, z, contrast_limits=[0.1, 3.5], crop=0)
+
+      Save a slice of the 4D CT-scan to a ``.png`` file in the experiment folder.
+
+      :param time: Time index of the slice to be saved.
+      :type time: int
+      :param z: Z-level index of the slice to be saved.
+      :type z: int
+      :param contrast_limits: Minimum and maximum intensity values for image scaling. Default is ``[0.1, 3.5]``.
+      :type contrast_limits: list, optional
+
+
+   .. py:method:: create_slice_movie(z, img_min=0, img_max=5, fps=7)
+
+      Create a movie by slicing through the data at the specified z-level
+      and adding a time label to each frame.
+
+      :param z: The z-level at which to slice through the data.
+      :type z: int
+      :param img_min: Minimum intensity value for image scaling. Default is 0.
+      :type img_min: int, optional
+      :param img_max: Maximum intensity value for image scaling. Default is 5.
+      :type img_max: int, optional
+      :param fps: Frames per second for the movie. Default is 7.
+      :type fps: int, optional
+
+
+   .. py:method:: create_stls(rupture=False, times=None)
+
+      Create ``.stl`` files for each agglomerate at each time instant. The files
+      are saved in the ``stls`` folder in the experiment folder. If ``rupture`` is
+      set to ``True``, the function creates ``.stl`` files for the binary mask
+      used to render the sidewall rupture of the battery. The files are saved in
+      the ``sidewall_stls`` folder in the experiment folder.
+
+      :param rupture: Set to ``True`` to create ``.stl`` files for the binary mask. Default is ``False``.
+      :type rupture: bool, optional
+      :param times: List of time instants for which to create ``.stl`` files. Default is ``None``
+                    (``stl`` files for all time instants are created).
+      :type times: list, optional
+
+
+   .. py:method:: create_dataframe()
+
+      Create a dataframe containing agglomerate properties such as centroid
+      coordinates, velocity, volume, volume derivative, radial section location
+      and vertical section location. The dataframe is saved as ``dataframe.csv``
+      in the experiment folder.
+
+
+
+   .. py:method:: plots(save=True)
+
+      Create and display plots of agglomerate properties over time.
+      These include total volume, average volume, volume expansion rate, speed,
+      and density. The plots are saved as ``plots.png`` in the experiment folder.
+
+      :param save: Set to ``True`` to save the plots as ``plots.png`` in the experiment folder.
+                   Default is ``True``.
+      :type save: bool, optional
+
+
+   .. py:method:: render(rupture=False, blender_executable_path='/Applications/Blender.app/Contents/MacOS/Blender', parent_path='/Users/matteoventurelli/Documents/VS Code/MasterThesis/src/fasttomo/blender/')
+
+      Render the agglomerates in the 4D mask using ``Blender``.
+      Run ``Data.segment()`` (or ``Data.segment_jellyroll()``) and
+      ``Data.create_stls()`` before running this method. This method
+      calls the :py:func:`render.py` script to render the agglomerates.
+
+      :param rupture: Set to ``True`` to render the sidewall rupture. Default is ``False``.
+      :type rupture: bool, optional
+      :param blender_executable_path: Path to the Blender executable. Default is ``"/Applications/Blender.app/Contents/MacOS/Blender"``.
+      :type blender_executable_path: str, optional
+      :param parent_path: Path to the folder containing the ``render.blend`` and ``render.py`` files. Default is
+                          ``"/Users/matteoventurelli/Documents/VS Code/MasterThesis/src/fasttomo/blender/"``.
+      :type parent_path: str, optional
+
+
+   .. py:method:: create_render_movie(fps=5, rupture=False)
+
+      Create a movie by sequencing rendered frames written with ``Data.render()``.
+
+
+      :param fps: Frames per second for the movie. Default is 5.
+      :type fps: int, optional
+      :param rupture: Set to `True` to create a movie for the sidewall rupture. Default is ``False``.
+      :type rupture: bool, optional
+
 
 

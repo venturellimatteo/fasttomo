@@ -1,3 +1,15 @@
+"""
+
+This module contains the functions to render the agglomerates and
+jellyroll in ``Blender``. The module is called from the ``Data.render``
+method in the ``fasttomo`` package to run within ``Blender``. 
+The script imports the STL files for each time instant for a specific
+experiment and renders either the agglomerates or the jellyroll 
+(to show the sidewall rupture) in three different views: side, top
+and perspective. 
+
+"""
+
 import bpy  # type: ignore
 import numpy as np
 import sys
@@ -5,6 +17,16 @@ import os
 
 
 def color_palette():
+    """
+
+    Returns the color palette used for the different labels.
+
+    Returns
+    -------
+    palette : np.array
+        10x3 array of RGB values for highly distinguishable colors.
+
+    """
     return np.array(
         [
             [0.90, 0.01, 0.01],
@@ -23,6 +45,17 @@ def color_palette():
 
 # function that modifies the properties of the rendering engine
 def modify_engine(isJellyroll):
+    """
+
+    Modifies the properties of the rendering engine.
+
+    Parameters
+    ----------
+    isJellyroll : bool
+        Whether agglomerates or jellyroll are being rendered.
+        Default is ``False``.
+
+    """
     bpy.context.scene.render.engine = "CYCLES"
     bpy.context.scene.cycles.time_limit = 240 if isJellyroll else 15
     bpy.context.scene.cycles.use_adaptive_sampling = True
@@ -35,6 +68,19 @@ def modify_engine(isJellyroll):
 
 # function that returns a color tuple given the label and the maximum value of the labels
 def modify_properties(obj, label, isJellyroll):
+    """
+
+    Modifies the properties of the object associated to a
+    specific label. A smoothing modifier is added to the
+    object and the material is assigned based on the label.
+
+    Parameters
+    ----------
+    isJellyroll : bool
+        Whether agglomerates or jellyroll are being rendered.
+        Default is ``False``.
+
+    """
     mod = obj.modifiers.new(name="Smooth", type="SMOOTH")
     mod.factor = 1
     mod.iterations = 5
@@ -54,6 +100,19 @@ def modify_properties(obj, label, isJellyroll):
 
 # function that modifies the properties of the object associated to a specific label
 def create_materials(isJellyroll):
+    """
+
+    Creates the materials for the different labels. A black
+    material is assigned to the battery casing, a grey material
+    to the jellyroll and different colors for the agglomerates.
+
+    Parameters
+    ----------
+    isJellyroll : bool
+        Whether agglomerates or jellyroll are being rendered.
+        Default is ``False``.
+
+    """
     mat = bpy.data.materials
     mat.new(name="ShellMaterial")
     mat["ShellMaterial"].use_nodes = True
@@ -88,6 +147,32 @@ def create_materials(isJellyroll):
 
 
 def create_folders(path, isJellyroll):
+    """
+
+    Returns the path for the STL files. Creates and returns the
+    folder to store the renders for the side, top and perspective
+    views.
+
+    Parameters
+    ----------
+    path : str
+        Path to the experiment folder.
+    isJellyroll : bool
+        Whether agglomerates or jellyroll are being rendered.
+        Default is ``False``.
+
+    Returns
+    -------
+    stl_path : str
+        Path to the STL files.
+    side_path : str
+        Path to the side view renders.
+    top_path : str
+        Path to the top view renders.
+    persp_path : str
+        Path to the perspective view renders.
+
+    """
     path_modifier = "" if not isJellyroll else "sidewall_"
     stl_path = os.path.join(path, path_modifier + "stls")
     render_path = os.path.join(path, path_modifier + "renders")
@@ -104,6 +189,23 @@ def create_folders(path, isJellyroll):
 
 
 def import_object(obj_name, time_path, isJellyroll):
+    """
+
+    Imports the STL file for a specific label, creates the associated
+    ``Blender`` object and modifies its properties.
+
+    Parameters
+    ----------
+    obj_name : str
+        Name of the STL file.
+    time_path : str
+        Path to the folder containing the STL files for a specific
+        time instant.
+    isJellyroll : bool
+        Whether agglomerates or jellyroll are being rendered.
+        Default is ``False``.
+
+    """
     bpy.ops.import_mesh.stl(filepath=os.path.join(time_path, obj_name))
     obj = bpy.context.active_object
     label = int(obj.name)
@@ -112,6 +214,11 @@ def import_object(obj_name, time_path, isJellyroll):
 
 
 def add_lights():
+    """
+
+    Adds two point lights to the scene.
+
+    """
     bpy.ops.object.light_add(
         type="POINT", radius=1, align="WORLD", location=(2, 0, 2), scale=(1, 1, 1)
     )
@@ -126,14 +233,24 @@ def add_lights():
 
 
 def top_view_render(top_path, time):
+    """
+
+    Renders the top view of the scene in orthographic mode.
+
+    Parameters
+    ----------
+    top_path : str
+        Path to the folder containing the top view renders.
+    time : str
+        Time instant for the render.
+
+    """
     bpy.context.scene.render.resolution_y = 2160
     bpy.ops.object.camera_add(
-        enter_editmode=False, location=(0.2, -0.2, 1)
+        enter_editmode=False, location=(0, 0, 1)
     )  # 0,2 0,2 1 for P42A_ISC_FT_H_Exp2, 0, 0, 1 for others
     bpy.context.active_object.data.type = "ORTHO"
-    bpy.context.object.data.ortho_scale = (
-        2.5  # 2.5 for P42A_ISC_FT_H_Exp2, 2 for others
-    )
+    bpy.context.object.data.ortho_scale = 2  # 2.5 for P42A_ISC_FT_H_Exp2, 2 for others
     bpy.context.scene.camera = bpy.context.active_object
     bpy.context.scene.render.filepath = os.path.join(top_path, time + ".png")
     bpy.ops.render.render(write_still=True)
@@ -142,10 +259,22 @@ def top_view_render(top_path, time):
 
 
 def side_view_render(side_path, time):
+    """
+
+    Renders the side view of the scene in orthographic mode.
+
+    Parameters
+    ----------
+    side_path : str
+        Path to the folder containing the side view renders.
+    time : str
+        Time instant for the render.
+
+    """
     bpy.context.scene.render.resolution_y = 1440
     bpy.ops.object.camera_add(
         enter_editmode=False,
-        location=(0.2, -1.5, -0.02),
+        location=(0, -1, 0),
         rotation=(
             np.pi / 2,
             0,
@@ -153,7 +282,7 @@ def side_view_render(side_path, time):
         ),  # (0.2, -1.5, -0.02) if P42A_ISC_FT_H_Exp2, else (0, -1, 0)
     )
     bpy.context.active_object.data.type = "ORTHO"
-    bpy.context.object.data.ortho_scale = 2.5  # 2.5 if P42A_ISC_FT_H_Exp2, else 2
+    bpy.context.object.data.ortho_scale = 2  # 2.5 if P42A_ISC_FT_H_Exp2, else 2
     bpy.context.scene.camera = bpy.context.active_object
     bpy.context.scene.render.filepath = os.path.join(side_path, time + ".png")
     bpy.ops.render.render(write_still=True)
@@ -162,9 +291,24 @@ def side_view_render(side_path, time):
 
 
 def persp_view_render(persp_path, time, isJellyroll):
+    """
+
+    Renders a perspective view of the scene.
+
+    Parameters
+    ----------
+    persp_path : str
+        Path to the folder containing the perspective view renders.
+    time : str
+        Time instant for the render.
+    isJellyroll : bool
+        Whether agglomerates or jellyroll are being rendered.
+        Default is ``False``.
+
+    """
     bpy.context.scene.render.resolution_y = 2160
     location = (
-        (2.4, -2.4, 3) if isJellyroll else (2.4, -2.4, 3)
+        (2.4, -2.4, 3) if isJellyroll else (1.8, -1.8, 2.4)
     )  # location = (2.4, -2.4, 2.8) if isJellyroll else (1.8, -1.8, 2.4)
     bpy.ops.object.camera_add(
         enter_editmode=False, location=location, rotation=(np.pi / 4, 0, np.pi / 4)
