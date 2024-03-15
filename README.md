@@ -52,8 +52,8 @@ To install `fasttomo`, follow these steps:
    pip install -r requirements.txt
    ```
 
-[!NOTE]
-[Blender 3.6.4](https://www.blender.org/download/lts/3-6/) installation is required for the usage of selected functions to render segmentation results.
+> [!NOTE]
+> [Blender 3.6.4](https://www.blender.org/download/lts/3-6/) installation is required for the usage of selected functions to render segmentation results.
 
 ## 2. Usage
 <!-- Clearly explain how to use your pipeline. Include examples and command-line syntax if applicable. If there are configuration files, provide information on how to customize them. -->
