@@ -52,11 +52,37 @@ To install `fasttomo`, follow these steps:
    pip install -r requirements.txt
    ```
 
+[!NOTE]
+[Blender 3.6.4](https://www.blender.org/download/lts/3-6/) installation is required for the usage of selected functions to render segmentation results.
+
 ## 2. Usage
 <!-- Clearly explain how to use your pipeline. Include examples and command-line syntax if applicable. If there are configuration files, provide information on how to customize them. -->
 
+To use `fasttomo`, open the python notebook file `notebook.ipynb`, specify the name of the experiment to process in the `exp` variable, optionally specify the `path` and initiate an instance of the `Data` class. From there, run any of the desired functions to segment or visualize the data.
+
 ## 3. Examples
 <!-- Include examples of how to use your pipeline with sample inputs. This helps users understand the expected input format and see the output. -->
+
+This example shows the code to process experiment `P28A_FT_H_Exp4_2`:
+
+1. `Data` class instance is initialized;
+2. Tomography data is segmented;
+3. Agglomerates features are extracted and saved as a `csv` file;
+4. Agglomerate data is processed and plotted;
+5. Segmentation mask is converted into `stl` meshes;
+6. Volumes are rendered as `png` files using `Blender`;
+7. `png` frames are sequenced into a movie.
+
+```python
+import fasttomo
+data = fasttomo.Data("P28A_FT_H_Exp4_2")
+data.segment()
+data.create_dataframe()
+data.plots()
+data.create_stls()
+data.render()
+data.create_render_movie()
+```
 
 ## 4. Results
 <!-- If your pipeline produces visual results, consider including sample outputs or screenshots to showcase the expected outcomes. -->
@@ -77,15 +103,7 @@ The MIT License is a permissive open-source license that allows you to use, modi
 ## 7. Acknowledgments
 <!-- Give credit to any external libraries, tools, or resources that you used in your project. This is a good practice to show appreciation for the work of others. -->
 
-<!-- I would like to extend my heartfelt gratitude to two remarkable individuals who played pivotal roles in the success of this project, not only as supervisors but also as friends.
-
-**Matilda** has been an extraordinary mentor, friend, and source of inspiration. Beyond her exceptional guidance in the academic realm, Matilda shared countless precious moments and provided unwavering support.
-
-**Ludo** is not just a mentor but a remarkable professional with an infectious smile. His cheerful attitude and deep professional expertise have been a constant source of motivation. Ludo's valuable advice and positive outlook have consistently guided me through challenges, making the journey smoother and more enjoyable.
-
-I feel profoundly fortunate to have Matilda and Ludo as supervisors and friends, and their influence on this project and my personal development cannot be overstated.
-
-Thank you for being such essential pillars of support and belief in this project. -->
+I would like to thank Matilda Fransson and Ludovic Broche for their invaluable guidance and support. I was fortunate to have Matilda not just as a supervisor but as a friend, with whom I shared countless laughs and precious moments. I am equally grateful to Ludo for his willingness to help and answer any question, as well as the joy his ever-present smile brought to our work.
 
 ## 8. Contact Information
 <!-- Provide a way for users to contact you if they have questions, feedback, or want to collaborate. This could be an email address, a link to your personal website, or a discussion forum. -->
