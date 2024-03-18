@@ -60,7 +60,7 @@ To install `fasttomo`, follow these steps:
 
 To use `fasttomo`, open the python notebook file `notebook.ipynb`, specify the name of the experiment to process in the `exp` variable, optionally specify the `path` and initiate an instance of the `Data` class. From there, run any of the desired functions to segment or visualize the data.
 
-## 3. Examples
+## 3. Example
 <!-- Include examples of how to use your pipeline with sample inputs. This helps users understand the expected input format and see the output. -->
 
 This example shows the code to process experiment `P28A_FT_H_Exp4_2`:
@@ -87,6 +87,8 @@ data.create_render_movie()
 ## 4. Results
 <!-- If your pipeline produces visual results, consider including sample outputs or screenshots to showcase the expected outcomes. -->
 
+![Results example](./results/readme/Comparison.png)
+
 ## 5. Documentation
 <!-- If you have detailed documentation beyond the README, provide links to it. This could include API documentation, user guides, or tutorials. -->
 For detailed documentation, including API references and usage guides, please visit the [project documentation](https://fasttomo.readthedocs.io).
@@ -103,7 +105,7 @@ The MIT License is a permissive open-source license that allows you to use, modi
 ## 7. Acknowledgments
 <!-- Give credit to any external libraries, tools, or resources that you used in your project. This is a good practice to show appreciation for the work of others. -->
 
-I would like to thank Matilda Fransson and Ludovic Broche for their invaluable guidance and support. I was fortunate to have Matilda not just as a supervisor but as a friend, with whom I shared countless laughs and precious moments. I am equally grateful to Ludo for his willingness to help and answer any question, as well as the joy his ever-present smile brought to our work.
+I would like to thank **Matilda Fransson** and **Ludovic Broche** for their invaluable guidance and support. I was fortunate to have Matilda not just as a supervisor but as a friend, with whom I shared countless laughs and precious moments. I am equally grateful to Ludo for his willingness to help and answer any question, as well as the joy his ever-present smile brought to our work.
 
 ## 8. Contact Information
 <!-- Provide a way for users to contact you if they have questions, feedback, or want to collaborate. This could be an email address, a link to your personal website, or a discussion forum. -->
