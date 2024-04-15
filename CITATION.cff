@@ -1,0 +1,31 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: fasttomo
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Matteo
+    family-names: Venturelli
+    email: matteo.venturelli2000@gmail.com
+    affiliation: ESRF
+    orcid: "https://orcid.org/0009-0000-8325-8207"
+repository-code: "https://github.com/venturellimatteo/fasttomo"
+url: "https://fasttomo.readthedocs.io/en/latest/"
+abstract: >-
+  Welcome to fasttomo, a Python package designed to address
+  the critical task of identifying copper agglomerates in
+  lithium-ion batteries during thermal runaway. Developed as
+  part of my Master's thesis at ESRF (European Synchrotron
+  Radiation Facility) from October 2023 to March 2024,
+  fasttomo offers a powerful set of tools for analyzing and
+  visualizing 4-dimensional CT data in (t, z, y, x) format.
+keywords:
+  - lithium-ion
+  - battery
+  - segmentation
+  - tomography
+license: MIT
