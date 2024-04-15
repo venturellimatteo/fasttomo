@@ -49,14 +49,17 @@ class _Image:
         _ = imshow(self._np, cmap="gray")
         return
 
-    def add_time_text(self, time):
+    def add_time_text(self, time, invert=False):
         draw = ImageDraw.Draw(self._PIL)
         image_size = self._np.shape[0]
+        color = "#000000" if invert else "#FFFFFF"
         draw.text(
-            xy=(image_size - 120, image_size - 30),
+            xy=(image_size - 115, image_size - 20),
+            # xy=(image_size - 400, image_size - 80),
             text=f"Time = {time * 50} ms",
             font=ImageFont.truetype("Roboto-Regular.ttf", 15),
-            fill="#FFFFFF",
+            # font=ImageFont.truetype("Roboto-Regular.ttf", 25),
+            fill=color,
         )
         self._np = np.array(self._PIL, dtype=np.uint8)
         return
@@ -87,16 +90,16 @@ class _Movie:
         self._height, self._width, _ = sample.shape
         return
 
-    def write(self, fps, view):
-        self._fps = fps
+    def write(self, fps, view=""):
         frame_files = sorted(
             [f for f in os.listdir(self._img_path) if f.endswith(".png")]
         )
         fourcc = VideoWriter_fourcc(*"mp4v")
+        view = " " + view if view != "" else view
         self._video = VideoWriter(
-            os.path.join(self.path, self.exp + " " + view + ".mp4"),
+            os.path.join(self.path, self.exp + view + ".mp4"),
             fourcc,
-            self._fps,
+            fps,
             (self._width, self._height),
         )
         for frame_file in frame_files:
@@ -421,7 +424,7 @@ class Data:
         self._index += 1
         while self._index < self.ct.shape[0]:
             progress_bar.set_postfix_str(f"Segmentation #{self._index + 1}")
-            self._segment3d()
+            self._segment3d(filtering3D, smallest_3Dvolume)
             progress_bar.set_postfix_str(f"Propagation #{self._index + 1}")
             self._propagate()
             progress_bar.update()
@@ -466,7 +469,7 @@ class Data:
             )
         return
 
-    def view(self, mask=False, jellyroll_mask=False):
+    def view(self, mask=False, jellyroll_mask=False, contrast_limits=[0.1, 3.5]):
         """
         Display tomography data within ``napari`` interactive viewer,
         optionally overlaying agglomerate segmentation mask `mask.npy`
@@ -483,19 +486,22 @@ class Data:
 
         viewer = napari.Viewer()
         settings = napari.settings.get_settings()
-        settings.application.playback_fps = 5
+        settings.application.playback_fps = 20
         viewer.add_image(
             self.ct,
             name=f"{self.exp} Volume",
-            contrast_limits=[0.1, 3.5],
+            contrast_limits=contrast_limits,
             colormap="gray_r",
         )
+        if mask or jellyroll_mask:
+            viewer.layers[f"{self.exp} Volume"].opacity = 0.4
+            viewer.layers[f"{self.exp} Volume"].colormap = "gray"
+
         if jellyroll_mask and not self.jellyroll_mask is None:
             viewer.add_labels(
                 self.jellyroll_mask, name=f"{self.exp} Binary mask", opacity=0.8
             )
         if mask and not self.mask is None:
-            viewer.layers[f"{self.exp} Volume"].opacity = 0.4
             viewer.add_labels(self.mask, name=f"{self.exp} Mask", opacity=0.8)
         viewer.dims.current_step = (0, 0)
         return
@@ -521,7 +527,7 @@ class Data:
         image.save_skimage(self.path, time, z, crop)
         return
 
-    def create_slice_movie(self, z, img_min=0, img_max=5, fps=7):
+    def create_slice_movie(self, z, contrast_limits=[0.1, 3.5], fps=7, invert=False):
         """
 
         Create a movie by slicing through the data at the specified z-level
@@ -546,8 +552,8 @@ class Data:
             os.makedirs(img_path)
         for time in range(self.ct.shape[0]):
             image = _Image(self.ct[time, z])
-            image.scale(img_min, img_max)
-            image.add_time_text(time)
+            image.scale(contrast_limits[0], contrast_limits[1], invert)
+            image.add_time_text(time, invert)
             image.save(img_path, time)
         movie = _Movie(movie_path, img_path, self.exp)
         movie.write(fps)
